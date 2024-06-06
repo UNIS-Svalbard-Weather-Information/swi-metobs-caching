@@ -5,6 +5,16 @@ import numpy as np
 
 app = Flask(__name__)
 
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371000  # radius of Earth in meters
+    phi1 = np.radians(lat1)
+    phi2 = np.radians(lat2)
+    delta_phi = np.radians(lat2 - lat1)
+    delta_lambda = np.radians(lon2 - lon1)
+    a = np.sin(delta_phi / 2.0) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    return R * c
+
 def process_netcdf_file(filepath, variables, duration):
     try:
         dataset = nc.Dataset(filepath)
@@ -15,6 +25,7 @@ def process_netcdf_file(filepath, variables, duration):
         mask = times >= time_frame
 
         data_points = []
+        last_point = None
         for i in range(len(times)):
             if not mask[i]:
                 continue
@@ -35,11 +46,14 @@ def process_netcdf_file(filepath, variables, duration):
                 if isinstance(value, float) and np.isnan(value):
                     data_point[key] = None
 
-            data_points.append(data_point)
+            # Filter points: Include point if it's the first one, or if it's 100m away from the last point
+            if last_point is None or haversine(last_point['lat'], last_point['lon'], data_point['lat'], data_point['lon']) >= 200:
+                data_points.append(data_point)
+                last_point = data_point
 
         latest_data = data_points[-1]
         track = [{'lat': dp['lat'], 'lon': dp['lon'], 'variable': dp} for dp in data_points]
-
+        print(len(track))
         return {
             'lat': latest_data['lat'],
             'lon': latest_data['lon'],
