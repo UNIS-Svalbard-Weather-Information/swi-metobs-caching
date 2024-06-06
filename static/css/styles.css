@@ -24,3 +24,20 @@
     list-style: none;
     padding-left: 0;
 }
+
+/* Legend styling */
+.info.legend {
+    background: white;
+    line-height: 1.5;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+.info.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}

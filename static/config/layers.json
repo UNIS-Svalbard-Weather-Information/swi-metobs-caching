@@ -1,13 +1,24 @@
-[
-    {
-        "name": "Topo Svalbard",
-        "type": "arcgis",
-        "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer"
-    },
-    
-    {
-        "name": "Orthophoto",
-        "type": "arcgis",
-        "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Ortofoto_Svalbard_WMTS_3857/MapServer"
-    }
-]
+{
+    "baseMaps": [
+        {
+            "name": "Topo Svalbard",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer"
+        },
+
+        {
+            "name": "Orthophoto",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Ortofoto_Svalbard_WMTS_3857/MapServer"
+        }
+    ],
+
+    "additionalLayers": [
+        {
+            "name": "Rules 1",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Skuterbegrensning_Svalbard/MapServer",
+            "layers": "topp:states"
+        }
+    ]
+}   
