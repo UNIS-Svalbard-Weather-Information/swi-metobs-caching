@@ -9,13 +9,13 @@
 </head>
 <body>
     <div id="menu">
-        <h3>Layers</h3>
-        <ul id="layerList"></ul>
-        <h3>Stations</h3>
+        <!--<h3>Layers</h3>
+        <ul id="layerList"></ul> -->
+        <h2>Stations</h2>
         <div id="station-controls">
             <div id="project-controls"></div>
         </div>
-        <h3>Track</h3>
+        <h2>Track</h2>
         <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
             <option value="0">None</option>
@@ -25,6 +25,7 @@
             <option value="12">12 hours</option>
             <option value="24">24 hours</option>
         </select>
+        <br>
         <label for="variable-select-dropdown">Variable:</label>
         <select id="variable-select-dropdown">
             <option value="none">None</option>
@@ -42,7 +43,10 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/controls.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/legend.js') }}"></script>
     <script>
         const layerConfigUrl = '{{ url_for("static", filename="config/layers.json") }}';
         const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
