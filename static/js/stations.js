@@ -72,12 +72,24 @@ function loadStations(mobileStationConfigUrl, windImagesUrl) {
             mobileStations.forEach(station => {
                 updateMobileStationData(station, initialDuration, windImagesUrl, initialVariable);
             });
+        })
+        .catch(error => {
+            console.error('Error loading stations:', error);
         });
 }
 
-function fetchMobileStationData(station, duration, variable) {
-    return fetch(`/api/mobile-station-data/${station.id}?duration=${duration}&variable=${variable}`)
-        .then(response => response.json());
+function fetchMobileStationData(station, duration) {
+    return fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`API error: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('Error fetching mobile station data:', error);
+            return null;
+        });
 }
 
 function toggleStation(stationId, isVisible, windImagesUrl) {
@@ -113,60 +125,67 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
 
     if (duration === 0) {
         // No track to display, but show the boat icon
-        fetchMobileStationData(station, duration, variable)
+        fetchMobileStationData(station, duration)
             .then(data => {
-                updateBoatMarker(station.id, data, variable);
-                updateWindMarker(station.id, data, windImagesUrl);
+                if (data) {
+                    updateBoatMarker(station.id, data, variable);
+                    updateWindMarker(station.id, data, windImagesUrl);
+                }
             });
         return;
     }
 
-    fetchMobileStationData(station, duration, variable)
+    fetchMobileStationData(station, duration)
         .then(data => {
-            updateBoatMarker(station.id, data, variable);
-            updateWindMarker(station.id, data, windImagesUrl);
+            if (data) {
+                updateBoatMarker(station.id, data, variable);
+                updateWindMarker(station.id, data, windImagesUrl);
 
-            const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
-            const values = data.track.map(dp => dp.variable);
-            const minValue = Math.min(...values);
-            const maxValue = Math.max(...values);
-            const extendedMinValue = minValue - (0.1 * minValue);
-            const extendedMaxValue = maxValue + (0.1 * maxValue);
+                const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
+                const values = data.track.map(dp => dp.variable[variable]);
+                const filteredValues = values.filter(v => v !== null && v !== undefined);
+                if (filteredValues.length === 0) return;
 
-            const colorScale = getColorScale(variable, extendedMinValue, extendedMaxValue);
+                const minValue = Math.min(...filteredValues);
+                const maxValue = Math.max(...filteredValues);
+                const extendedMinValue = minValue - (0.1 * minValue);
+                const extendedMaxValue = maxValue + (0.1 * maxValue);
 
-            let segments = [];
-            for (let i = 0; i < latlngs.length - 1; i++) {
-                const segment = L.polyline([latlngs[i], latlngs[i + 1]], {
-                    color: colorScale(values[i]),
-                    weight: 5,
-                    opacity: 0.7
-                }).addTo(map);
-                segments.push(segment);
+                const colorScale = getColorScale(variable, extendedMinValue, extendedMaxValue);
 
-                // Add popups to each point
-                L.circleMarker(latlngs[i], {
+                let segments = [];
+                for (let i = 0; i < latlngs.length - 1; i++) {
+                    const segment = L.polyline([latlngs[i], latlngs[i + 1]], {
+                        color: colorScale(values[i]),
+                        weight: 5,
+                        opacity: 0.7
+                    }).addTo(map);
+                    segments.push(segment);
+
+                    // Add popups to each point
+                    L.circleMarker(latlngs[i], {
+                        radius: 5,
+                        color: colorScale(values[i]),
+                        fillColor: colorScale(values[i]),
+                        fillOpacity: 0.9
+                    })
+                    .bindPopup(createPopupContent(station.name, data.track[i].variable))
+                    .addTo(map);
+                }
+
+                // Add popup to the last point
+                L.circleMarker(latlngs[latlngs.length - 1], {
                     radius: 5,
-                    color: colorScale(values[i]),
-                    fillColor: colorScale(values[i]),
+                    color: colorScale(values[latlngs.length - 1]),
+                    fillColor: colorScale(values[latlngs.length - 1]),
                     fillOpacity: 0.9
                 })
-                .bindPopup(createPopupContent(station.name, data.track[i]))
+                .bindPopup(createPopupContent(station.name, data.track[latlngs.length - 1].variable))
                 .addTo(map);
+
+                trackLayers[station.id] = segments;
+                updateColorBar(variable, extendedMinValue, extendedMaxValue);
             }
-
-            // Add popup to the last point
-            L.circleMarker(latlngs[latlngs.length - 1], {
-                radius: 5,
-                color: colorScale(values[latlngs.length - 1]),
-                fillColor: colorScale(values[latlngs.length - 1]),
-                fillOpacity: 0.9
-            })
-            .bindPopup(createPopupContent(station.name, data.track[latlngs.length - 1]))
-            .addTo(map);
-
-            trackLayers[station.id] = segments;
-            updateColorBar(variable, extendedMinValue, extendedMaxValue);
         });
 }
 
@@ -178,11 +197,11 @@ function createPopupContent(stationName, dataPoint) {
     return `
         <strong>Boat: ${stationName}</strong><br>
         Time: ${dateString}<br>
-        Air Temperature: ${dataPoint.airTemperature ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>
-        Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>
-        Wind Speed: ${dataPoint.windSpeed ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>
-        Wind Direction: ${dataPoint.windDirection ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>
-        Relative Humidity: ${dataPoint.relativeHumidity ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %
+        Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>
+        Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>
+        Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>
+        Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>
+        Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %
     `;
 }
 
@@ -204,7 +223,7 @@ function updateBoatMarker(stationId, data, variable) {
         map.removeLayer(boatMarkers[stationId]);
     }
 
-    const variableInfo = variable !== 'none' && data.variable !== null ? `<br>${variable}: ${data.variable}` : '';
+    const variableInfo = variable !== 'none' && data[variable] !== null ? `<br>${variable}: ${data[variable]}` : '';
     const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
     boatMarker.bindPopup(`Boat: ${stationId}<br>Wind Speed: ${data.windSpeed} kts<br>Wind Direction: ${data.windDirection}°${variableInfo}`);
     boatMarkers[stationId] = boatMarker;

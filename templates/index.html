@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Station Map</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 </head>
 <body>
     <div id="menu">
-        <!--<h3>Layers</h3>
-        <ul id="layerList"></ul> -->
-        <h2>Stations</h2>
+        <h3>Layers</h3>
+        <ul id="layerList"></ul>
+        <h3>Stations</h3>
         <div id="station-controls">
             <div id="project-controls"></div>
         </div>
-        <h2>Track</h2>
+        <h3>Track</h3>
         <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
             <option value="0">None</option>
@@ -40,8 +40,8 @@
         <h3>Opacity Controls</h3>
     </div>
     <div id="map"></div>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.0/dist/esri-leaflet.js"></script>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
     <script src="{{ url_for('static', filename='js/stations.js') }}"></script>

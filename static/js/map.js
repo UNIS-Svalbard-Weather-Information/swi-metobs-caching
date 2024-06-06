@@ -2,11 +2,18 @@ let additionalLayers = {};
 let map;
 let colorBar;
 
+// Define default extent (latitude, longitude, zoom level)
+const defaultExtent = {
+    lat: 78.3, 
+    lon: 16, 
+    zoom: 8 
+};
+
 function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
-            map = L.map('map').setView([0, 0], 2);
+            map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
             const baseLayers = {};
             additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
