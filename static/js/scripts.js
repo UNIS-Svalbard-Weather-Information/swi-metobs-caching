@@ -8,16 +8,33 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
             const legendControl = L.control({ position: 'bottomright' });
 
-            // Function to update legend
-            function updateLegend(layerName) {
-                let legendHtml = '<h4>Legend</h4>';
-                if (layerName === 'Topp States') {
-                    legendHtml += '<i style="background: #ff0000"></i> State 1<br>';
-                    legendHtml += '<i style="background: #00ff00"></i> State 2<br>';
-                    legendHtml += '<i style="background: #0000ff"></i> State 3<br>';
-                    // Add more legend items as needed
+            // Function to fetch and update legend
+            function updateLegend(layer) {
+                if (!layer) {
+                    legendControl._div.innerHTML = '';
+                    return;
                 }
-                // Add conditions for other layers here
+
+                let legendHtml = '<h4>Legend</h4>';
+
+                if (layer.type === 'wms') {
+                    const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
+                    legendHtml += `<img src="${legendUrl}" alt="Legend">`;
+                } else if (layer.type === 'arcgis') {
+                    fetch(`${layer.url}/legend?f=pjson`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.layers.forEach(layer => {
+                                legendHtml += `<strong>${layer.layerName}</strong><br>`;
+                                layer.legend.forEach(item => {
+                                    legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
+                                });
+                            });
+                            legendControl._div.innerHTML = legendHtml;
+                        });
+                    return;
+                }
+
                 legendControl._div.innerHTML = legendHtml;
             }
 
@@ -26,8 +43,8 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
                 this.update();
                 return this._div;
             };
-            legendControl.update = function (layerName) {
-                updateLegend(layerName);
+            legendControl.update = function (layer) {
+                updateLegend(layer);
             };
             legendControl.addTo(map);
 
@@ -80,7 +97,12 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
 
                 // Update legend when layer is added
                 layerObj.on('add', function () {
-                    legendControl.update(layer.name);
+                    legendControl.update(layer);
+                });
+
+                // Clear legend when layer is removed
+                layerObj.on('remove', function () {
+                    legendControl.update(null);
                 });
             });
 

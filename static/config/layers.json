@@ -15,10 +15,19 @@
 
     "additionalLayers": [
         {
-            "name": "Rules 1",
+            "name": "Snowscooter driving area",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Skuterbegrensning_Svalbard/MapServer",
+            "layers": "topp:states"
+        },
+
+        {
+            "name": "Boat landing sites",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Ilandstigningslokaliteter_Svalbard/MapServer",
             "layers": "topp:states"
         }
     ]
 }   
+
+
