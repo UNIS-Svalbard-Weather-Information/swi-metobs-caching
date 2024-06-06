@@ -6,6 +6,12 @@
     <title>Weather Station Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <!--<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0"></script>
+    <script src="https://unpkg.com/leaflet-polyline-color@1.0.0"></script> -->
+</head>
 </head>
 <body>
     <div id="menu">
@@ -15,19 +21,31 @@
     <div id="opacity-controls">
         <h3>Opacity Controls</h3>
     </div>
-    <div id="track-duration">
-        <h3>Track Duration</h3>
+    <div id="track-controls">
+        <h3>Track</h3>
+        <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
+            <option value="0">None</option>
             <option value="1">1 hour</option>
             <option value="3">3 hours</option>
             <option value="6">6 hours</option>
             <option value="12">12 hours</option>
             <option value="24">24 hours</option>
         </select>
+        <label for="variable-select-dropdown">Variable:</label>
+        <select id="variable-select-dropdown">
+            <option value="none">None</option>
+            <option value="airTemperature">Air Temperature</option>
+            <option value="seaSurfaceTemperature">Sea Surface Temperature</option>
+            <option value="windSpeed">Wind Speed</option>
+            <option value="windDirection">Wind Direction</option>
+            <option value="relativeHumidity">Relative Humidity</option>
+        </select>
     </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     <script>
         const layerConfigUrl = '{{ url_for("static", filename="config/layers.json") }}';

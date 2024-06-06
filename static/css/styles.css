@@ -41,8 +41,8 @@
     margin-top: 0;
 }
 
-/* Track duration styling */
-#track-duration {
+/* Track controls styling */
+#track-controls {
     width: 200px;
     position: absolute;
     top: 400px;
@@ -53,8 +53,18 @@
     z-index: 1000;
 }
 
-#track-duration h3 {
+#track-controls h3 {
     margin-top: 0;
+}
+
+#track-controls label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#track-controls select {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 /* Legend styling */

@@ -2,7 +2,13 @@
     {
         "id": "bard",
         "name": "MS Bard",
-        "netcdf_file": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBard/1min/2024/06/mobile_AWS_MSBard_Table_1min_20240601.nc"
+        "netcdf_file": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBard/1min/2024/06/mobile_AWS_MSBard_Table_1min_20240601.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed_corrected",
+            "windDirection": "wind_direction_corrected",
+            "relativeHumidity": "relative_humidity"
+        }
     }
-
 ]
