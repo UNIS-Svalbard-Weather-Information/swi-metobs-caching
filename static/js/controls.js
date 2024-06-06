@@ -2,7 +2,7 @@ function addOpacityControl(layerName, layerObj) {
     const opacityControls = document.getElementById('opacity-controls');
     const controlHtml = `
         <div class="opacity-control" id="opacity-${layerName}">
-            <label>${layerName}</label>
+            <label>${layerName}</label><br>
             <input type="range" min="0" max="100" value="100" onchange="updateLayerOpacity('${layerName}', this.value)">
         </div>
     `;

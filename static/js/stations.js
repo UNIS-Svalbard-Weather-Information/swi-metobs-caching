@@ -195,8 +195,9 @@ function createPopupContent(stationName, dataPoint) {
     const windDirectionLetter = getWindDirectionLetter(dataPoint.windDirection);
 
     return `
-        <strong>Boat: ${stationName}</strong><br>
-        Time: ${dateString}<br>
+        <strong>${stationName}</strong><br>
+        ${dateString}<br>
+        ----<br>
         Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>
         Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>
         Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>
@@ -223,9 +224,9 @@ function updateBoatMarker(stationId, data, variable) {
         map.removeLayer(boatMarkers[stationId]);
     }
 
-    const variableInfo = variable !== 'none' && data[variable] !== null ? `<br>${variable}: ${data[variable]}` : '';
+    const variableInfo = createPopupContent(stationId, data.latest);
     const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
-    boatMarker.bindPopup(`Boat: ${stationId}<br>Wind Speed: ${data.windSpeed} kts<br>Wind Direction: ${data.windDirection}°${variableInfo}`);
+    boatMarker.bindPopup(variableInfo);
     boatMarkers[stationId] = boatMarker;
 }
 
@@ -233,16 +234,19 @@ function updateWindMarker(stationId, data, windImagesUrl) {
     const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
     const windIcon = L.icon({
         iconUrl: iconUrl,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [48, 48], // Increase the size of the wind icon
+        iconAnchor: [24, 24]
     });
 
     if (windMarkers[stationId]) {
         map.removeLayer(windMarkers[stationId]);
     }
 
-    const windMarker = L.marker([data.lat, data.lon], { icon: windIcon }).addTo(map);
-    windMarker.bindPopup(`Wind Speed: ${data.windSpeed} kts<br>Wind Direction: ${data.windDirection}°`);
+    const windMarker = L.marker([data.lat, data.lon], { 
+        icon: windIcon,
+        rotationAngle: data.windDirection - 90 // Adjust rotation to point in the correct direction
+    }).addTo(map);
+    windMarker.bindPopup(createPopupContent(stationId, data.latest));
     windMarkers[stationId] = windMarker;
 }
 

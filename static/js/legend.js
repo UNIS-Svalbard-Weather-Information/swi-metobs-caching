@@ -36,13 +36,22 @@ function updateColorBar(variable, minValue, maxValue) {
         return;
     }
 
+    // Mapping of variables to their units
+    const variableUnits = {
+        "airTemperature": "Temperature [°C]",
+        "seaSurfaceTemperature": "Sea Surface Temp [°C]",
+        "windSpeed": "Wind Speed [m/s]",
+        "windDirection": "Wind Direction [°]",
+        "relativeHumidity": "Relative Humidity [%]"
+    };
+
     const colorBarDiv = L.DomUtil.create('div', 'info legend');
     const colorScale = getColorScale(variable, minValue, maxValue);
 
     const legend = d3.select(colorBarDiv)
         .append('svg')
-        .attr('width', 100)
-        .attr('height', 300);
+        .attr('width', 100)  // Increased width to accommodate rotated label
+        .attr('height', 350); // Increased height for the label
 
     const gradient = legend.append('defs')
         .append('linearGradient')
@@ -65,6 +74,7 @@ function updateColorBar(variable, minValue, maxValue) {
         .attr('stop-color', d => d.color);
 
     legend.append('rect')
+        .attr('x', 10)  // Shifted to the right to make space for the label
         .attr('width', 20)
         .attr('height', 300)
         .style('fill', 'url(#gradient)');
@@ -76,14 +86,31 @@ function updateColorBar(variable, minValue, maxValue) {
     const axis = d3.axisRight(axisScale)
         .ticks(5);
 
-    legend.append('g')
+    const axisGroup = legend.append('g')
         .attr('class', 'axis')
-        .attr('transform', 'translate(20, 0)')
+        .attr('transform', 'translate(30, 0)')  // Adjusted to align with the color bar
         .call(axis);
 
-    colorBar = L.control({ position: 'bottomright' });
+    // Increase the font size for the axis
+    axisGroup.selectAll('text')
+        .style('font-size', '14px');
+
+    // Adding rotated label for variable and unit
+    legend.append('text')
+        .attr('x', 60)  // Position to the right of the axis
+        .attr('y', 150)  // Middle of the color bar
+        .attr('transform', 'rotate(-90, 60, 150)')  // Rotate 90 degrees around the label position
+        .attr('dy', '.35em')
+        .attr('text-anchor', 'middle')
+        .style('font-size', '16px')  // Increase the font size for the label
+        .text(variableUnits[variable] || variable);
+
+    colorBar = L.control({ position: 'bottomleft' });
     colorBar.onAdd = function () {
         return colorBarDiv;
     };
     colorBar.addTo(map);
 }
+
+
+

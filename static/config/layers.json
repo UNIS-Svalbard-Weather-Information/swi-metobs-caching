@@ -26,6 +26,13 @@
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Ilandstigningslokaliteter_Svalbard/MapServer",
             "layers": "topp:states"
+        },
+
+        {
+            "name": "Walrus haulout sites",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/F_Walrus_Haulout_Sites_Svalbard/MapServer",
+            "layers": "topp:states"
         }
     ]
 }   

@@ -47,19 +47,20 @@ def process_netcdf_file(filepath, variables, duration):
                     data_point[key] = None
 
             # Filter points: Include point if it's the first one, or if it's 100m away from the last point
-            if last_point is None or haversine(last_point['lat'], last_point['lon'], data_point['lat'], data_point['lon']) >= 200:
+            if last_point is None or haversine(last_point['lat'], last_point['lon'], data_point['lat'], data_point['lon']) >= 100:
                 data_points.append(data_point)
                 last_point = data_point
 
         latest_data = data_points[-1]
         track = [{'lat': dp['lat'], 'lon': dp['lon'], 'variable': dp} for dp in data_points]
-        print(len(track))
+
         return {
             'lat': latest_data['lat'],
             'lon': latest_data['lon'],
             'windSpeed': latest_data['windSpeed'],
             'windDirection': latest_data['windDirection'],
-            'track': track
+            'track': track,
+            'latest': latest_data  # Add latest data for the popup
         }
     except Exception as e:
         print(f"Error processing NetCDF file: {e}")
