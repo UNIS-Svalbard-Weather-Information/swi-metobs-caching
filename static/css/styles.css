@@ -41,6 +41,22 @@
     margin-top: 0;
 }
 
+/* Track duration styling */
+#track-duration {
+    width: 200px;
+    position: absolute;
+    top: 400px;
+    left: 0;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+#track-duration h3 {
+    margin-top: 0;
+}
+
 /* Legend styling */
 .info.legend {
     background: white;

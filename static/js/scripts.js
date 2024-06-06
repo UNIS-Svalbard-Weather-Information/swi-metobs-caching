@@ -1,10 +1,11 @@
 let additionalLayers = {};
+let map;
 
 function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
-            const map = L.map('map').setView([0, 0], 2);
+            map = L.map('map').setView([0, 0], 2);
             const baseLayers = {};
             additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
@@ -113,15 +114,25 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
             fetch(mobileStationConfigUrl)
                 .then(response => response.json())
                 .then(mobileStations => {
+                    const durationSelect = document.getElementById('track-duration-select');
+                    durationSelect.addEventListener('change', () => {
+                        const duration = parseInt(durationSelect.value, 10);
+                        mobileStations.forEach(station => {
+                            fetchMobileStationData(station, map, windImagesUrl, duration);
+                        });
+                    });
+
+                    // Initial load with default duration (1 hour)
+                    const initialDuration = parseInt(durationSelect.value, 10);
                     mobileStations.forEach(station => {
-                        fetchMobileStationData(station, map, windImagesUrl);
+                        fetchMobileStationData(station, map, windImagesUrl, initialDuration);
                     });
                 });
         });
 }
 
-function fetchMobileStationData(station, map, windImagesUrl) {
-    fetch(`/api/mobile-station-data/${station.id}`)
+function fetchMobileStationData(station, map, windImagesUrl, duration) {
+    fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`)
         .then(response => response.json())
         .then(data => {
             const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);

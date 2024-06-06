@@ -15,6 +15,16 @@
     <div id="opacity-controls">
         <h3>Opacity Controls</h3>
     </div>
+    <div id="track-duration">
+        <h3>Track Duration</h3>
+        <select id="track-duration-select">
+            <option value="1">1 hour</option>
+            <option value="3">3 hours</option>
+            <option value="6">6 hours</option>
+            <option value="12">12 hours</option>
+            <option value="24">24 hours</option>
+        </select>
+    </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
@@ -22,8 +32,8 @@
     <script>
         const layerConfigUrl = '{{ url_for("static", filename="config/layers.json") }}';
         const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
-        const beaufortImagesUrl = '{{ url_for("static", filename="images/beaufort") }}';
-        loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl);
+        const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';
+        loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl);
     </script>
 </body>
 </html>
