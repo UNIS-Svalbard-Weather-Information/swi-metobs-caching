@@ -1,0 +1,26 @@
+#map {
+    height: 100vh;
+    width: calc(100% - 200px);
+    position: absolute;
+    right: 0;
+}
+
+#menu {
+    width: 200px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+#menu h3 {
+    margin-top: 0;
+}
+
+#menu ul {
+    list-style: none;
+    padding-left: 0;
+}
