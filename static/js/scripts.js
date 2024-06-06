@@ -1,6 +1,6 @@
 let additionalLayers = {};
 
-function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
+function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
@@ -114,17 +114,17 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
                 .then(response => response.json())
                 .then(mobileStations => {
                     mobileStations.forEach(station => {
-                        fetchMobileStationData(station, map, beaufortImagesUrl);
+                        fetchMobileStationData(station, map, windImagesUrl);
                     });
                 });
         });
 }
 
-function fetchMobileStationData(station, map, beaufortImagesUrl) {
+function fetchMobileStationData(station, map, windImagesUrl) {
     fetch(`/api/mobile-station-data/${station.id}`)
         .then(response => response.json())
         .then(data => {
-            const iconUrl = `${beaufortImagesUrl}/${data.windBeaufort}.png`;
+            const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
             const icon = L.icon({
                 iconUrl: iconUrl,
                 iconSize: [32, 32],
@@ -132,10 +132,16 @@ function fetchMobileStationData(station, map, beaufortImagesUrl) {
             });
 
             const mobileMarker = L.marker([data.lat, data.lon], { icon: icon }).addTo(map);
-            mobileMarker.bindPopup(`Boat: ${station.name}<br>Wind Speed: ${data.windSpeed} m/s<br>Wind Direction: ${data.windDirection}°`);
+            mobileMarker.bindPopup(`Boat: ${station.name}<br>Wind Speed: ${data.windSpeed} kts<br>Wind Direction: ${data.windDirection}°`);
 
             const polyline = L.polyline(data.track, { color: 'blue' }).addTo(map);
         });
+}
+
+function getWindSpeedIcon(basePath, windSpeed) {
+    const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
+    let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
+    return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
 }
 
 function addOpacityControl(layerName, layerObj) {
