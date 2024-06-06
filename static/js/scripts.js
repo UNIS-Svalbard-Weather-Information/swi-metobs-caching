@@ -1,10 +1,12 @@
+let additionalLayers = {};
+
 function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
             const map = L.map('map').setView([0, 0], 2);
             const baseLayers = {};
-            const additionalLayers = {};
+            additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
             const legendControl = L.control({ position: 'bottomright' });
 
@@ -95,14 +97,16 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, beaufortImagesUrl) {
                 additionalLayers[layer.name] = layerObj;
                 layerControl.addOverlay(layerObj, layer.name);
 
-                // Update legend when layer is added
+                // Update legend and add opacity control when layer is added
                 layerObj.on('add', function () {
                     legendControl.update(layer);
+                    addOpacityControl(layer.name, layerObj);
                 });
 
-                // Clear legend when layer is removed
+                // Clear legend and remove opacity control when layer is removed
                 layerObj.on('remove', function () {
                     legendControl.update(null);
+                    removeOpacityControl(layer.name);
                 });
             });
 
@@ -132,4 +136,29 @@ function fetchMobileStationData(station, map, beaufortImagesUrl) {
 
             const polyline = L.polyline(data.track, { color: 'blue' }).addTo(map);
         });
+}
+
+function addOpacityControl(layerName, layerObj) {
+    const opacityControls = document.getElementById('opacity-controls');
+    const controlHtml = `
+        <div class="opacity-control" id="opacity-${layerName}">
+            <label>${layerName}</label>
+            <input type="range" min="0" max="100" value="100" onchange="updateLayerOpacity('${layerName}', this.value)">
+        </div>
+    `;
+    opacityControls.insertAdjacentHTML('beforeend', controlHtml);
+}
+
+function removeOpacityControl(layerName) {
+    const control = document.getElementById(`opacity-${layerName}`);
+    if (control) {
+        control.remove();
+    }
+}
+
+function updateLayerOpacity(layerName, value) {
+    const layer = additionalLayers[layerName];
+    if (layer) {
+        layer.setOpacity(value / 100);
+    }
 }

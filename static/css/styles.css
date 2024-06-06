@@ -25,6 +25,22 @@
     padding-left: 0;
 }
 
+/* Opacity controls styling */
+#opacity-controls {
+    width: 200px;
+    position: absolute;
+    top: 200px;
+    left: 0;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+#opacity-controls h3 {
+    margin-top: 0;
+}
+
 /* Legend styling */
 .info.legend {
     background: white;
@@ -34,10 +50,7 @@
     z-index: 1000;
 }
 
-.info.legend i {
-    width: 18px;
-    height: 18px;
-    float: left;
-    margin-right: 8px;
-    opacity: 0.7;
+.info.legend img {
+    display: block;
+    margin-bottom: 5px;
 }
