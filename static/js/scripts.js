@@ -4,6 +4,7 @@ let trackLayers = {};
 let boatMarkers = {};
 let windMarkers = {};
 let colorBar;
+let mobileStations = {};
 
 function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
     fetch(layerConfigUrl)
@@ -120,7 +121,47 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
 
             fetch(mobileStationConfigUrl)
                 .then(response => response.json())
-                .then(mobileStations => {
+                .then(stations => {
+                    mobileStations = stations;
+                    const projectControls = document.getElementById('project-controls');
+                    const projects = {};
+
+                    stations.forEach(station => {
+                        const project = station.project || 'Uncategorized';
+                        if (!projects[project]) {
+                            projects[project] = [];
+                        }
+                        projects[project].push(station);
+                    });
+
+                    for (const project in projects) {
+                        const projectDiv = document.createElement('div');
+                        const projectLabel = document.createElement('label');
+                        projectLabel.textContent = project;
+                        projectDiv.appendChild(projectLabel);
+
+                        projects[project].forEach(station => {
+                            const stationDiv = document.createElement('div');
+                            const stationCheckbox = document.createElement('input');
+                            stationCheckbox.type = 'checkbox';
+                            stationCheckbox.id = `station-${station.id}`;
+                            stationCheckbox.checked = true;
+                            stationCheckbox.addEventListener('change', () => {
+                                toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
+                            });
+
+                            const stationLabel = document.createElement('label');
+                            stationLabel.setAttribute('for', `station-${station.id}`);
+                            stationLabel.textContent = station.name;
+
+                            stationDiv.appendChild(stationCheckbox);
+                            stationDiv.appendChild(stationLabel);
+                            projectDiv.appendChild(stationDiv);
+                        });
+
+                        projectControls.appendChild(projectDiv);
+                    }
+
                     const durationSelect = document.getElementById('track-duration-select');
                     const variableSelect = document.getElementById('variable-select-dropdown');
                     
@@ -153,6 +194,31 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
 function fetchMobileStationData(station, duration, variable) {
     return fetch(`/api/mobile-station-data/${station.id}?duration=${duration}&variable=${variable}`)
         .then(response => response.json());
+}
+
+function toggleStation(stationId, isVisible, windImagesUrl) {
+    if (!isVisible) {
+        if (trackLayers[stationId]) {
+            trackLayers[stationId].forEach(layer => map.removeLayer(layer));
+            delete trackLayers[stationId];
+        }
+        if (boatMarkers[stationId]) {
+            map.removeLayer(boatMarkers[stationId]);
+            delete boatMarkers[stationId];
+        }
+        if (windMarkers[stationId]) {
+            map.removeLayer(windMarkers[stationId]);
+            delete windMarkers[stationId];
+        }
+    } else {
+        const durationSelect = document.getElementById('track-duration-select');
+        const variableSelect = document.getElementById('variable-select-dropdown');
+        const duration = parseInt(durationSelect.value, 10);
+        const variable = variableSelect.value;
+
+        const station = mobileStations.find(s => s.id === stationId);
+        updateMobileStationData(station, duration, windImagesUrl, variable);
+    }
 }
 
 function updateMobileStationData(station, duration, windImagesUrl, variable) {

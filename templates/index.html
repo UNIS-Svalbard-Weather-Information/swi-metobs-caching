@@ -6,22 +6,15 @@
     <title>Weather Station Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <!--<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0"></script>
-    <script src="https://unpkg.com/leaflet-polyline-color@1.0.0"></script> -->
-</head>
 </head>
 <body>
     <div id="menu">
         <h3>Layers</h3>
         <ul id="layerList"></ul>
-    </div>
-    <div id="opacity-controls">
-        <h3>Opacity Controls</h3>
-    </div>
-    <div id="track-controls">
+        <h3>Stations</h3>
+        <div id="station-controls">
+            <div id="project-controls"></div>
+        </div>
         <h3>Track</h3>
         <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
@@ -41,6 +34,9 @@
             <option value="windDirection">Wind Direction</option>
             <option value="relativeHumidity">Relative Humidity</option>
         </select>
+    </div>
+    <div id="opacity-controls">
+        <h3>Opacity Controls</h3>
     </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

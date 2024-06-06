@@ -1,12 +1,12 @@
 #map {
     height: 100vh;
-    width: calc(100% - 200px);
+    width: calc(100% - 300px);
     position: absolute;
     right: 0;
 }
 
 #menu {
-    width: 200px;
+    width: 300px;
     position: absolute;
     top: 0;
     left: 0;
@@ -14,6 +14,8 @@
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     z-index: 1000;
+    overflow-y: auto;
+    max-height: 100vh;
 }
 
 #menu h3 {
@@ -27,9 +29,9 @@
 
 /* Opacity controls styling */
 #opacity-controls {
-    width: 200px;
+    width: 300px;
     position: absolute;
-    top: 200px;
+    top: 600px;
     left: 0;
     background: white;
     padding: 10px;
@@ -39,32 +41,6 @@
 
 #opacity-controls h3 {
     margin-top: 0;
-}
-
-/* Track controls styling */
-#track-controls {
-    width: 200px;
-    position: absolute;
-    top: 400px;
-    left: 0;
-    background: white;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    z-index: 1000;
-}
-
-#track-controls h3 {
-    margin-top: 0;
-}
-
-#track-controls label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-#track-controls select {
-    width: 100%;
-    margin-bottom: 10px;
 }
 
 /* Legend styling */
@@ -79,4 +55,16 @@
 .info.legend img {
     display: block;
     margin-bottom: 5px;
+}
+
+#station-controls label {
+    font-weight: bold;
+}
+
+#station-controls div {
+    margin-bottom: 10px;
+}
+
+#station-controls input[type="checkbox"] {
+    margin-right: 5px;
 }
