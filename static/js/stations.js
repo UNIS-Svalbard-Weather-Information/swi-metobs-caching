@@ -166,7 +166,7 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
                     segments.push(segment);
 
                     // Add popups to each point
-                    L.circleMarker(latlngs[i], {
+                    const dot = L.circleMarker(latlngs[i], {
                         radius: 5,
                         color: colorScale(values[i]),
                         fillColor: colorScale(values[i]),
@@ -175,17 +175,19 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
                     .bindPopup(createPopupContent(station.name, data.track[i].variable))
                     .addTo(map);
 
+                    segments.push(dot)
+
                 }
 
                 // Add popup to the last point
-                L.circleMarker(latlngs[latlngs.length - 1], {
-                    radius: 5,
-                    color: colorScale(values[latlngs.length - 1]),
-                    fillColor: colorScale(values[latlngs.length - 1]),
-                    fillOpacity: 0.9
-                })
-                .bindPopup(createPopupContent(station.name, data.track[latlngs.length - 1].variable))
-                .addTo(map);
+                //L.circleMarker(latlngs[latlngs.length - 1], {
+                //    radius: 5,
+                //    color: colorScale(values[latlngs.length - 1]),
+                //    fillColor: colorScale(values[latlngs.length - 1]),
+                //    fillOpacity: 0.9
+                //})
+                //.bindPopup(createPopupContent(station.name, data.track[latlngs.length - 1].variable))
+                //.addTo(map);
 
                 trackLayers[station.id] = segments;
                 updateColorBar(variable, extendedMinValue, extendedMaxValue);
