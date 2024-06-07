@@ -39,6 +39,8 @@ function loadStations(mobileStationConfigUrl, windImagesUrl) {
                     stationLabel.setAttribute('for', `station-${station.id}`);
                     stationLabel.textContent = station.name;
 
+                    
+
                     stationDiv.appendChild(stationCheckbox);
                     stationDiv.appendChild(stationLabel);
                     projectDiv.appendChild(stationDiv);
@@ -129,7 +131,7 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
             .then(data => {
                 if (data) {
                     updateBoatMarker(station.id, data, variable);
-                    updateWindMarker(station.id, data, windImagesUrl);
+                    updateWindMarker(station.id, station.name, data, windImagesUrl);
                 }
             });
         return;
@@ -139,7 +141,7 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
         .then(data => {
             if (data) {
                 updateBoatMarker(station.id, data, variable);
-                updateWindMarker(station.id, data, windImagesUrl);
+                updateWindMarker(station.id, station.name, data, windImagesUrl);
 
                 const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
                 const values = data.track.map(dp => dp.variable[variable]);
@@ -171,6 +173,7 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
                     })
                     .bindPopup(createPopupContent(station.name, data.track[i].variable))
                     .addTo(map);
+
                 }
 
                 // Add popup to the last point
@@ -230,7 +233,7 @@ function updateBoatMarker(stationId, data, variable) {
     boatMarkers[stationId] = boatMarker;
 }
 
-function updateWindMarker(stationId, data, windImagesUrl) {
+function updateWindMarker(stationId, stationName, data, windImagesUrl) {
     const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
     const windIcon = L.icon({
         iconUrl: iconUrl,
@@ -246,7 +249,7 @@ function updateWindMarker(stationId, data, windImagesUrl) {
         icon: windIcon,
         rotationAngle: data.windDirection - 90 // Adjust rotation to point in the correct direction
     }).addTo(map);
-    windMarker.bindPopup(createPopupContent(stationId, data.latest));
+    windMarker.bindPopup(createPopupContent(stationName, data.latest));
     windMarkers[stationId] = windMarker;
 }
 
