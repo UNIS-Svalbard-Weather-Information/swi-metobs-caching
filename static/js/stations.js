@@ -95,6 +95,7 @@ function fetchMobileStationData(station, duration) {
 }
 
 function toggleStation(stationId, isVisible, windImagesUrl) {
+    console.log(trackLayers[stationId])
     if (!isVisible) {
         if (trackLayers[stationId]) {
             trackLayers[stationId].forEach(layer => map.removeLayer(layer));
@@ -227,7 +228,7 @@ function updateBoatMarker(station, data, variable) {
         map.removeLayer(boatMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station.id, data.latest);
+    const variableInfo = createPopupContent(station.name, data.latest);
     const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
     boatMarker.bindPopup(variableInfo);
     boatMarkers[station.id] = boatMarker;
