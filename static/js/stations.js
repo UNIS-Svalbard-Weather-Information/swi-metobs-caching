@@ -130,8 +130,8 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
         fetchMobileStationData(station, duration)
             .then(data => {
                 if (data) {
-                    updateBoatMarker(station.id, data, variable);
-                    updateWindMarker(station.id, station.name, data, windImagesUrl);
+                    updateBoatMarker(station, data, variable);
+                    updateWindMarker(station, data, windImagesUrl);
                 }
             });
         return;
@@ -140,8 +140,8 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
     fetchMobileStationData(station, duration)
         .then(data => {
             if (data) {
-                updateBoatMarker(station.id, data, variable);
-                updateWindMarker(station.id, station.name, data, windImagesUrl);
+                updateBoatMarker(station, data, variable);
+                updateWindMarker(station, data, windImagesUrl);
 
                 const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
                 const values = data.track.map(dp => dp.variable[variable]);
@@ -215,42 +215,51 @@ function getWindDirectionLetter(degrees) {
     return directions[index];
 }
 
-function updateBoatMarker(stationId, data, variable) {
-    const boatIconUrl = '/static/images/boat_icon.png';
+function updateBoatMarker(station, data, variable) {
+    //const boatIconUrl = '/static/images/boat_icon.png';
     const boatIcon = L.icon({
-        iconUrl: boatIconUrl,
+        iconUrl: station.icon,
         iconSize: [32, 32],
         iconAnchor: [16, 16]
     });
 
-    if (boatMarkers[stationId]) {
-        map.removeLayer(boatMarkers[stationId]);
+    if (boatMarkers[station.id]) {
+        map.removeLayer(boatMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(stationId, data.latest);
+    const variableInfo = createPopupContent(station.id, data.latest);
     const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
     boatMarker.bindPopup(variableInfo);
-    boatMarkers[stationId] = boatMarker;
+    boatMarkers[station.id] = boatMarker;
 }
 
-function updateWindMarker(stationId, stationName, data, windImagesUrl) {
+function updateWindMarker(station, data, windImagesUrl) {
     const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
-    const windIcon = L.icon({
-        iconUrl: iconUrl,
-        iconSize: [48, 48], // Increase the size of the wind icon
-        iconAnchor: [24, 24]
-    });
+    //const windIcon = L.icon({
+    //    iconUrl: iconUrl,
+    //    iconSize: [48, 48], // Increase the size of the wind icon
+    //    iconAnchor: [24, 24]
+    //});
 
-    if (windMarkers[stationId]) {
-        map.removeLayer(windMarkers[stationId]);
+    var windRotatedIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `<img src="${iconUrl}" class="rotated-icon" style="transform: rotate(${data.windDirection - 90}deg);" />`,
+        iconSize: [50, 50], // size of the icon
+        iconAnchor: [25, 25] // point of the icon which will correspond to marker's location
+      });
+  
+      //L.marker([data.lat, data.lon], { icon: rotatedIcon }).addTo(map);
+
+    if (windMarkers[station.id]) {
+        map.removeLayer(windMarkers[station.id]);
     }
 
     const windMarker = L.marker([data.lat, data.lon], { 
-        icon: windIcon,
-        rotationAngle: data.windDirection - 90 // Adjust rotation to point in the correct direction
+        icon: windRotatedIcon,
     }).addTo(map);
-    windMarker.bindPopup(createPopupContent(stationName, data.latest));
-    windMarkers[stationId] = windMarker;
+
+    windMarker.bindPopup(createPopupContent(station.name, data.latest));
+    windMarkers[station.id] = windMarker;
 }
 
 function getWindSpeedIcon(basePath, windSpeed) {

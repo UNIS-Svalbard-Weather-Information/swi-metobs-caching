@@ -81,3 +81,8 @@
     overflow-y: auto;
     max-height: 100vh;
 }
+
+
+.rotated-icon {
+    transform-origin: center;
+  }
