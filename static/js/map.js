@@ -9,7 +9,7 @@ const defaultExtent = {
     zoom: 8 
 };
 
-function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
+function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
@@ -89,6 +89,6 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl) {
                 });
             });
 
-            loadStations(mobileStationConfigUrl, windImagesUrl);
+            loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
         });
 }

@@ -1,83 +1,98 @@
 let trackLayers = {};
 let boatMarkers = {};
+let fixedStationMarkers = {};
 let windMarkers = {};
 let mobileStations = {};
+let fixedStations = {};
 
-function loadStations(mobileStationConfigUrl, windImagesUrl) {
-    fetch(mobileStationConfigUrl)
-        .then(response => response.json())
-        .then(stations => {
-            mobileStations = stations;
-            const projectControls = document.getElementById('project-controls');
-            const projects = {};
+function loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
+    Promise.all([
+        fetch(mobileStationConfigUrl).then(response => response.json()),
+        fetch(fixedStationConfigUrl).then(response => response.json())
+    ])
+    .then(([mobileStationsData, fixedStationsData]) => {
+        mobileStations = mobileStationsData;
+        fixedStations = fixedStationsData;
 
-            stations.forEach(station => {
-                const project = station.project || 'Uncategorized';
-                if (!projects[project]) {
-                    projects[project] = [];
-                }
-                projects[project].push(station);
-            });
+        const projectControls = document.getElementById('project-controls');
+        const projects = {};
 
-            for (const project in projects) {
-                const projectDiv = document.createElement('div');
-                const projectLabel = document.createElement('label');
-                projectLabel.textContent = project;
-                projectDiv.appendChild(projectLabel);
+        const allStations = [...mobileStations, ...fixedStations];
 
-                projects[project].forEach(station => {
-                    const stationDiv = document.createElement('div');
-                    const stationCheckbox = document.createElement('input');
-                    stationCheckbox.type = 'checkbox';
-                    stationCheckbox.id = `station-${station.id}`;
-                    stationCheckbox.checked = true;
-                    stationCheckbox.addEventListener('change', () => {
-                        toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
-                    });
-
-                    const stationLabel = document.createElement('label');
-                    stationLabel.setAttribute('for', `station-${station.id}`);
-                    stationLabel.textContent = station.name;
-
-                    
-
-                    stationDiv.appendChild(stationCheckbox);
-                    stationDiv.appendChild(stationLabel);
-                    projectDiv.appendChild(stationDiv);
-                });
-
-                projectControls.appendChild(projectDiv);
+        allStations.forEach(station => {
+            const project = station.project || 'Uncategorized';
+            if (!projects[project]) {
+                projects[project] = [];
             }
-
-            const durationSelect = document.getElementById('track-duration-select');
-            const variableSelect = document.getElementById('variable-select-dropdown');
-            
-            durationSelect.addEventListener('change', () => {
-                const duration = parseInt(durationSelect.value, 10);
-                const variable = variableSelect.value;
-                mobileStations.forEach(station => {
-                    updateMobileStationData(station, duration, windImagesUrl, variable);
-                });
-            });
-
-            variableSelect.addEventListener('change', () => {
-                const duration = parseInt(durationSelect.value, 10);
-                const variable = variableSelect.value;
-                mobileStations.forEach(station => {
-                    updateMobileStationData(station, duration, windImagesUrl, variable);
-                });
-            });
-
-            // Initial load with default duration (1 hour) and variable (none)
-            const initialDuration = parseInt(durationSelect.value, 10);
-            const initialVariable = variableSelect.value;
-            mobileStations.forEach(station => {
-                updateMobileStationData(station, initialDuration, windImagesUrl, initialVariable);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading stations:', error);
+            projects[project].push(station);
         });
+
+        for (const project in projects) {
+            const projectDiv = document.createElement('div');
+            const projectLabel = document.createElement('h3');
+            projectLabel.textContent = project;
+            projectDiv.appendChild(projectLabel);
+
+            projects[project].forEach(station => {
+                const stationDiv = document.createElement('div');
+                const stationCheckbox = document.createElement('input');
+                stationCheckbox.type = 'checkbox';
+                stationCheckbox.id = `station-${station.id}`;
+                stationCheckbox.checked = true;
+                stationCheckbox.addEventListener('change', () => {
+                    toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
+                });
+
+                const stationLabel = document.createElement('label');
+                stationLabel.setAttribute('for', `station-${station.id}`);
+                stationLabel.textContent = station.name;
+
+                stationDiv.appendChild(stationCheckbox);
+                stationDiv.appendChild(stationLabel);
+                projectDiv.appendChild(stationDiv);
+            });
+
+            projectControls.appendChild(projectDiv);
+        }
+
+        const durationSelect = document.getElementById('track-duration-select');
+        const variableSelect = document.getElementById('variable-select-dropdown');
+        
+        durationSelect.addEventListener('change', () => {
+            const duration = parseInt(durationSelect.value, 10);
+            const variable = variableSelect.value;
+            mobileStations.forEach(station => {
+                updateMobileStationData(station, duration, windImagesUrl, variable);
+            });
+            fixedStations.forEach(station => {
+                updateFixedStationData(station, windImagesUrl);
+            });
+        });
+
+        variableSelect.addEventListener('change', () => {
+            const duration = parseInt(durationSelect.value, 10);
+            const variable = variableSelect.value;
+            mobileStations.forEach(station => {
+                updateMobileStationData(station, duration, windImagesUrl, variable);
+            });
+            fixedStations.forEach(station => {
+                updateFixedStationData(station, duration, windImagesUrl, variable);
+            });
+        });
+
+        // Initial load with default duration (1 hour) and variable (none)
+        const initialDuration = parseInt(durationSelect.value, 10);
+        const initialVariable = variableSelect.value;
+        mobileStations.forEach(station => {
+            updateMobileStationData(station, initialDuration, windImagesUrl, initialVariable);
+        });
+        fixedStations.forEach(station => {
+            updateFixedStationData(station, initialDuration, windImagesUrl, initialVariable);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading stations:', error);
+    });
 }
 
 function fetchMobileStationData(station, duration) {
@@ -195,6 +210,10 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
         });
 }
 
+function updateFixedStationData(station, windImagesUrl) {
+    updateFixedStationMarker(station, null)
+}
+
 function createPopupContent(stationName, dataPoint) {
     const date = new Date(dataPoint.time * 1000);
     const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
@@ -220,8 +239,10 @@ function getWindDirectionLetter(degrees) {
 
 function updateBoatMarker(station, data, variable) {
     //const boatIconUrl = '/static/images/boat_icon.png';
-    const boatIcon = L.icon({
-        iconUrl: station.icon,
+    const boatIcon = L.divIcon({
+        className: 'boat-marker',
+        //iconUrl: station.icon,
+        html: `<img src="${station.icon}" width="32" height="32"/>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16]
     });
@@ -236,6 +257,25 @@ function updateBoatMarker(station, data, variable) {
     boatMarkers[station.id] = boatMarker;
 }
 
+
+function updateFixedStationMarker(station, data) {
+    //const boatIconUrl = '/static/images/boat_icon.png';
+    const Icon = L.icon({
+        iconUrl: station.icon,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+
+    if (fixedStationMarkers[station.id]) {
+        map.removeLayer(boatMarkers[station.id]);
+    }
+
+    //const variableInfo = createPopupContent(station.name, data.latest);
+    const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
+    //Marker.bindPopup(variableInfo);
+    fixedStationMarkers[station.id] = Marker;
+}
+
 function updateWindMarker(station, data, windImagesUrl) {
     const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
     //const windIcon = L.icon({
@@ -246,9 +286,9 @@ function updateWindMarker(station, data, windImagesUrl) {
 
     var windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" class="rotated-icon" style="transform: rotate(${data.windDirection - 90}deg);" />`,
-        iconSize: [50, 50], // size of the icon
-        iconAnchor: [25, 25] // point of the icon which will correspond to marker's location
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection - 90}deg);" />`,
+        iconSize: [80, 80], // size of the icon
+        iconAnchor: [40, 40] // point of the icon which will correspond to marker's location
       });
   
       //L.marker([data.lat, data.lon], { icon: rotatedIcon }).addTo(map);

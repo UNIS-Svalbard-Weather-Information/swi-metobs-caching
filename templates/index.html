@@ -16,7 +16,7 @@
         <div id="station-controls">
             <div id="project-controls"></div>
         </div>
-        <h3>Track</h3>
+        <h2>Track</h2>
         <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
             <option value="0">None</option>
@@ -36,9 +36,10 @@
             <option value="windDirection">Wind Direction</option>
             <option value="relativeHumidity">Relative Humidity</option>
         </select>
-    </div>
-    <div id="opacity-controls">
-        <h2>Opacity Controls</h2>
+    <!--</div>-->
+        <div id="opacity-controls">
+            <h2>Opacity Controls</h2>
+        </div>
     </div>
 
     <div id="credits">
@@ -56,8 +57,9 @@
     <script>
         const layerConfigUrl = '{{ url_for("static", filename="config/layers.json") }}';
         const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
+        const fixedStationConfigUrl = '{{ url_for("static", filename="config/fixed_stations.json") }}';
         const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';
-        loadMap(layerConfigUrl, mobileStationConfigUrl, windImagesUrl);
+        loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
     </script>
 </body>
 </html>
