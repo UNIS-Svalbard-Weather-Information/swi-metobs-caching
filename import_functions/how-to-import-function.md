@@ -1,7 +1,3 @@
-Sure, here is the Markdown documentation as plain text that you can easily copy and paste:
-
----
-
 # `netcdf_boat` Function Documentation
 
 The `netcdf_boat` function processes a NetCDF file to extract boat data over a specified duration. Users can create their own function to process more exotic data as long as they adhere to the input and output criteria described below.
