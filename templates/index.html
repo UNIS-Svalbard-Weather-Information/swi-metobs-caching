@@ -75,7 +75,10 @@
         const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
         const fixedStationConfigUrl = '{{ url_for("static", filename="config/fixed_stations.json") }}';
         const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';
-        loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+        //loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+        });
     </script>
 </body>
 </html>

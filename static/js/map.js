@@ -1,5 +1,6 @@
 let additionalLayers = {};
 let map;
+let drawnItems;
 let colorBar;
 
 // Define default extent (latitude, longitude, zoom level)
@@ -95,33 +96,13 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             initializeLeafletDraw();
 
             // Add event listener for GPX file upload
-            document.getElementById('upload-gpx').addEventListener('change', function (event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const gpxData = e.target.result;
-                        const gpxLayer = new L.GPX(gpxData, {
-                            async: true
-                        }).on('loaded', function (e) {
-                            const geojson = gpxLayer.toGeoJSON();
-                            L.geoJSON(geojson, {
-                                onEachFeature: function (feature, layer) {
-                                    drawnItems.addLayer(layer);
-                                }
-                            });
-                            map.fitBounds(e.target.getBounds());
-                        }).addTo(map);
-                    };
-                    reader.readAsText(file);
-                }
-            });
+            document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
 }
 
 function initializeLeafletDraw() {
     // Feature Group to store editable layers
-    const drawnItems = new L.FeatureGroup();
+    drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
     // Leaflet Draw control
@@ -131,11 +112,11 @@ function initializeLeafletDraw() {
         },
         draw: {
             polyline: true,
-            polygon: false,
-            circle: false,
-            rectangle: false,
+            polygon: true,
+            circle: true,
+            rectangle: true,
             marker: true,
-            circlemarker: false
+            circlemarker: true
         }
     });
     map.addControl(drawControl);
@@ -150,6 +131,47 @@ function initializeLeafletDraw() {
     document.getElementById('download-gpx').addEventListener('click', function () {
         downloadGPX(drawnItems);
     });
+}
+
+function handleGPXUpload(event) {
+    const files = event.target.files;
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const gpxData = e.target.result;
+            const gpxLayer = new L.GPX(gpxData, {
+                async: true
+            }).on('loaded', function (e) {
+                const geojson = gpxLayer.toGeoJSON();
+                const filteredGeojson = filterGeoJSON(geojson);
+                
+                // Clear existing layers
+                drawnItems.clearLayers();
+                
+                // Add the filtered GeoJSON data to the drawnItems layer group
+                L.geoJSON(filteredGeojson, {
+                    onEachFeature: function (feature, layer) {
+                        drawnItems.addLayer(layer);
+                    }
+                });
+                
+                // Adjust the map view to fit the bounds of the new data
+                const bounds = L.geoJSON(filteredGeojson).getBounds();
+                map.fitBounds(bounds);
+            });
+        };
+        reader.readAsText(file);
+    });
+}
+
+function filterGeoJSON(geojson) {
+    // Filter the GeoJSON to include only polylines and points
+    return {
+        type: 'FeatureCollection',
+        features: geojson.features.filter(feature => 
+            feature.geometry.type === 'LineString' || feature.geometry.type === 'Point'
+        )
+    };
 }
 
 function downloadGPX(layerGroup) {
