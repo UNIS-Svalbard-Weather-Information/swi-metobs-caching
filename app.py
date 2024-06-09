@@ -1,7 +1,5 @@
 from flask import Flask, jsonify, render_template, request
-import netCDF4 as nc
 import json
-import numpy as np
 import json
 import importlib
 import sys
