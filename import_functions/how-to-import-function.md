@@ -35,6 +35,9 @@ def import_function(url, variables, duration, station_id):
 
 ## Outputs
 
+>[!WARNING] 
+>The output data should be in basic python data type such as float, int, string or list in order to be processed later by jsonify when handeling API call.
+
 ### `data_ready`
 - **Type**: `dict`
 - **Description**: The processed data including the latest location, wind information, and track history. The structure of the output dictionary is as follows:
