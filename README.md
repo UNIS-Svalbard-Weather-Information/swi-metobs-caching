@@ -1,6 +1,3 @@
-Sure! Here is the updated README file with the directory structure included:
-
-```markdown
 # UNIS Svalbard Weather Information
 
 UNIS Svalbard Weather Information (SWI) is an application to gather the data coming from different weather stations across the archipelago in order to have an overview of the weather conditions.
@@ -186,4 +183,3 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
-```
