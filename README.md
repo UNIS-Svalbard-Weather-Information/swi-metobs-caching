@@ -148,7 +148,7 @@ The application will be accessible at `http://127.0.0.1:5000/`.
 
 ## Import Functions
 
-The import functions used to fetch and process data are located in the `import_functions` folder. Each function is documented within its respective module and a general documentation to help to create `import_function` dedicated to certain sources of data is availble [how-to-import-function][/import_functions/how-to-import-function.md]
+The import functions used to fetch and process data are located in the `import_functions` folder. Each function is documented within its respective module and a general documentation to help to create `import_function` dedicated to certain sources of data is availble [how-to-import-function](/import_functions/how-to-import-function.md)
 
 ## Directory Structure
 
