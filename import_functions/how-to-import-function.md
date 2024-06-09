@@ -1,11 +1,11 @@
-# `netcdf_boat` Function Documentation
+# `import_function` Function Documentation
 
-The `netcdf_boat` function processes a NetCDF file to extract boat data over a specified duration. Users can create their own function to process more exotic data as long as they adhere to the input and output criteria described below.
+The `import_function` function processes data source to extract weather data over a specified duration. Users can create their own function to process more exotic data as long as they adhere to the input and output criteria described below.
 
 ## Function Signature
 
 ```python
-def netcdf_boat(url, variables, duration, station_id):
+def import_function(url, variables, duration, station_id):
 ```
 
 ## Inputs
@@ -22,6 +22,8 @@ def netcdf_boat(url, variables, duration, station_id):
   - `windSpeed`: The NetCDF variable name for wind speed.
   - `windDirection`: The NetCDF variable name for wind direction.
   - `relativeHumidity`: The NetCDF variable name for relative humidity.
+
+  In case a variable is not in use, the field in the input should be `None`.
 
 ### `duration`
 - **Type**: `int`
@@ -103,4 +105,5 @@ station_id = "station_123"
 
 ## Usage
 
-Users can create their own function to process different types of data by following the same input and output structure. This allows for flexibility in handling various data sources while maintaining consistency in the processed output format.
+- Users can create their own function to process different types of data by following the same input and output structure. This allows for flexibility in handling various data sources while maintaining consistency in the processed output format.
+- The import function should be linked in the configuration file of the station concerned by the function.
