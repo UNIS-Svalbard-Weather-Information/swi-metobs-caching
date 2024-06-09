@@ -46,7 +46,19 @@ def get_mobile_station_data(station_id):
 
 @app.route('/api/fixed-station-data/<station_id>')
 def get_fixed_station_data(station_id):
-    return jsonify({'error': 'Internal server error'}), 500
+    try:
+        duration = int(request.args.get('duration', 1))
+        with open('static/config/fixed_stations.json') as f:
+            stations = json.load(f)
+            station = next((s for s in stations if s['id'] == station_id), None)
+            if not station:
+                return jsonify({'error': 'Station not found'}), 404
+
+        data = get_data(station['import_function'], station['url'], station['variables'], duration, station['id'])
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error retrieving station data: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

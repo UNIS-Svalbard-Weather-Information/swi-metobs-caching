@@ -13,7 +13,28 @@
         },
         "icon": "/static/images/lighthouse.png",
         "lat": 78.38166,
-        "lon": 14.753
+        "lon": 14.753,
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+
+    },
+
+
+    {
+        "id": "daudmannsodden",
+        "name": "Daudmannsodden",
+        "project": "IWIN Lighthouse",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Daudmannsodden/10min/%Y/%m/lighthouse_AWS_Daudmannsodden_Table_10min_%Y%m%d.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/lighthouse.png",
+        "lat": 78.21056,
+        "lon": 12.98685,
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
 
     }
 ]
