@@ -90,5 +90,78 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             });
 
             loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+
+            // Initialize Leaflet Draw
+            initializeLeafletDraw();
+
+            // Add event listener for GPX file upload
+            document.getElementById('upload-gpx').addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const gpxData = e.target.result;
+                        const gpxLayer = new L.GPX(gpxData, {
+                            async: true
+                        }).on('loaded', function (e) {
+                            const geojson = gpxLayer.toGeoJSON();
+                            L.geoJSON(geojson, {
+                                onEachFeature: function (feature, layer) {
+                                    drawnItems.addLayer(layer);
+                                }
+                            });
+                            map.fitBounds(e.target.getBounds());
+                        }).addTo(map);
+                    };
+                    reader.readAsText(file);
+                }
+            });
         });
+}
+
+function initializeLeafletDraw() {
+    // Feature Group to store editable layers
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Leaflet Draw control
+    const drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            polyline: true,
+            polygon: false,
+            circle: false,
+            rectangle: false,
+            marker: true,
+            circlemarker: false
+        }
+    });
+    map.addControl(drawControl);
+
+    // Event listener for when a new layer is created
+    map.on(L.Draw.Event.CREATED, function (event) {
+        const layer = event.layer;
+        drawnItems.addLayer(layer);
+    });
+
+    // Add download button event listener
+    document.getElementById('download-gpx').addEventListener('click', function () {
+        downloadGPX(drawnItems);
+    });
+}
+
+function downloadGPX(layerGroup) {
+    const geojson = layerGroup.toGeoJSON();
+    const gpx = togpx(geojson);
+    
+    const blob = new Blob([gpx], { type: 'application/gpx+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'map-drawings.gpx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }

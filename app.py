@@ -20,7 +20,7 @@ Routes:
     /api/fixed-station-data/<station_id>
 """
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 import netCDF4 as nc
 import json
 import numpy as np
@@ -129,6 +129,11 @@ def get_fixed_station_data(station_id):
     except Exception as e:
         print(f"Error retrieving station data: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/libs/<path:filename>')
+def serve_libs(filename):
+    return send_from_directory('libs', filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
