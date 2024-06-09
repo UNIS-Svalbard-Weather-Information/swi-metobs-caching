@@ -76,7 +76,7 @@ def netcdf_boat(url, variables, duration, station_id):
 
             latest_data = data_points[-1]
             track = [{'lat': dp['lat'], 'lon': dp['lon'], 'variable': dp} for dp in data_points]
-            print(track)
+            #print(track)
 
             data_ready =  {
                 'lat': latest_data['lat'],
