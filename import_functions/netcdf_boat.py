@@ -80,7 +80,8 @@ def netcdf_boat(url, variables, duration, station_id):
         else:
             data_points = []
             last_point = None
-            for i in range(len(times)):
+            #for i in range(len(times)):
+            for i in range(len(times) - 1, -1, -1): #follow the list backward. So the distance calculation will keep the more recent data.
                 try:
                     if not mask[i]:
                         continue
@@ -108,7 +109,7 @@ def netcdf_boat(url, variables, duration, station_id):
                 except:
                     pass
 
-            latest_data = data_points[-1]
+            latest_data = data_points[0]
             track = [{'lat': dp['lat'], 'lon': dp['lon'], 'variable': dp} for dp in data_points]
 
             data_ready =  {
