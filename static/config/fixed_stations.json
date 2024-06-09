@@ -3,7 +3,7 @@
         "id": "bohemanneset",
         "name": "Bohemanneset",
         "project": "IWIN Lighthouse",
-        "netcdf_file": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/2024/06/lighthouse_AWS_Bohemanneset_Table_10min_20240607.nc.html",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/2024/06/lighthouse_AWS_Bohemanneset_Table_10min_20240607.nc.html",
         "variables": {
             "airTemperature": "temperature",
             "seaSurfaceTemperature": null,
