@@ -168,7 +168,7 @@ The import functions used to fetch and process data are located in the `import_f
 ```
 
 >[!WARNING] 
->The folder data is required in order to store cached data file to reduce the calculation time on the server.
+>The folder ```data``` is required in order to store cached data file to reduce the calculation time on the server.
 
 ## Contributing
 
