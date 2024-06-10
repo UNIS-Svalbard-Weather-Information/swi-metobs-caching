@@ -105,18 +105,45 @@ function initializeLeafletDraw() {
     drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
-    // Leaflet Draw control
+    // Leaflet Draw control with custom feature colors
     const drawControl = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems
         },
         draw: {
-            polyline: true,
-            polygon: true,
-            circle: true,
-            rectangle: true,
-            marker: true,
-            circlemarker: true
+            polyline: {
+                shapeOptions: {
+                    color: '#FF0000', // Red color
+                    weight: 4
+                }
+            },
+            polygon: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            circle: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            rectangle: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            marker: {
+                icon: L.icon({
+                    iconUrl: 'static/images/map_drawing_element/pin.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            },
+            circlemarker: {
+                color: '#FF0000' // Red color
+            }
         }
     });
     map.addControl(drawControl);
@@ -125,12 +152,51 @@ function initializeLeafletDraw() {
     map.on(L.Draw.Event.CREATED, function (event) {
         const layer = event.layer;
         drawnItems.addLayer(layer);
+
+        // Calculate and display length if the layer is a polyline
+        if (layer instanceof L.Polyline) {
+            displayPolylineLength(layer);
+        }
+    });
+
+    // Event listener for when an existing layer is edited
+    map.on('draw:edited', function (event) {
+        const layers = event.layers;
+        layers.eachLayer(function (layer) {
+            if (layer instanceof L.Polyline) {
+                displayPolylineLength(layer);
+            }
+        });
     });
 
     // Add download button event listener
     document.getElementById('download-gpx').addEventListener('click', function () {
         downloadGPX(drawnItems);
     });
+}
+
+function displayPolylineLength(polyline) {
+    const latlngs = polyline.getLatLngs();
+    const length = calculateLength(latlngs);
+    const lengthInKm = (length / 1000).toFixed(2); // Convert meters to kilometers and round to 2 decimal places
+
+    // Create a popup with the length information
+    const popupContent = `Length: ${lengthInKm} km`;
+    const popup = L.popup()
+        .setLatLng(polyline.getBounds().getCenter())
+        .setContent(popupContent)
+        .openOn(map);
+
+    // Bind the popup to the polyline
+    polyline.bindPopup(popup);
+}
+
+function calculateLength(latlngs) {
+    let length = 0;
+    for (let i = 0; i < latlngs.length - 1; i++) {
+        length += latlngs[i].distanceTo(latlngs[i + 1]);
+    }
+    return length;
 }
 
 function handleGPXUpload(event) {
@@ -152,6 +218,11 @@ function handleGPXUpload(event) {
                 L.geoJSON(filteredGeojson, {
                     onEachFeature: function (feature, layer) {
                         drawnItems.addLayer(layer);
+
+                        // Calculate and display length if the feature is a polyline
+                        if (feature.geometry.type === 'LineString') {
+                            displayPolylineLength(layer);
+                        }
                     }
                 });
                 
