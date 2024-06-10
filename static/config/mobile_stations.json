@@ -14,12 +14,27 @@
         "icon": "/static/images/boat/bard.png",
         "import_function" : "netcdf_boat.netcdf_boat"
     },
-
+    
     {
         "id": "billefjorden",
         "name": "MS Billefjorden",
         "project": "IWIN Boat",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBillefjord/10min/%Y/%m/mobile_AWS_MSBillefjord_Table_10min_%Y%m%d.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed_corrected",
+            "windDirection": "wind_direction_corrected",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/boat/billefjorden.png",
+        "import_function" : "netcdf_boat.netcdf_boat"
+    },
+    {
+        "id": "polargirl",
+        "name": "MS Polargirl",
+        "project": "IWIN Boat",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSPolargirl/10min/%Y/%m/mobile_AWS_MSPolargirl_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
             "seaSurfaceTemperature": null,

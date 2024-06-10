@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWI - Svalbard Weather Informations</title>
+    <title>SWI - Svalbard Weather Information</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />  
-
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 </head>
 <body>
     <div id="menu">
-        <img src="/static/logo.webp", width="50%", class="center"></img>
+        <!--<img src="/static/logo.webp" alt="Logo" width="50%" class="center">-->
+        
+        <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center">
+        <h1>Svalbard Weather Information</h1>
         <ul id="layerList"></ul>
         <h2>Stations</h2>
-        <div id="station-controls">
-            <div id="project-controls"></div>
-        </div>
+        <div id="project-controls"></div> <!-- Ensure this is the correct ID -->
         <h2>Track</h2>
         <label for="track-duration-select">Duration:</label>
         <select id="track-duration-select">
@@ -40,7 +38,6 @@
             <option value="windDirection">Wind Direction</option>
             <option value="relativeHumidity">Relative Humidity</option>
         </select>
-    <!--</div>-->
         <div id="opacity-controls">
             <h2>Opacity Controls</h2>
         </div>
@@ -53,12 +50,11 @@
         </div>
 
         <div id="credits">
-            <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg", width="80%", class="center"></img>
+            <br>
+            <p> Louis Pauchet - UNIS/INSA Rouen Normandie 2024</p>
         </div>
+
     </div>
-
-
-
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet@3.0.0/dist/esri-leaflet.js"></script>
@@ -75,8 +71,8 @@
         const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
         const fixedStationConfigUrl = '{{ url_for("static", filename="config/fixed_stations.json") }}';
         const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';
-        //loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
         document.addEventListener('DOMContentLoaded', () => {
+            initializeProjectControls(windImagesUrl);
             loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
         });
     </script>
