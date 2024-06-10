@@ -89,6 +89,8 @@ function initializeProjectControls(windImagesUrl) {
 
         projects[project].forEach(station => {
             const stationDiv = document.createElement('div');
+            stationDiv.classList.add('station-item'); // Add this line
+
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
             stationCheckbox.id = `station-${station.id}`;
