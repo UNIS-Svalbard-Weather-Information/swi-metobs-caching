@@ -3,12 +3,12 @@
         "id": "bohemanneset",
         "name": "Bohemanneset",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/2024/06/lighthouse_AWS_Bohemanneset_Table_10min_20240607.nc.html",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/%Y/%m/lighthouse_AWS_Bohemanneset_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
             "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed_corrected",
-            "windDirection": "wind_direction_corrected",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
@@ -17,8 +17,6 @@
         "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
 
     },
-
-
     {
         "id": "daudmannsodden",
         "name": "Daudmannsodden",
@@ -34,6 +32,60 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.21056,
         "lon": 12.98685,
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+
+    },
+    {
+        "id": "narveneset",
+        "name": "Narveneset",
+        "project": "IWIN Lighthouse",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Narveneset/10min/%Y/%m/lighthouse_AWS_Narveneset_Table_10min_%Y%m%d.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/lighthouse.png",
+        "lat": 78.56343,
+        "lon": 16.29687,
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+
+    },
+    {
+        "id": "kappthordsen",
+        "name": "Kapp Thordsen",
+        "project": "IWIN Lighthouse",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_KappThordsen/10min/%Y/%m/lighthouse_AWS_KappThordsen_Table_10min_%Y%m%d.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/lighthouse.png",
+        "lat": 78.45632,
+        "lon": 15.46768,
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+
+    },
+    {
+        "id": "gasoyane",
+        "name": "Gasoyane",
+        "project": "IWIN Lighthouse",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Gasoyane/10min/%Y/%m/lighthouse_AWS_Gasoyane_Table_10min_%Y%m%d.nc",
+        "variables": {
+            "airTemperature": "temperature",
+            "seaSurfaceTemperature": null,
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/lighthouse.png",
+        "lat": 78.45792,
+        "lon": 16.20082,
         "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
 
     }
