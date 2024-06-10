@@ -296,7 +296,7 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
                         fillColor: colorScale(values[i]),
                         fillOpacity: 0.9
                     })
-                    .bindPopup(createPopupContent(station.name, data.track[i].variable))
+                    .bindPopup(createPopupContent(station, data.track[i].variable))
                     .addTo(map);
 
                     segments.push(dot);
@@ -339,22 +339,37 @@ function updateFixedStationData(station, windImagesUrl) {
  * @param {Object} dataPoint - The data point to display.
  * @returns {string} - The HTML content for the popup.
  */
-function createPopupContent(stationName, dataPoint) {
+function createPopupContent(station, dataPoint) {
     const date = new Date(dataPoint.time * 1000);
     const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     const windDirectionLetter = getWindDirectionLetter(dataPoint.windDirection);
 
-    return `
-        <strong>${stationName}</strong><br>
-        ${dateString}<br>
-        ----<br>
-        Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>
-        Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>
-        Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>
-        Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>
-        Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %
-    `;
+    const variables = station.variables;
+    let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
+
+    if (variables.airTemperature) {
+        content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
+    }
+
+    if (variables.seaSurfaceTemperature) {
+        content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
+    }
+
+    if (variables.windSpeed) {
+        content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
+    }
+
+    if (variables.windDirection) {
+        content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
+    }
+
+    if (variables.relativeHumidity) {
+        content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
+    }
+
+    return content;
 }
+
 
 /**
  * Converts wind direction in degrees to a compass direction letter.
@@ -387,7 +402,7 @@ function updateBoatMarker(station, data, variable) {
         map.removeLayer(boatMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station.name, data.latest);
+    const variableInfo = createPopupContent(station, data.latest);
     const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
     boatMarker.bindPopup(variableInfo);
     boatMarkers[station.id] = boatMarker;
@@ -410,7 +425,7 @@ function updateFixedStationMarker(station, data) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station.name, data.latest);
+    const variableInfo = createPopupContent(station, data.latest);
 
     const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
     Marker.bindPopup(variableInfo);
@@ -442,7 +457,7 @@ function updateWindMarker(station, data, windImagesUrl) {
         icon: windRotatedIcon,
     }).addTo(map);
 
-    windMarker.bindPopup(createPopupContent(station.name, data.latest));
+    windMarker.bindPopup(createPopupContent(station, data.latest));
     windMarkers[station.id] = windMarker;
 }
 
