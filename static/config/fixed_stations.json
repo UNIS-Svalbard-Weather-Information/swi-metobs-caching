@@ -3,12 +3,12 @@
         "id": "bohemanneset",
         "name": "Bohemanneset",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/2024/06/lighthouse_AWS_Bohemanneset_Table_10min_20240607.nc.html",
+        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/%Y/%m/lighthouse_AWS_Bohemanneset_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
             "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed_corrected",
-            "windDirection": "wind_direction_corrected",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",

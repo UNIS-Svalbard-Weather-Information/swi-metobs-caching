@@ -170,6 +170,27 @@ function fetchMobileStationData(station, duration) {
 }
 
 /**
+ * Fetches data for a specific fixed station.
+ * 
+ * @param {Object} station - The fixed station id.
+ * @param {number} duration - The duration for which to fetch the data.
+ * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
+ */
+function fetchFixedStationData(station, duration) {
+    return fetch(`/api/fixed-station-data/${station.id}?duration=${duration}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`API error: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('Error fetching mobile station data:', error);
+            return null;
+        });
+}
+
+/**
  * Toggles the visibility of a station's data on the map.
  * 
  * @param {string} stationId - The ID of the station.
@@ -190,14 +211,28 @@ function toggleStation(stationId, isVisible, windImagesUrl) {
             map.removeLayer(windMarkers[stationId]);
             delete windMarkers[stationId];
         }
+        if (fixedStationMarkers[stationId]) {
+            map.removeLayer(fixedStationMarkers[stationId]);
+            delete fixedStationMarkers[stationId];
+        }
     } else {
         const durationSelect = document.getElementById('track-duration-select');
         const variableSelect = document.getElementById('variable-select-dropdown');
         const duration = parseInt(durationSelect.value, 10);
         const variable = variableSelect.value;
-
+        
         const station = mobileStations.find(s => s.id === stationId);
-        updateMobileStationData(station, duration, windImagesUrl, variable);
+
+        if (station) {
+            updateMobileStationData(station, duration, windImagesUrl, variable);
+        } else {
+            const fixedStation = fixedStations.find(s => s.id === stationId);
+            if (fixedStation) {
+                updateFixedStationData(fixedStation, windImagesUrl);
+            } else {
+                console.error(`Station with id ${stationId} not found in both mobile and fixed stations`);
+            }
+        }
     }
 }
 
@@ -280,7 +315,21 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateFixedStationData(station, windImagesUrl) {
-    updateFixedStationMarker(station, null);
+    if (trackLayers[station.id]) {
+        trackLayers[station.id].forEach(layer => map.removeLayer(layer));
+        delete trackLayers[station.id];
+    }
+
+
+    fetchFixedStationData(station, 0)
+        .then(data => {
+            if (data) {
+                updateFixedStationMarker(station, data);
+                updateWindMarker(station, data, windImagesUrl);
+            }
+        });
+    return;
+    
 }
 
 /**
@@ -361,7 +410,10 @@ function updateFixedStationMarker(station, data) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
+    const variableInfo = createPopupContent(station.name, data.latest);
+
     const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
+    Marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = Marker;
 }
 
