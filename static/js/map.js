@@ -212,7 +212,7 @@ function handleGPXUpload(event) {
                 const filteredGeojson = filterGeoJSON(geojson);
                 
                 // Clear existing layers
-                drawnItems.clearLayers();
+                //drawnItems.clearLayers();
                 
                 // Add the filtered GeoJSON data to the drawnItems layer group
                 L.geoJSON(filteredGeojson, {
