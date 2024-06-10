@@ -1,5 +1,6 @@
 let additionalLayers = {};
 let map;
+let drawnItems;
 let colorBar;
 
 // Define default extent (latitude, longitude, zoom level)
@@ -90,5 +91,170 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             });
 
             loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+
+            // Initialize Leaflet Draw
+            initializeLeafletDraw();
+
+            // Add event listener for GPX file upload
+            document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
+}
+
+function initializeLeafletDraw() {
+    // Feature Group to store editable layers
+    drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Leaflet Draw control with custom feature colors
+    const drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            polyline: {
+                shapeOptions: {
+                    color: '#FF0000', // Red color
+                    weight: 4
+                }
+            },
+            polygon: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            circle: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            rectangle: {
+                shapeOptions: {
+                    color: '#FF0000' // Red color
+                }
+            },
+            marker: {
+                icon: L.icon({
+                    iconUrl: 'static/images/map_drawing_element/pin.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            },
+            circlemarker: {
+                color: '#FF0000' // Red color
+            }
+        }
+    });
+    map.addControl(drawControl);
+
+    // Event listener for when a new layer is created
+    map.on(L.Draw.Event.CREATED, function (event) {
+        const layer = event.layer;
+        drawnItems.addLayer(layer);
+
+        // Calculate and display length if the layer is a polyline
+        if (layer instanceof L.Polyline) {
+            displayPolylineLength(layer);
+        }
+    });
+
+    // Event listener for when an existing layer is edited
+    map.on('draw:edited', function (event) {
+        const layers = event.layers;
+        layers.eachLayer(function (layer) {
+            if (layer instanceof L.Polyline) {
+                displayPolylineLength(layer);
+            }
+        });
+    });
+
+    // Add download button event listener
+    document.getElementById('download-gpx').addEventListener('click', function () {
+        downloadGPX(drawnItems);
+    });
+}
+
+function displayPolylineLength(polyline) {
+    const latlngs = polyline.getLatLngs();
+    const length = calculateLength(latlngs);
+    const lengthInKm = (length / 1000).toFixed(2); // Convert meters to kilometers and round to 2 decimal places
+
+    // Create a popup with the length information
+    const popupContent = `Length: ${lengthInKm} km`;
+    const popup = L.popup()
+        .setLatLng(polyline.getBounds().getCenter())
+        .setContent(popupContent)
+        .openOn(map);
+
+    // Bind the popup to the polyline
+    polyline.bindPopup(popup);
+}
+
+function calculateLength(latlngs) {
+    let length = 0;
+    for (let i = 0; i < latlngs.length - 1; i++) {
+        length += latlngs[i].distanceTo(latlngs[i + 1]);
+    }
+    return length;
+}
+
+function handleGPXUpload(event) {
+    const files = event.target.files;
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const gpxData = e.target.result;
+            const gpxLayer = new L.GPX(gpxData, {
+                async: true
+            }).on('loaded', function (e) {
+                const geojson = gpxLayer.toGeoJSON();
+                const filteredGeojson = filterGeoJSON(geojson);
+                
+                // Clear existing layers
+                //drawnItems.clearLayers();
+                
+                // Add the filtered GeoJSON data to the drawnItems layer group
+                L.geoJSON(filteredGeojson, {
+                    onEachFeature: function (feature, layer) {
+                        drawnItems.addLayer(layer);
+
+                        // Calculate and display length if the feature is a polyline
+                        if (feature.geometry.type === 'LineString') {
+                            displayPolylineLength(layer);
+                        }
+                    }
+                });
+                
+                // Adjust the map view to fit the bounds of the new data
+                const bounds = L.geoJSON(filteredGeojson).getBounds();
+                map.fitBounds(bounds);
+            });
+        };
+        reader.readAsText(file);
+    });
+}
+
+function filterGeoJSON(geojson) {
+    // Filter the GeoJSON to include only polylines and points
+    return {
+        type: 'FeatureCollection',
+        features: geojson.features.filter(feature => 
+            feature.geometry.type === 'LineString' || feature.geometry.type === 'Point'
+        )
+    };
+}
+
+function downloadGPX(layerGroup) {
+    const geojson = layerGroup.toGeoJSON();
+    const gpx = togpx(geojson);
+    
+    const blob = new Blob([gpx], { type: 'application/gpx+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'map-drawings.gpx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
