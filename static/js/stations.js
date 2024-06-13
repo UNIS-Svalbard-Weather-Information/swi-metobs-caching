@@ -442,7 +442,7 @@ function updateFixedStationMarker(station, data) {
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateWindMarker(station, data, windImagesUrl) {
-    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
+    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed, data.windDirection);
     
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
@@ -470,10 +470,15 @@ function updateWindMarker(station, data, windImagesUrl) {
  * @param {number} windSpeed - The wind speed value.
  * @returns {string} - The URL of the wind speed icon.
  */
-function getWindSpeedIcon(basePath, windSpeed) {
-    const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
-    let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
-    return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
+function getWindSpeedIcon(basePath, windSpeed, windDirection) {
+    if (windDirection==null || windSpeed==null) {
+        return `${basePath}/null.gif`;
+    } else {
+        const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
+        let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
+        return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
+    }
+
 }
 
 /**

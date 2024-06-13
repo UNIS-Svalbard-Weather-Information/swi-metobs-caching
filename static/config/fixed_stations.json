@@ -313,13 +313,13 @@
     {
         "id": "SN99864",
         "name": "NYBYEN",
-        "project": "Met Norway",
+        "project": "PermaMeteoCommunity",
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
             "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed",
-            "windDirection": "wind_from_direction",
+            "windSpeed": "mean(wind_speed PT1M)",
+            "windDirection": "mean(wind_from_direction PT1M)",
             "relativeHumidity": null
         },
         "icon": "/static/images/metAWS.png",
@@ -330,13 +330,13 @@
     {
         "id": "SN99858",
         "name": "VANNLEDNINGSDALEN",
-        "project": "Met Norway",
+        "project": "PermaMeteoCommunity",
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
             "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed",
-            "windDirection": "wind_from_direction",
+            "windSpeed": "mean(wind_speed PT1M)",
+            "windDirection": "mean(wind_from_direction PT1M)",
             "relativeHumidity": null
         },
         "icon": "/static/images/metAWS.png",
@@ -381,13 +381,13 @@
     {
         "id": "SN99861",
         "name": "LONGYEARBYEN CEMETERY",
-        "project": "Met Norway",
+        "project": "PermaMeteoCommunity",
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
             "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed",
-            "windDirection": "wind_from_direction",
+            "windSpeed": "mean(wind_speed PT1M)",
+            "windDirection": "mean(wind_from_direction PT1M)",
             "relativeHumidity": null
         },
         "icon": "/static/images/metAWS.png",
