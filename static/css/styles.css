@@ -101,3 +101,18 @@ body {
 .rotated-icon {
     transform-origin: center;
 }
+
+.project-header {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    margin-bottom: 10px; /* Space between the project header and station list */
+}
+
+.project-item {
+    margin-bottom: 20px; /* Space between projects */
+}
+
+.station-item {
+    margin-left: 20px; /* Indent station checkboxes to visually nest them under the project */
+}
+

@@ -83,13 +83,38 @@ function initializeProjectControls(windImagesUrl) {
 
     for (const project in projects) {
         const projectDiv = document.createElement('div');
-        const projectLabel = document.createElement('h3');
-        projectLabel.textContent = project;
-        projectDiv.appendChild(projectLabel);
+        projectDiv.classList.add('project-item'); // Use this class to style the project container
 
+        // Create a container for the checkbox and label to ensure they are in line
+        const projectHeader = document.createElement('div');
+        projectHeader.classList.add('project-header'); // Style this class to align items in line
+
+        // Create a master checkbox for the project
+        const projectCheckbox = document.createElement('input');
+        projectCheckbox.type = 'checkbox';
+        projectCheckbox.id = `project-${project}`;
+        projectCheckbox.checked = true;
+        projectCheckbox.addEventListener('change', () => {
+            toggleProjectStations(project, projectCheckbox.checked, windImagesUrl);
+        });
+
+        // Create a label for the project
+        const projectLabel = document.createElement('label');
+        projectLabel.setAttribute('for', `project-${project}`);
+        projectLabel.textContent = project;
+        projectLabel.style.marginLeft = "5px"; // Adjust spacing as needed
+
+        // Append checkbox and label to the header container
+        projectHeader.appendChild(projectCheckbox);
+        projectHeader.appendChild(projectLabel);
+
+        // Append the header to the projectDiv
+        projectDiv.appendChild(projectHeader);
+
+        // Process each station within the project
         projects[project].forEach(station => {
             const stationDiv = document.createElement('div');
-            stationDiv.classList.add('station-item'); // Add this line
+            stationDiv.classList.add('station-item');
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
@@ -111,6 +136,9 @@ function initializeProjectControls(windImagesUrl) {
         projectControls.appendChild(projectDiv);
     }
 }
+
+
+
 
 /**
  * Initializes event listeners for track duration and variable selection changes.
@@ -236,6 +264,18 @@ function toggleStation(stationId, isVisible, windImagesUrl) {
             }
         }
     }
+}
+
+
+function toggleProjectStations(project, isVisible, windImagesUrl) {
+    const allStations = [...mobileStations, ...fixedStations];
+    allStations.forEach(station => {
+        if (station.project === project) {
+            const stationCheckbox = document.getElementById(`station-${station.id}`);
+            stationCheckbox.checked = isVisible;
+            toggleStation(station.id, isVisible, windImagesUrl);
+        }
+    });
 }
 
 /**
