@@ -143,4 +143,6 @@ def serve_libs(filename):
 
 
 if __name__ == '__main__':
+    if not os.path.exists('data'):
+        os.makedirs('data')
     app.run(debug=True)
