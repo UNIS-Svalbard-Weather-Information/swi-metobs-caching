@@ -1,33 +1,42 @@
-function updateLegend(layer, legendControl) {
-    if (!layer) {
-        legendControl._div.innerHTML = '';
+function updateLegend(legendControl) {
+    let legendHtml = '<h4>Legend</h4>';
+
+    if (Object.keys(activeLayers).length === 0) {
+        legendControl._div.innerHTML = legendHtml;
         return;
     }
 
-    let legendHtml = '<h4>Legend</h4>';
+    let legendPromises = [];
 
-    if (layer.type === 'wms') {
-        const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
-        legendHtml += `<img src="${legendUrl}" alt="Legend">`;
-        legendControl._div.innerHTML = legendHtml;
-    } else if (layer.type === 'arcgis') {
-        fetch(`${layer.url}/legend?f=pjson`)
-            .then(response => response.json())
-            .then(data => {
-                legendHtml += '<ul>';
-                data.layers.forEach(layerItem => {
-                    if (layer.layers.includes(layerItem.layerId)) {
-                        legendHtml += `<li><strong>${layerItem.layerName}</strong><br>`;
-                        layerItem.legend.forEach(item => {
-                            legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
+    for (let layerName in activeLayers) {
+        const layer = activeLayers[layerName];
+        if (layer.type === 'wms') {
+            const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
+            legendHtml += `<img src="${legendUrl}" alt="Legend">`;
+        } else if (layer.type === 'arcgis') {
+            legendPromises.push(
+                fetch(`${layer.url}/legend?f=pjson`)
+                    .then(response => response.json())
+                    .then(data => {
+                        legendHtml += `<strong>${layerName}</strong><br><ul>`;
+                        data.layers.forEach(layerItem => {
+                            if (layer.layers.includes(layerItem.layerId)) {
+                                legendHtml += `<li><strong>${layerItem.layerName}</strong><br>`;
+                                layerItem.legend.forEach(item => {
+                                    legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
+                                });
+                                legendHtml += '</li>';
+                            }
                         });
-                        legendHtml += '</li>';
-                    }
-                });
-                legendHtml += '</ul>';
-                legendControl._div.innerHTML = legendHtml;
-            });
+                        legendHtml += '</ul>';
+                    })
+            );
+        }
     }
+
+    Promise.all(legendPromises).then(() => {
+        legendControl._div.innerHTML = legendHtml;
+    });
 }
 
 function updateColorBar(variable, minValue, maxValue) {
