@@ -71,8 +71,8 @@ function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
     const projects = {};
 
+    // Collect all stations into their respective projects
     const allStations = [...mobileStations, ...fixedStations];
-
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
         if (!projects[project]) {
@@ -81,15 +81,15 @@ function initializeProjectControls(windImagesUrl) {
         projects[project].push(station);
     });
 
+    // Create UI elements for each project
     for (const project in projects) {
         const projectDiv = document.createElement('div');
-        projectDiv.classList.add('project-item'); // Use this class to style the project container
+        projectDiv.classList.add('project-item');
 
-        // Create a container for the checkbox and label to ensure they are in line
         const projectHeader = document.createElement('div');
-        projectHeader.classList.add('project-header'); // Style this class to align items in line
+        projectHeader.classList.add('project-header');
 
-        // Create a master checkbox for the project
+        // Master checkbox for the project
         const projectCheckbox = document.createElement('input');
         projectCheckbox.type = 'checkbox';
         projectCheckbox.id = `project-${project}`;
@@ -98,27 +98,33 @@ function initializeProjectControls(windImagesUrl) {
             toggleProjectStations(project, projectCheckbox.checked, windImagesUrl);
         });
 
-        // Create a label for the project
-        const projectLabel = document.createElement('label');
-        projectLabel.setAttribute('for', `project-${project}`);
+        const projectLabel = document.createElement('button');
+        projectLabel.classList.add('project-toggle-button');
         projectLabel.textContent = project;
-        projectLabel.style.marginLeft = "5px"; // Adjust spacing as needed
+        projectLabel.onclick = function () {
+            const content = this.parentNode.parentNode.querySelector('.station-list');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        };
 
-        // Append checkbox and label to the header container
+        // Styling the button
+        projectLabel.style.marginLeft = '10px';  // Adjust as needed
+
+        // Adding master checkbox and button to project header
         projectHeader.appendChild(projectCheckbox);
         projectHeader.appendChild(projectLabel);
 
-        // Append the header to the projectDiv
-        projectDiv.appendChild(projectHeader);
+        const stationListDiv = document.createElement('div');
+        stationListDiv.classList.add('station-list');
+        stationListDiv.style.display = 'none';  // Initially hidden
 
-        // Process each station within the project
+        // Create UI for each station within the project
         projects[project].forEach(station => {
             const stationDiv = document.createElement('div');
             stationDiv.classList.add('station-item');
+            stationDiv.id = `station-${station.id}`;
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
-            stationCheckbox.id = `station-${station.id}`;
             stationCheckbox.checked = true;
             stationCheckbox.addEventListener('change', () => {
                 toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
@@ -130,12 +136,16 @@ function initializeProjectControls(windImagesUrl) {
 
             stationDiv.appendChild(stationCheckbox);
             stationDiv.appendChild(stationLabel);
-            projectDiv.appendChild(stationDiv);
+            stationListDiv.appendChild(stationDiv);
         });
 
+        // Append the header and station list to the project div
+        projectDiv.appendChild(projectHeader);
+        projectDiv.appendChild(stationListDiv);
         projectControls.appendChild(projectDiv);
     }
 }
+
 
 
 
@@ -185,18 +195,18 @@ function updateStationsData(duration, windImagesUrl, variable) {
  * @param {number} duration - The duration for which to fetch the data.
  * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
  */
-function fetchMobileStationData(station, duration) {
-    return fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error fetching mobile station data:', error);
-            return null;
-        });
+async function fetchMobileStationData(station, duration) {
+    try {
+        const response = await fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching mobile station data:', error);
+        updateStationUIOnError(station.id);
+        return null;
+    }
 }
 
 /**
@@ -216,6 +226,7 @@ function fetchFixedStationData(station, duration) {
         })
         .catch(error => {
             console.error('Error fetching mobile station data:', error);
+            updateStationUIOnError(station.id); 
             return null;
         });
 }
@@ -539,4 +550,16 @@ function getColorScale(variable, minValue, maxValue) {
     };
 
     return colorScale[variable];
+}
+
+
+
+function updateStationUIOnError(stationId) {
+    const stationElement = document.getElementById(`station-${stationId}`);
+    if (stationElement) {
+        stationElement.style.textDecoration = "line-through";
+        stationElement.style.color = "grey";
+        const parent = stationElement.parentElement;
+        parent.appendChild(stationElement); // Move to the end of the list
+    }
 }
