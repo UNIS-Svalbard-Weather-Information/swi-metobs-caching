@@ -9,22 +9,25 @@ function updateLegend(layer, legendControl) {
     if (layer.type === 'wms') {
         const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
         legendHtml += `<img src="${legendUrl}" alt="Legend">`;
+        legendControl._div.innerHTML = legendHtml;
     } else if (layer.type === 'arcgis') {
         fetch(`${layer.url}/legend?f=pjson`)
             .then(response => response.json())
             .then(data => {
-                data.layers.forEach(layer => {
-                    legendHtml += `<strong>${layer.layerName}</strong><br>`;
-                    layer.legend.forEach(item => {
-                        legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
-                    });
+                legendHtml += '<ul>';
+                data.layers.forEach(layerItem => {
+                    if (layer.layers.includes(layerItem.layerId)) {
+                        legendHtml += `<li><strong>${layerItem.layerName}</strong><br>`;
+                        layerItem.legend.forEach(item => {
+                            legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
+                        });
+                        legendHtml += '</li>';
+                    }
                 });
+                legendHtml += '</ul>';
                 legendControl._div.innerHTML = legendHtml;
             });
-        return;
     }
-
-    legendControl._div.innerHTML = legendHtml;
 }
 
 function updateColorBar(variable, minValue, maxValue) {
