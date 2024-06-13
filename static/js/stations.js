@@ -35,6 +35,12 @@ let mobileStations = [];
 let fixedStations = [];
 
 /**
+ * Object to store the visibility state for each station.
+ * @type {Object.<string, boolean>}
+ */
+let stationVisibility = {};
+
+/**
  * Loads station data from provided URLs and initializes the map controls.
  * 
  * @param {string} mobileStationConfigUrl - URL to fetch mobile station configuration.
@@ -49,6 +55,10 @@ function loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesU
     .then(([mobileStationsData, fixedStationsData]) => {
         mobileStations = mobileStationsData;
         fixedStations = fixedStationsData;
+
+        // Initialize visibility state
+        mobileStations.forEach(station => stationVisibility[station.id] = true);
+        fixedStations.forEach(station => stationVisibility[station.id] = true);
 
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
@@ -146,10 +156,6 @@ function initializeProjectControls(windImagesUrl) {
     }
 }
 
-
-
-
-
 /**
  * Initializes event listeners for track duration and variable selection changes.
  * 
@@ -181,10 +187,14 @@ function initializeEventListeners(windImagesUrl) {
  */
 function updateStationsData(duration, windImagesUrl, variable) {
     mobileStations.forEach(station => {
-        updateMobileStationData(station, duration, windImagesUrl, variable);
+        if (stationVisibility[station.id]) {
+            updateMobileStationData(station, duration, windImagesUrl, variable);
+        }
     });
     fixedStations.forEach(station => {
-        updateFixedStationData(station, windImagesUrl);
+        if (stationVisibility[station.id]) {
+            updateFixedStationData(station, windImagesUrl);
+        }
     });
 }
 
@@ -241,6 +251,8 @@ function fetchFixedStationData(station, duration) {
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function toggleStation(stationId, isVisible, windImagesUrl) {
+    stationVisibility[stationId] = isVisible;
+    
     if (!isVisible) {
         if (trackLayers[stationId]) {
             trackLayers[stationId].forEach(layer => map.removeLayer(layer));
@@ -278,7 +290,6 @@ function toggleStation(stationId, isVisible, windImagesUrl) {
         }
     }
 }
-
 
 function toggleProjectStations(project, isVisible, windImagesUrl) {
     const allStations = [...mobileStations, ...fixedStations];
@@ -375,7 +386,6 @@ function updateFixedStationData(station, windImagesUrl) {
         delete trackLayers[station.id];
     }
 
-
     fetchFixedStationData(station, 0)
         .then(data => {
             if (data) {
@@ -383,8 +393,6 @@ function updateFixedStationData(station, windImagesUrl) {
                 updateWindMarker(station, data, windImagesUrl);
             }
         });
-    return;
-    
 }
 
 /**
@@ -424,7 +432,6 @@ function createPopupContent(station, dataPoint) {
 
     return content;
 }
-
 
 /**
  * Converts wind direction in degrees to a compass direction letter.
@@ -553,8 +560,6 @@ function getColorScale(variable, minValue, maxValue) {
 
     return colorScale[variable];
 }
-
-
 
 function updateStationUIOnError(stationId) {
     const stationElement = document.getElementById(`station-${stationId}`);
