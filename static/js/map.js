@@ -64,7 +64,10 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                         layerObj = L.tileLayer(layer.url);
                         break;
                     case 'arcgis':
-                        layerObj = L.esri.dynamicMapLayer({ url: layer.url });
+                        layerObj = L.esri.dynamicMapLayer({
+                            url: layer.url,
+                            layers: layer.layers
+                        });
                         break;
                     case 'wms':
                         layerObj = L.tileLayer.wms(layer.url, {
