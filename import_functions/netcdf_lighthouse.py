@@ -4,27 +4,13 @@ import numpy as np
 import os
 import sys
 from datetime import date, datetime, timedelta
+from generic_functions import get_station_settings
 
 # Directory to store data files; should end with a slash
 data_directory = "./data/"
 
 # Add import functions path to system path
 sys.path.append(os.path.join(os.path.dirname(__file__), './import_functions'))
-
-def get_station_settings(station_id):
-    """
-    Retrieve the settings for a specific station from the configuration file.
-
-    Parameters:
-    station_id (str): The identifier for the station.
-
-    Returns:
-    dict: A dictionary containing the settings for the specified station, or None if the station is not found.
-    """
-    with open('static/config/fixed_stations.json') as f:
-        stations = json.load(f)
-        station = next((s for s in stations if s['id'] == station_id), None)
-        return station
 
 def get_url(url, date):
     """
