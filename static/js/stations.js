@@ -71,8 +71,8 @@ function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
     const projects = {};
 
+    // Collect all stations into their respective projects
     const allStations = [...mobileStations, ...fixedStations];
-
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
         if (!projects[project]) {
@@ -81,19 +81,50 @@ function initializeProjectControls(windImagesUrl) {
         projects[project].push(station);
     });
 
+    // Create UI elements for each project
     for (const project in projects) {
         const projectDiv = document.createElement('div');
-        const projectLabel = document.createElement('h3');
-        projectLabel.textContent = project;
-        projectDiv.appendChild(projectLabel);
+        projectDiv.classList.add('project-item');
 
+        const projectHeader = document.createElement('div');
+        projectHeader.classList.add('project-header');
+
+        // Master checkbox for the project
+        const projectCheckbox = document.createElement('input');
+        projectCheckbox.type = 'checkbox';
+        projectCheckbox.id = `project-${project}`;
+        projectCheckbox.checked = true;
+        projectCheckbox.addEventListener('change', () => {
+            toggleProjectStations(project, projectCheckbox.checked, windImagesUrl);
+        });
+
+        const projectLabel = document.createElement('button');
+        projectLabel.classList.add('project-toggle-button');
+        projectLabel.textContent = project;
+        projectLabel.onclick = function () {
+            const content = this.parentNode.parentNode.querySelector('.station-list');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // Styling the button
+        projectLabel.style.marginLeft = '10px';  // Adjust as needed
+
+        // Adding master checkbox and button to project header
+        projectHeader.appendChild(projectCheckbox);
+        projectHeader.appendChild(projectLabel);
+
+        const stationListDiv = document.createElement('div');
+        stationListDiv.classList.add('station-list');
+        stationListDiv.style.display = 'none';  // Initially hidden
+
+        // Create UI for each station within the project
         projects[project].forEach(station => {
             const stationDiv = document.createElement('div');
-            stationDiv.classList.add('station-item'); // Add this line
+            stationDiv.classList.add('station-item');
+            stationDiv.id = `station-${station.id}`;
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
-            stationCheckbox.id = `station-${station.id}`;
             stationCheckbox.checked = true;
             stationCheckbox.addEventListener('change', () => {
                 toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
@@ -105,12 +136,19 @@ function initializeProjectControls(windImagesUrl) {
 
             stationDiv.appendChild(stationCheckbox);
             stationDiv.appendChild(stationLabel);
-            projectDiv.appendChild(stationDiv);
+            stationListDiv.appendChild(stationDiv);
         });
 
+        // Append the header and station list to the project div
+        projectDiv.appendChild(projectHeader);
+        projectDiv.appendChild(stationListDiv);
         projectControls.appendChild(projectDiv);
     }
 }
+
+
+
+
 
 /**
  * Initializes event listeners for track duration and variable selection changes.
@@ -157,18 +195,20 @@ function updateStationsData(duration, windImagesUrl, variable) {
  * @param {number} duration - The duration for which to fetch the data.
  * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
  */
-function fetchMobileStationData(station, duration) {
-    return fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error fetching mobile station data:', error);
-            return null;
-        });
+async function fetchMobileStationData(station, duration) {
+    try {
+        const response = await fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        console.log('Fetch successful:', data);  // Log the successful data
+        return data;
+    } catch (error) {
+        console.error('Error fetching mobile station data:', error);
+        updateStationUIOnError(station.id);
+        return null;
+    }
 }
 
 /**
@@ -188,6 +228,7 @@ function fetchFixedStationData(station, duration) {
         })
         .catch(error => {
             console.error('Error fetching mobile station data:', error);
+            updateStationUIOnError(station.id); 
             return null;
         });
 }
@@ -236,6 +277,18 @@ function toggleStation(stationId, isVisible, windImagesUrl) {
             }
         }
     }
+}
+
+
+function toggleProjectStations(project, isVisible, windImagesUrl) {
+    const allStations = [...mobileStations, ...fixedStations];
+    allStations.forEach(station => {
+        if (station.project === project) {
+            const stationCheckbox = document.getElementById(`station-${station.id}`);
+            stationCheckbox.checked = isVisible;
+            toggleStation(station.id, isVisible, windImagesUrl);
+        }
+    });
 }
 
 /**
@@ -442,7 +495,7 @@ function updateFixedStationMarker(station, data) {
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateWindMarker(station, data, windImagesUrl) {
-    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed);
+    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed, data.windDirection);
     
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
@@ -470,10 +523,15 @@ function updateWindMarker(station, data, windImagesUrl) {
  * @param {number} windSpeed - The wind speed value.
  * @returns {string} - The URL of the wind speed icon.
  */
-function getWindSpeedIcon(basePath, windSpeed) {
-    const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
-    let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
-    return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
+function getWindSpeedIcon(basePath, windSpeed, windDirection) {
+    if (windDirection==null || windSpeed==null) {
+        return `${basePath}/null.gif`;
+    } else {
+        const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
+        let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
+        return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
+    }
+
 }
 
 /**
@@ -494,4 +552,16 @@ function getColorScale(variable, minValue, maxValue) {
     };
 
     return colorScale[variable];
+}
+
+
+
+function updateStationUIOnError(stationId) {
+    const stationElement = document.getElementById(`station-${stationId}`);
+    if (stationElement) {
+        stationElement.style.textDecoration = "line-through";
+        stationElement.style.color = "grey";
+        const parent = stationElement.parentElement;
+        parent.appendChild(stationElement); // Move to the end of the list
+    }
 }
