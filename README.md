@@ -21,13 +21,13 @@ UNIS Svalbard Weather Information (SWI) is an application to gather the data com
 1. **Clone the repository:**
 
     ```bash
-    git clone <repository_url>
+    git clone https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation.git
     ```
 
 2. **Navigate to the project directory:**
 
     ```bash
-    cd <project_directory>
+    cd UNIS_SvalbardWeatherInformation
     ```
 
 3. **Install dependencies:**
