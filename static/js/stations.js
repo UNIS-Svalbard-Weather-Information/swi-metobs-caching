@@ -201,7 +201,9 @@ async function fetchMobileStationData(station, duration) {
         if (!response.ok) {
             throw new Error(`API error: ${response.statusText}`);
         }
-        return await response.json();
+        const data = await response.json();
+        console.log('Fetch successful:', data);  // Log the successful data
+        return data;
     } catch (error) {
         console.error('Error fetching mobile station data:', error);
         updateStationUIOnError(station.id);
