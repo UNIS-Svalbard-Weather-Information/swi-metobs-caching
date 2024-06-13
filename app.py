@@ -20,7 +20,7 @@ Routes:
     /api/fixed-station-data/<station_id>
 """
 
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, jsonify, render_template, request, send_from_directory, abort
 import netCDF4 as nc
 import json
 import numpy as np
@@ -97,7 +97,11 @@ def get_mobile_station_data(station_id):
                 return jsonify({'error': 'Station not found'}), 404
 
         data = get_data(station['import_function'], station['url'], station['variables'], duration, station['id'])
-        return jsonify(data)
+        
+        if data==None or data == {}:
+            return jsonify({'error': 'No data available'}), 404
+        else:
+            return jsonify(data)
     except Exception as e:
         print(f"Error retrieving station data: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -125,7 +129,10 @@ def get_fixed_station_data(station_id):
                 return jsonify({'error': 'Station not found'}), 404
 
         data = get_data(station['import_function'], station['url'], station['variables'], duration, station['id'])
-        return jsonify(data)
+        if data==None:
+            return jsonify({'error': 'No data available'}), 404
+        else:
+            return jsonify(data)
     except Exception as e:
         print(f"Error retrieving station data: {e}")
         return jsonify({'error': 'Internal server error'}), 500

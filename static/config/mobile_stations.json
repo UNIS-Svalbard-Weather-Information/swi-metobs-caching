@@ -2,7 +2,7 @@
     {
         "id": "bard",
         "name": "MS Bard",
-        "project": "IWIN Boat",
+        "project": "IWIN Boats",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBard/10min/%Y/%m/mobile_AWS_MSBard_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
@@ -18,7 +18,7 @@
     {
         "id": "billefjorden",
         "name": "MS Billefjorden",
-        "project": "IWIN Boat",
+        "project": "IWIN Boats",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBillefjord/10min/%Y/%m/mobile_AWS_MSBillefjord_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
@@ -33,7 +33,7 @@
     {
         "id": "polargirl",
         "name": "MS Polargirl",
-        "project": "IWIN Boat",
+        "project": "IWIN Boats",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSPolargirl/10min/%Y/%m/mobile_AWS_MSPolargirl_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "temperature",
