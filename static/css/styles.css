@@ -116,3 +116,20 @@ body {
     margin-left: 20px; /* Indent station checkboxes to visually nest them under the project */
 }
 
+.project-toggle-button {
+    background-color: #007cc5;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    text-align: left;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.project-toggle-button:hover {
+    background-color: #0069a7;
+}
