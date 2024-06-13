@@ -2,6 +2,7 @@ let additionalLayers = {};
 let map;
 let drawnItems;
 let colorBar;
+let activeLayers = {};
 
 // Define default extent (latitude, longitude, zoom level)
 const defaultExtent = {
@@ -16,7 +17,6 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         .then(layerConfig => {
             map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
             const baseLayers = {};
-            additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
             const legendControl = L.control({ position: 'bottomright' });
 
@@ -25,8 +25,8 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                 this.update();
                 return this._div;
             };
-            legendControl.update = function (layer) {
-                updateLegend(layer, this);
+            legendControl.update = function () {
+                updateLegend(this);
             };
             legendControl.addTo(map);
 
@@ -80,15 +80,17 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                 additionalLayers[layer.name] = layerObj;
                 layerControl.addOverlay(layerObj, layer.name);
 
-                // Update legend and add opacity control when layer is added
+                // Update active layers and legend when a layer is added
                 layerObj.on('add', function () {
-                    legendControl.update(layer);
+                    activeLayers[layer.name] = layer;
+                    legendControl.update();
                     addOpacityControl(layer.name, layerObj);
                 });
 
-                // Clear legend and remove opacity control when layer is removed
+                // Remove from active layers and update legend when a layer is removed
                 layerObj.on('remove', function () {
-                    legendControl.update(null);
+                    delete activeLayers[layer.name];
+                    legendControl.update();
                     removeOpacityControl(layer.name);
                 });
             });
