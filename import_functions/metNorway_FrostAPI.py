@@ -7,7 +7,6 @@ import json
 import os
 from generic_functions import get_station_settings
 from dateutil import parser
-import traceback
 
 data_directory = "./data/"
 
@@ -28,7 +27,6 @@ def request_data_to_FrostAPI(url, variables, duration, station_id):
             r.raise_for_status()
         except requests.RequestException as e:
             print(f"Request error for {station_id}/{variable}/{duration}: {e}")
-            print(traceback.format_exc())
             data_dict[variable] = None
             continue
 
@@ -44,15 +42,12 @@ def request_data_to_FrostAPI(url, variables, duration, station_id):
             data_dict[variable] = data
         except KeyError as e:
             print(f"Key error while processing data for {station_id}/{variable}/{duration}: {e}")
-            print(traceback.format_exc())
             data_dict[variable] = None
         except IndexError as e:
             print(f"Index error while processing data for {station_id}/{variable}/{duration}: {e}")
-            print(traceback.format_exc())
             data_dict[variable] = None
         except Exception as e:
             print(f"Unexpected error while processing data for {station_id}/{variable}/{duration}: {e}")
-            print(traceback.format_exc())
             data_dict[variable] = None
 
     timestamps = sorted(set(chain.from_iterable(
@@ -95,14 +90,12 @@ def metNorway_FrostAPI(url, variables, duration, station_id):
             df = request_data_to_FrostAPI(url, variables, work_duration, station_id)
         except Exception as e:
             print(f"Error while requesting data to Frost API: {e}")
-            print(traceback.format_exc())
             return None
         
         try:
             station = get_station_settings(station_id)
         except Exception as e:
             print(f"Error getting station settings for {station_id}: {e}")
-            print(traceback.format_exc())
             return None
 
         track = []
@@ -146,6 +139,5 @@ def metNorway_FrostAPI(url, variables, duration, station_id):
                 json.dump(result, f)
         except IOError as e:
             print(f"IO error while saving data to file: {e}")
-            print(traceback.format_exc())
 
         return result
