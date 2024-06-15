@@ -100,9 +100,24 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             // Initialize Leaflet Draw
             initializeLeafletDraw();
 
+            // Initialize Leaflet Measure
+            initializeLeafletMeasure();
+
             // Add event listener for GPX file upload
             document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
+}
+
+function initializeLeafletMeasure() {
+    // Initialize Leaflet Measure
+    const measureControl = new L.Control.Measure({
+        position: 'topleft',
+        primaryLengthUnit: 'meters',
+        secondaryLengthUnit: 'kilometers',
+        primaryAreaUnit: 'sqmeters',
+        secondaryAreaUnit: 'sqkilometers',
+    });
+    map.addControl(measureControl);
 }
 
 function initializeLeafletDraw() {
