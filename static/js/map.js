@@ -173,7 +173,12 @@ function initializeLeafletDraw() {
         const layer = event.layer;
         drawnItems.addLayer(layer);
 
-        // Calculate and display length if the layer is a polyline
+        // Display coordinates if the layer is a marker
+        if (layer instanceof L.Marker) {
+            displayMarkerCoordinates(layer);
+        }
+
+        // Display length if the layer is a polyline
         if (layer instanceof L.Polyline) {
             displayPolylineLength(layer);
         }
@@ -193,6 +198,18 @@ function initializeLeafletDraw() {
     document.getElementById('download-gpx').addEventListener('click', function () {
         downloadGPX(drawnItems);
     });
+}
+
+function displayMarkerCoordinates(marker) {
+    const latlng = marker.getLatLng();
+    const popupContent = `Coordinates: ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+    const popup = L.popup()
+        .setLatLng(latlng)
+        .setContent(popupContent)
+        .openOn(map);
+
+    // Bind the popup to the marker
+    marker.bindPopup(popup);
 }
 
 function displayPolylineLength(polyline) {
