@@ -61,8 +61,12 @@ def get_data(import_function_str, url, variables, duration, station_id):
     Returns:
         dict: Data fetched by the import function.
     """
-    import_function = load_function(import_function_str)
-    return import_function(url, variables, duration, station_id)
+    try:
+        import_function = load_function(import_function_str)
+        return import_function(url, variables, duration, station_id)
+    except Exception as e:
+        print(f"Error retrieving station data: {e}")
+        return []
 
 @app.route('/')
 def index():
