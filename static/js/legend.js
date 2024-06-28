@@ -1,3 +1,13 @@
+const variableUnits = {
+    "airTemperature": "Temperature [°C]",
+    "seaSurfaceTemperature": "Sea Surface Temp [°C]",
+    "windSpeed": "Wind Speed [m/s]",
+    "windDirection": "Wind Direction [°]",
+    "relativeHumidity": "Relative Humidity [%]"
+};
+
+
+
 function updateLegend(legendControl) {
     let legendHtml = '<h4>Legend</h4>';
 
@@ -39,7 +49,78 @@ function updateLegend(legendControl) {
     });
 }
 
-function updateColorBar(variable, minValue, maxValue) {
+
+function updateColorBar(variable, minValue, maxValue, colorScale) {
+    // Remove the existing color bar if it exists
+    d3.select('.colorBar').remove();
+
+    if (variable === 'none') {
+        return;
+    }
+  
+    // Create a new legend control
+    var legend = L.control({position: 'bottomleft'});
+  
+    legend.onAdd = function (map) {
+      var div = L.DomUtil.create('div', 'colorBar');
+      var width = 300;
+      var height = 60; // Increase height to accommodate variable name and unit
+      var svg = d3.select(div).append('svg')
+        .attr('width', width)
+        .attr('height', height);
+  
+      var gradient = svg.append('defs')
+        .append('linearGradient')
+        .attr('id', 'gradient')
+        .attr('x1', '0%')
+        .attr('x2', '100%')
+        .attr('y1', '0%')
+        .attr('y2', '0%');
+  
+      // Define the gradient stops based on the color scale
+      gradient.selectAll('stop')
+        .data(d3.range(minValue, maxValue, (maxValue - minValue) / 10))
+        .enter().append('stop')
+        .attr('offset', d => ((d - minValue) / (maxValue - minValue)) * 100 + '%')
+        .attr('stop-color', d => colorScale(d));
+  
+      // Draw the rectangle and fill with gradient
+      svg.append('rect')
+        .attr('width', width)
+        .attr('height', 20)
+        .attr('y', 20)
+        .style('fill', 'url(#gradient)');
+  
+      // Add labels
+      var xScale = d3.scaleLinear()
+        .domain([minValue, maxValue])
+        .range([0, width]);
+  
+      var xAxis = d3.axisBottom(xScale)
+        .ticks(5);
+  
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', 'translate(0,40)')
+        .call(xAxis);
+  
+      // Add variable name and unit
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', 15)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text(variableUnits[variable] || variable);
+  
+      return div;
+    };
+  
+    // Add the new legend to the map
+    legend.addTo(map);
+  }
+
+function updateColorBar2(variable, minValue, maxValue, colorScale) {
     if (colorBar) {
         map.removeControl(colorBar);
     }
@@ -58,7 +139,7 @@ function updateColorBar(variable, minValue, maxValue) {
     };
 
     const colorBarDiv = L.DomUtil.create('div', 'info legend');
-    const colorScale = getColorScale(variable, minValue, maxValue);
+    //const colorScale = getColorScale(variable, minValue, maxValue);
 
     const legend = d3.select(colorBarDiv)
         .append('svg')

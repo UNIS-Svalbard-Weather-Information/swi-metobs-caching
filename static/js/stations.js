@@ -215,7 +215,7 @@ async function fetchMobileStationData(station, duration) {
         console.log('Fetch successful:', data);  // Log the successful data
         return data;
     } catch (error) {
-        console.error('Error fetching mobile station data:', error);
+        //console.error('Error fetching mobile station data:', error);
         updateStationUIOnError(station.id);
         return null;
     }
@@ -237,7 +237,7 @@ function fetchFixedStationData(station, duration) {
             return response.json();
         })
         .catch(error => {
-            console.error('Error fetching mobile station data:', error);
+            //console.error('Error fetching mobile station data:', error);
             updateStationUIOnError(station.id); 
             return null;
         });
@@ -346,6 +346,8 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
 
                 const colorScale = getColorScale(variable, extendedMinValue, extendedMaxValue);
 
+                console.log(colorScale)
+
                 let segments = [];
                 for (let i = 0; i < latlngs.length - 1; i++) {
                     const segment = L.polyline([latlngs[i], latlngs[i + 1]], {
@@ -369,9 +371,9 @@ function updateMobileStationData(station, duration, windImagesUrl, variable) {
                 }
 
                 trackLayers[station.id] = segments;
-                updateColorBar(variable, extendedMinValue, extendedMaxValue);
+                updateColorBar(variable, extendedMinValue, extendedMaxValue, colorScale);
             }
-        });
+        }, null);
 }
 
 /**
