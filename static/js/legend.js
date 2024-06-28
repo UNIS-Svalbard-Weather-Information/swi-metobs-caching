@@ -9,7 +9,15 @@ const variableUnits = {
 
 
 function updateLegend(legendControl) {
-    let legendHtml = '<h4>Legend</h4>';
+    // Add the legend-container class to the div
+    legendControl._div.classList.add('legend-container');
+
+    // Prevent map scroll when interacting with the legend
+    legendControl._div.addEventListener('wheel', function(e) {
+        e.stopPropagation();
+    });
+
+    let legendHtml = '<h2>Legend</h2>';
 
     if (Object.keys(activeLayers).length === 0) {
         legendControl._div.innerHTML = legendHtml;
@@ -28,7 +36,7 @@ function updateLegend(legendControl) {
                 fetch(`${layer.url}/legend?f=pjson`)
                     .then(response => response.json())
                     .then(data => {
-                        legendHtml += `<strong>${layerName}</strong><br><ul>`;
+                        legendHtml += `<h3>${layerName}</h3><br><ul>`;
                         data.layers.forEach(layerItem => {
                             if (layer.layers.includes(layerItem.layerId)) {
                                 legendHtml += `<li><strong>${layerItem.layerName}</strong><br>`;
@@ -48,6 +56,8 @@ function updateLegend(legendControl) {
         legendControl._div.innerHTML = legendHtml;
     });
 }
+
+
 
 
 function updateColorBar(variable, minValue, maxValue, colorScale) {
