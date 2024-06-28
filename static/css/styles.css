@@ -83,6 +83,16 @@ body {
     margin-bottom: 5px;
 }
 
+/* Legend container styles */
+.legend-container {
+    max-height: 50vh; /* Set maximum height to 50% of the viewport height */
+    overflow-y: auto; /* Make it scrollable */
+    background-color: rgba(255, 255, 255, 0.8); /* Optional: make it semi-transparent */
+    z-index: 1000; /* Ensure it stays above other elements */
+    position: relative; /* Ensure it stays in place relative to the map */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
 #station-controls {
     display: flex;
     flex-direction: column;
