@@ -70,6 +70,33 @@ def request_data_to_FrostAPI(url, variables, duration, station_id):
 def to_unix_time(dt):
     return dt.timestamp()
 
+
+def get_latest_file(data_directory, station_id, duration):
+    # Define the file pattern prefix
+    file_prefix = f"{station_id}_{str(duration)}"
+    
+    # Get the current time
+    now = datetime.now()
+    
+    # Initialize variables to store the latest file and its modification time
+    latest_file = None
+    latest_mtime = None
+    
+    # Iterate over files in the directory
+    for filename in os.listdir(data_directory):
+        if filename.startswith(file_prefix) and filename.endswith(".json"):
+            filepath = os.path.join(data_directory, filename)
+            file_mtime = os.path.getmtime(filepath)
+            file_datetime = datetime.fromtimestamp(file_mtime)
+            
+            # Check if the file is the latest one and within the last 2 hours
+            if (latest_mtime is None or file_mtime > latest_mtime) and (now - file_datetime) <= timedelta(hours=2):
+                latest_file = filepath
+                latest_mtime = file_mtime
+    
+    return latest_file
+
+
 def metNorway_FrostAPI(url, variables, duration, station_id):
     import time
 
@@ -82,7 +109,7 @@ def metNorway_FrostAPI(url, variables, duration, station_id):
             return json.load(f)
     else:
         if duration == 0:
-            work_duration = 5
+            work_duration = 1
         else:
             work_duration = duration
         
@@ -90,7 +117,8 @@ def metNorway_FrostAPI(url, variables, duration, station_id):
             df = request_data_to_FrostAPI(url, variables, work_duration, station_id)
         except Exception as e:
             print(f"Error while requesting data to Frost API: {e}")
-            return None
+            print(f"Return last stored file for {station_id}")
+            return get_latest_file(data_directory, station_id, duration)
         
         try:
             station = get_station_settings(station_id)
