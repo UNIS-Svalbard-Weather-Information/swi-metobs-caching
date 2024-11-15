@@ -30,20 +30,24 @@ function updateLegend(legendControl) {
         const layer = activeLayers[layerName];
         if (layer.type === 'wms') {
             const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
-            legendHtml += `<img src="${legendUrl}" alt="Legend">`;
+            legendHtml += `<div class="legend-item"><img src="${legendUrl}" alt="Legend"> <span>${layerName}</span></div>`;
         } else if (layer.type === 'arcgis') {
             legendPromises.push(
                 fetch(`${layer.url}/legend?f=pjson`)
                     .then(response => response.json())
                     .then(data => {
-                        legendHtml += `<h3>${layerName}</h3><br><ul>`;
+                        legendHtml += `<h3>${layerName}</h3><ul>`;
                         data.layers.forEach(layerItem => {
                             if (layer.layers.includes(layerItem.layerId)) {
-                                legendHtml += `<li><strong>${layerItem.layerName}</strong><br>`;
+                                legendHtml += `<li><strong>${layerItem.layerName}</strong><ul>`;
                                 layerItem.legend.forEach(item => {
-                                    legendHtml += `<img src="data:image/png;base64,${item.imageData}" alt="${item.label}"> ${item.label}<br>`;
+                                    legendHtml += `
+                                        <li class="legend-item">
+                                            <img src="data:image/png;base64,${item.imageData}" alt="${item.label}">
+                                            <span>${item.label}</span>
+                                        </li>`;
                                 });
-                                legendHtml += '</li>';
+                                legendHtml += '</ul></li>';
                             }
                         });
                         legendHtml += '</ul>';
@@ -56,6 +60,7 @@ function updateLegend(legendControl) {
         legendControl._div.innerHTML = legendHtml;
     });
 }
+
 
 
 
