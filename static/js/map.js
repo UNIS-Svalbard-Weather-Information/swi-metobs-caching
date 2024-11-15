@@ -17,6 +17,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         .then(layerConfig => {
             map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
             const baseLayers = {};
+            const additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
             const legendControl = L.control({ position: 'bottomright' });
 
@@ -76,6 +77,35 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                             transparent: true
                         });
                         break;
+                    case 'geojson':
+                        fetch(layer.url)
+                            .then(response => response.json())
+                            .then(geojsonData => {
+                                layerObj = L.geoJSON(geojsonData, {
+                                    onEachFeature: function (feature, layer) {
+                                        if (feature.properties && feature.properties.popupContent) {
+                                            layer.bindPopup(feature.properties.popupContent);
+                                        }
+                                    }
+                                });
+                                additionalLayers[layer.name] = layerObj;
+                                layerControl.addOverlay(layerObj, layer.name);
+
+                                // Update active layers and legend when a layer is added
+                                layerObj.on('add', function () {
+                                    activeLayers[layer.name] = layer;
+                                    legendControl.update();
+                                    addOpacityControl(layer.name, layerObj);
+                                });
+
+                                // Remove from active layers and update legend when a layer is removed
+                                layerObj.on('remove', function () {
+                                    delete activeLayers[layer.name];
+                                    legendControl.update();
+                                    removeOpacityControl(layer.name);
+                                });
+                            });
+                        return; // Return early to prevent further execution for this case
                 }
                 additionalLayers[layer.name] = layerObj;
                 layerControl.addOverlay(layerObj, layer.name);
@@ -107,6 +137,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
 }
+
 
 function initializeLeafletMeasure() {
     // Initialize Leaflet Measure
