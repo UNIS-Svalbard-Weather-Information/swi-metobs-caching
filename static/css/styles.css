@@ -164,3 +164,12 @@ body {
 .legend-item span {
     vertical-align: middle;
 }
+
+.geojson-legend-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #3388ff; /* Default Leaflet GeoJSON color */
+    border: 1px solid #000;
+    display: inline-block;
+    margin-right: 5px;
+}
