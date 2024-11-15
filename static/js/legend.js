@@ -13,7 +13,7 @@ function updateLegend(legendControl) {
     legendControl._div.classList.add('legend-container');
 
     // Prevent map scroll when interacting with the legend
-    legendControl._div.addEventListener('wheel', function(e) {
+    legendControl._div.addEventListener('wheel', function (e) {
         e.stopPropagation();
     });
 
@@ -28,13 +28,17 @@ function updateLegend(legendControl) {
 
     for (let layerName in activeLayers) {
         const layer = activeLayers[layerName];
+
         if (layer.type === 'wms') {
             const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
             legendHtml += `<div class="legend-item"><img src="${legendUrl}" alt="Legend"> <span>${layerName}</span></div>`;
         } else if (layer.type === 'arcgis') {
             legendPromises.push(
                 fetch(`${layer.url}/legend?f=pjson`)
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch legend for ${layerName}`);
+                        return response.json();
+                    })
                     .then(data => {
                         legendHtml += `<h3>${layerName}</h3><ul>`;
                         data.layers.forEach(layerItem => {
@@ -52,7 +56,19 @@ function updateLegend(legendControl) {
                         });
                         legendHtml += '</ul>';
                     })
+                    .catch(error => {
+                        console.error(error);
+                        legendHtml += `<div class="legend-error">Error loading legend for ${layerName}</div>`;
+                    })
             );
+        } else if (layer.type === 'geojson') {
+            legendHtml += `<h3>${layerName}</h3><ul>`;
+            legendHtml += `
+                <li class="legend-item">
+                    <div class="geojson-legend-icon"></div> <!-- Customize with CSS -->
+                    <span>${layerName} Features</span>
+                </li>`;
+            legendHtml += '</ul>';
         }
     }
 
@@ -60,6 +76,7 @@ function updateLegend(legendControl) {
         legendControl._div.innerHTML = legendHtml;
     });
 }
+
 
 
 
