@@ -20,13 +20,15 @@ Routes:
     /api/fixed-station-data/<station_id>
 """
 
-from flask import Flask, jsonify, render_template, request, send_from_directory, abort
+from flask import Flask, jsonify, render_template, request, send_from_directory, abort, send_file
 import netCDF4 as nc
 import json
 import numpy as np
 import importlib
 import sys
 import os
+from apscheduler.schedulers.background import BackgroundScheduler
+from import_functions.sea_ice_handler import create_ice_chart_geojson
 
 sys.path.append(os.path.join(os.path.dirname(__file__), './import_functions'))
 
@@ -67,6 +69,12 @@ def get_data(import_function_str, url, variables, duration, station_id):
     except Exception as e:
         print(f"Error retrieving station data: {e}")
         return []
+
+# Run GeoJSON creation function every hour
+scheduler = BackgroundScheduler()
+scheduler.add_job(create_ice_chart_geojson, 'interval', hours=1)
+scheduler.start()
+
 
 @app.route('/')
 def index():
@@ -144,6 +152,23 @@ def get_fixed_station_data(station_id):
 @app.route('/libs/<path:filename>')
 def serve_libs(filename):
     return send_from_directory('libs', filename)
+
+@app.route('/api/maps/sea-ice', methods=['GET'])
+def serve_geojson():
+    GEOJSON_FILE = "./maps/ice_chart_data/chart_ice.geojson"
+    try:
+        if not os.path.exists(GEOJSON_FILE):
+            try:
+                create_ice_chart_geojson()
+            except:
+                return jsonify({"error": "Impossible to create sea ice geoJson"}), 404
+
+        if os.path.exists(GEOJSON_FILE):
+            return send_file(GEOJSON_FILE, mimetype='application/json')
+        else:
+            return jsonify({"error": "GeoJSON file not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
