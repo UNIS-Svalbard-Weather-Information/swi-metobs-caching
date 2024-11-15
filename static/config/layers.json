@@ -46,6 +46,12 @@
             "type": "arcgis",
             "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
             "layers": [7, 8]
+        },
+        {
+            "name": "Sea Ice",
+            "type": "geojson",
+            "url": "/api/maps/sea-ice",
+            "layers": [0]
         }
     ]
 }   
