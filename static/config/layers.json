@@ -11,14 +11,21 @@
         {
             "name": "Snowscooter driving area",
             "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Skuterbegrensning_Svalbard/MapServer",
-            "layers": [0, 1, 2]
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
+            "layers": [6, 7, 8]
+        },
+
+        {
+            "name": "Trafic rules",
+            "type": "arcgis",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
+            "layers": [2, 3, 4, 5]
         },
 
         {
             "name": "Boat landing sites",
             "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/T_Ilandstigningslokaliteter_Svalbard/MapServer",
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
             "layers": [0]
         },
 
