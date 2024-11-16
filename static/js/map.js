@@ -17,7 +17,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         .then(layerConfig => {
             map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
             const baseLayers = {};
-            const additionalLayers = {};
+            //const additionalLayers = {};
             const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
             const legendControl = L.control({ position: 'bottomright' });
 

@@ -19,6 +19,20 @@ function removeOpacityControl(layerName) {
 function updateLayerOpacity(layerName, value) {
     const layer = additionalLayers[layerName];
     if (layer) {
-        layer.setOpacity(value / 100);
+        console.log(`Updating opacity for layer: ${layerName}, value: ${value}`);
+        if (layer.setOpacity) {
+            // For layers with setOpacity method (e.g., tile layers, WMS layers)
+            layer.setOpacity(value / 100);
+        } else if (layer.setStyle) {
+            // For GeoJSON layers or other styled layers
+            layer.setStyle({
+                opacity: value / 100,      // Applies to contours (e.g., lines)
+                fillOpacity: value / 100  // Applies to fills (e.g., polygons)
+            });
+        } else {
+            console.warn(`Layer does not support opacity adjustment: ${layerName}`);
+        }
+    } else {
+        console.error(`Layer not found in additionalLayers: ${layerName}`);
     }
 }
