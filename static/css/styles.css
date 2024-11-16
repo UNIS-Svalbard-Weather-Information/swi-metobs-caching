@@ -1,3 +1,4 @@
+/* General Body and Layout */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -5,6 +6,7 @@ body {
     overflow: hidden; /* Prevent scrolling on the main page */
 }
 
+/* Map Area */
 #map {
     height: 100vh;
     width: calc(100% - 340px); /* Adjust width to account for the menu */
@@ -13,12 +15,13 @@ body {
     right: 0;
 }
 
+/* Sidebar Menu */
 #menu {
     width: 300px;
-    position: fixed; /* Make sure the menu is fixed */
+    position: fixed;
     top: 0;
     left: 0;
-    bottom: 0; /* Extend to the bottom to use the full height */
+    bottom: 0;
     background: white;
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -27,6 +30,7 @@ body {
     max-height: 100vh;
 }
 
+/* Menu Headings */
 #menu h2 {
     margin-top: 0;
     font-size: 1.2em;
@@ -34,13 +38,16 @@ body {
     padding-bottom: 5px;
 }
 
+/* Form Controls */
 #menu label {
     display: block;
     margin-top: 10px;
     font-weight: bold;
 }
 
-#menu select, #menu button, #menu input[type="file"] {
+#menu select,
+#menu button,
+#menu input[type="file"] {
     width: 100%;
     margin-top: 5px;
     padding: 5px;
@@ -48,7 +55,9 @@ body {
     border-radius: 3px;
 }
 
-#menu select:hover, #menu button:hover, #menu input[type="file"]:hover {
+#menu select:hover,
+#menu button:hover,
+#menu input[type="file"]:hover {
     border-color: #aaa;
 }
 
@@ -56,7 +65,10 @@ body {
     cursor: pointer;
 }
 
-#opacity-controls, #download_option, #credits {
+/* Additional Components */
+#opacity-controls,
+#download_option,
+#credits {
     margin-top: 20px;
 }
 
@@ -65,11 +77,7 @@ body {
     margin: 10px auto;
 }
 
-.center {
-    display: block;
-    margin: 10px auto;
-}
-
+/* Legend Styling */
 .info.legend {
     background: white;
     line-height: 1.5;
@@ -83,7 +91,7 @@ body {
     margin-bottom: 5px;
 }
 
-/* Legend container styles */
+/* Scrollable Legend Container */
 .legend-container {
     max-height: 50vh; /* Set maximum height to 50% of the viewport height */
     overflow-y: auto; /* Make it scrollable */
@@ -93,6 +101,94 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
+/* Legend Items */
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.legend-item img {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.legend-item span {
+    vertical-align: middle;
+}
+
+/* GeoJSON Legend Icon */
+.geojson-legend-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #3388ff; /* Default Leaflet GeoJSON color */
+    border: 1px solid #000;
+    display: inline-block;
+    margin-right: 5px;
+    border-radius: 4px; /* Rounded edges for consistency */
+}
+
+.legend-dates {
+    margin-bottom: 1em;
+    font-size: 14px;
+    color: #555;
+}
+
+.legend-dates p {
+    margin: 0.2em 0;
+}
+
+.legend-date {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Tooltip Styling */
+.tooltip {
+    position: relative;
+    cursor: pointer; /* Indicates interactivity */
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 120%; /* Position above the element */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: normal; /* Allow text to wrap */
+    display: none; /* Hidden by default */
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    max-width: calc(100% - 20px); /* Ensure it fits inside the legend */
+    word-wrap: break-word; /* Break long words if necessary */
+    text-align: center; /* Optional: Center-align the text */
+}
+
+.tooltip:hover::after {
+    display: block;
+}
+
+/* Optional: Ensure the tooltip stays within the legend */
+.info.legend .tooltip::after {
+    max-width: 95%; /* Further constrain width within the legend */
+}
+
+
+
+
+
+
+
+
+
+
+/* Station Controls */
 #station-controls {
     display: flex;
     flex-direction: column;
@@ -112,6 +208,7 @@ body {
     transform-origin: center;
 }
 
+/* Project Items */
 .project-header {
     display: flex;
     align-items: center; /* Align items vertically in the center */
@@ -144,23 +241,27 @@ body {
     background-color: #0069a7;
 }
 
+/* Custom Legend Styling */
 .legend-container {
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
 
-.legend-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
+/* Popup Box Styling */
+.popup-box {
+    position: absolute; /* Position relative to the document */
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    max-width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    white-space: normal; /* Allow wrapping of text */
+    word-wrap: break-word; /* Prevent text overflow */
+    text-align: center;
 }
 
-.legend-item img {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-}
 
-.legend-item span {
-    vertical-align: middle;
-}
+
