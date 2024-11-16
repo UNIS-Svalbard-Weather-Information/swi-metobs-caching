@@ -105,32 +105,36 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         logger.error(f"Failed to clip and mask: {e}")
         raise
 
-    # List of unique NIS_CLASS values
-    unique_classes = gdf["NIS_CLASS"].unique()
-    logger.info(f"Unique NIS_CLASS values found: {unique_classes}")
-
-    # Generate a random color for each class
+    # Fixed colors from the legend
     class_colors = {
-        nis_class: f'#{random.randint(0, 0xFFFFFF):06x}'  # Random hex color
-        for nis_class in unique_classes
+        "Fast Ice": "#808080",  # Gray
+        "Very Close Drift Ice": "#FF0000",  # Red
+        "Close Drift Ice": "#FFA500",  # Orange
+        "Open Drift Ice": "#FFFF00",  # Yellow
+        "Very Open Drift Ice": "#90EE90",  # Light Green
+        "Open Water": "#ADD8E6",  # Light Blue
     }
 
-    # Create features for GeoJSON
+    # Filter out the 'Ice Free' field if present
+    if "Ice Free" in gdf["NIS_CLASS"].unique():
+        gdf = gdf[gdf["NIS_CLASS"] != "Ice Free"]
+
+    # Generate features for GeoJSON using fixed colors
     features = []
-    for nis_class in unique_classes:
-        class_gdf = gdf[gdf["NIS_CLASS"] == nis_class]
-        dissolved = class_gdf.dissolve(by="NIS_CLASS").geometry.iloc[0]
+    for nis_class in class_colors.keys():
+        if nis_class in gdf["NIS_CLASS"].unique():
+            class_gdf = gdf[gdf["NIS_CLASS"] == nis_class]
+            dissolved = class_gdf.dissolve(by="NIS_CLASS").geometry.iloc[0]
 
-        feature = {
-            "type": "Feature",
-            "properties": {
-                "name": nis_class,
-                "color": class_colors[nis_class],
-            },
-            "geometry": mapping(dissolved),
-        }
-        features.append(feature)
-
+            feature = {
+                "type": "Feature",
+                "properties": {
+                    "name": nis_class,
+                    "color": class_colors[nis_class],
+                },
+                "geometry": mapping(dissolved),
+            }
+            features.append(feature)
     # Create the GeoJSON structure
     geojson_data = {
         "type": "FeatureCollection",
