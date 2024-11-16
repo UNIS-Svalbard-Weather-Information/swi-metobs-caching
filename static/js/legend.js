@@ -29,7 +29,43 @@ function updateLegend(legendControl) {
     for (let layerName in activeLayers) {
         const layer = activeLayers[layerName];
 
-        if (layer.type === 'wms') {
+        if (layer.type === 'geojson') {
+            // Fetch the GeoJSON data for the layer
+            legendPromises.push(
+                fetch(layer.url)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch GeoJSON for ${layerName}`);
+                        return response.json();
+                    })
+                    .then(geojsonData => {
+                        legendHtml += `<h3>${layerName}</h3><ul>`;
+                        const uniqueStyles = new Set();
+
+                        geojsonData.features.forEach(feature => {
+                            const properties = feature.properties || {};
+                            const color = properties.color || '#3388ff'; // Default color
+                            const label = properties.name || 'Feature';
+
+                            // Avoid duplicate entries in the legend
+                            const uniqueKey = `${color}-${label}`;
+                            if (!uniqueStyles.has(uniqueKey)) {
+                                uniqueStyles.add(uniqueKey);
+                                legendHtml += `
+                                    <li class="legend-item">
+                                        <span class="geojson-legend-icon" style="background-color: ${color};"></span>
+                                        <span>${label}</span>
+                                    </li>`;
+                            }
+                        });
+
+                        legendHtml += '</ul>';
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        legendHtml += `<div class="legend-error">Error loading legend for ${layerName}</div>`;
+                    })
+            );
+        } else if (layer.type === 'wms') {
             const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
             legendHtml += `<div class="legend-item"><img src="${legendUrl}" alt="Legend"> <span>${layerName}</span></div>`;
         } else if (layer.type === 'arcgis') {
@@ -61,14 +97,6 @@ function updateLegend(legendControl) {
                         legendHtml += `<div class="legend-error">Error loading legend for ${layerName}</div>`;
                     })
             );
-        } else if (layer.type === 'geojson') {
-            legendHtml += `<h3>${layerName}</h3><ul>`;
-            legendHtml += `
-                <li class="legend-item">
-                    <div class="geojson-legend-icon"></div> <!-- Customize with CSS -->
-                    <span>${layerName} Features</span>
-                </li>`;
-            legendHtml += '</ul>';
         }
     }
 
@@ -76,6 +104,8 @@ function updateLegend(legendControl) {
         legendControl._div.innerHTML = legendHtml;
     });
 }
+
+
 
 
 
