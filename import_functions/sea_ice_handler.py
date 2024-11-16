@@ -6,6 +6,7 @@ import logging
 import json
 from shapely.geometry import mapping, box
 from datetime import datetime, timedelta
+import re
 
 
 def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", svalbard_bbox=(7.5, 74.0, 36.0, 81.0)):
@@ -101,6 +102,17 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         zip_ref.extractall(output_dir)
 
     shapefiles = [f for f in os.listdir(output_dir) if f.endswith(".shp")]
+
+    # Regular expression to extract YYYYMMDD
+    match = re.search(r'\d{8}', shapefiles[0])
+    if match:
+        date_str = match.group()  # '20241115'
+        date_obj = datetime.strptime(date_str, '%Y%m%d')
+        logger.info(f"Shape file from {date_obj}")  # Output: 2024-11-15 00:00:00
+    else:
+        date_obj = datetime.strptime("19000101", '%Y%m%d')
+        logger.info(f"No date found in the shape file")
+
     if not shapefiles:
         logger.error("No shapefile found in the downloaded ZIP.")
         raise FileNotFoundError("No shapefile found in the downloaded ZIP.")
@@ -140,7 +152,8 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
             }
             features.append(feature)
 
-    geojson_data = {"type": "FeatureCollection", "features": features}
+    geojson_data = {"type": "FeatureCollection", "features": features, "date" : date_obj.isoformat(), "lastDownload" : datetime.now().isoformat()}
+
 
     with open(geojson_path, "w") as f:
         json.dump(geojson_data, f)
@@ -151,7 +164,7 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
 
 if __name__ == "__main__":
     try:
-        geojson_path = create_ice_chart_geojson(force=False)
+        geojson_path = create_ice_chart_geojson(force=True)
         print(f"Generated GeoJSON is available at: {geojson_path}")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
