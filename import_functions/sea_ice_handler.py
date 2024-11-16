@@ -8,7 +8,7 @@ from shapely.geometry import mapping, box
 
 
 
-def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", svalbard_bbox=(-10.0, 74.0, 35.0, 82.0)):
+def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", svalbard_bbox=(7.5, 74.0, 36.0, 81.0)):
     """
     Clips the input GeoDataFrame to the Svalbard bounding box and masks out the land areas using a local shapefile.
 
