@@ -129,6 +129,65 @@ body {
     border-radius: 4px; /* Rounded edges for consistency */
 }
 
+.legend-dates {
+    margin-bottom: 1em;
+    font-size: 14px;
+    color: #555;
+}
+
+.legend-dates p {
+    margin: 0.2em 0;
+}
+
+.legend-date {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Tooltip Styling */
+.tooltip {
+    position: relative;
+    cursor: pointer; /* Indicates interactivity */
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 120%; /* Position above the element */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: normal; /* Allow text to wrap */
+    display: none; /* Hidden by default */
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    max-width: calc(100% - 20px); /* Ensure it fits inside the legend */
+    word-wrap: break-word; /* Break long words if necessary */
+    text-align: center; /* Optional: Center-align the text */
+}
+
+.tooltip:hover::after {
+    display: block;
+}
+
+/* Optional: Ensure the tooltip stays within the legend */
+.info.legend .tooltip::after {
+    max-width: 95%; /* Further constrain width within the legend */
+}
+
+
+
+
+
+
+
+
+
+
 /* Station Controls */
 #station-controls {
     display: flex;
@@ -187,3 +246,22 @@ body {
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
+
+/* Popup Box Styling */
+.popup-box {
+    position: absolute; /* Position relative to the document */
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    max-width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    white-space: normal; /* Allow wrapping of text */
+    word-wrap: break-word; /* Prevent text overflow */
+    text-align: center;
+}
+
+
+

@@ -70,12 +70,6 @@ def get_data(import_function_str, url, variables, duration, station_id):
         print(f"Error retrieving station data: {e}")
         return []
 
-# Run GeoJSON creation function every hour
-scheduler = BackgroundScheduler()
-scheduler.add_job(create_ice_chart_geojson, 'interval', hours=1)
-scheduler.start()
-
-
 @app.route('/')
 def index():
     """
