@@ -77,35 +77,40 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                             transparent: true
                         });
                         break;
-                    case 'geojson':
+                     case 'geojson':
                         fetch(layer.url)
                             .then(response => response.json())
                             .then(geojsonData => {
-                                layerObj = L.geoJSON(geojsonData, {
-                                    onEachFeature: function (feature, layer) {
-                                        if (feature.properties && feature.properties.popupContent) {
-                                            layer.bindPopup(feature.properties.popupContent);
-                                        }
-                                    }
+                                // Define a style function based on feature properties
+                                const style = feature => ({
+                                    color: feature.properties.color || 'black', // Contour color
+                                    weight: feature.properties.weight || 2,    // Contour weight
+                                    opacity: feature.properties.opacity || 1,  // Contour opacity
+                                    fillColor: feature.properties.color || 'blue', // Fill color
+                                    fillOpacity: feature.properties.fillOpacity || 0.9 // Fill opacity
                                 });
-                                additionalLayers[layer.name] = layerObj;
-                                layerControl.addOverlay(layerObj, layer.name);
+
+                                // Create the GeoJSON layer with the style function
+                                const geojsonLayer = L.geoJSON(geojsonData, { style });
+
+                                additionalLayers[layer.name] = geojsonLayer;
+                                layerControl.addOverlay(geojsonLayer, layer.name);
 
                                 // Update active layers and legend when a layer is added
-                                layerObj.on('add', function () {
+                                geojsonLayer.on('add', function () {
                                     activeLayers[layer.name] = layer;
                                     legendControl.update();
-                                    addOpacityControl(layer.name, layerObj);
+                                    addOpacityControl(layer.name, geojsonLayer);
                                 });
 
                                 // Remove from active layers and update legend when a layer is removed
-                                layerObj.on('remove', function () {
+                                geojsonLayer.on('remove', function () {
                                     delete activeLayers[layer.name];
                                     legendControl.update();
                                     removeOpacityControl(layer.name);
                                 });
                             });
-                        return; // Return early to prevent further execution for this case
+                        return;
                 }
                 additionalLayers[layer.name] = layerObj;
                 layerControl.addOverlay(layerObj, layer.name);
