@@ -155,14 +155,9 @@ def serve_libs(filename):
 
 @app.route('/api/maps/sea-ice', methods=['GET'])
 def serve_geojson():
-    GEOJSON_FILE = "./maps/ice_chart_data/ice_chart.geojson"
-    try:
-        if not os.path.exists(GEOJSON_FILE):
-            try:
-                create_ice_chart_geojson()
-            except:
-                return jsonify({"error": "Impossible to create sea ice geoJson"}), 404
 
+    GEOJSON_FILE = create_ice_chart_geojson()
+    try:
         if os.path.exists(GEOJSON_FILE):
             return send_file(GEOJSON_FILE, mimetype='application/json')
         else:
