@@ -5,12 +5,14 @@ import geopandas as gpd
 import logging
 import json
 from shapely.geometry import mapping, box
-import random
+
 
 
 def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", svalbard_bbox=(-10.0, 74.0, 35.0, 82.0)):
     """
     Clips the input GeoDataFrame to the Svalbard bounding box and masks out the land areas using a local shapefile.
+
+    To increase the resolution of the processing of the contour line, you can replace S1000_Land_f by S100_Land_f
 
     Parameters:
         gdf (GeoDataFrame): The GeoDataFrame to process.
