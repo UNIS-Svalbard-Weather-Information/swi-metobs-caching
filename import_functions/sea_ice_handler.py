@@ -5,14 +5,12 @@ import geopandas as gpd
 import logging
 import json
 from shapely.geometry import mapping, box
-
+from datetime import datetime, timedelta
 
 
 def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", svalbard_bbox=(7.5, 74.0, 36.0, 81.0)):
     """
     Clips the input GeoDataFrame to the Svalbard bounding box and masks out the land areas using a local shapefile.
-
-    To increase the resolution of the processing of the contour line, you can replace S1000_Land_f by S100_Land_f
 
     Parameters:
         gdf (GeoDataFrame): The GeoDataFrame to process.
@@ -24,49 +22,68 @@ def clip_and_mask_water_area(gdf, shapefile_path="static/maps/S1000_Land_f", sva
     """
     logging.info("Starting clip and mask process...")
 
-    # Step 1: Clip GeoDataFrame to the bounding box of Svalbard
     svalbard_geom = box(*svalbard_bbox)  # Create a box geometry using the bounding box
     svalbard_gdf = gpd.GeoDataFrame([1], geometry=[svalbard_geom], crs=gdf.crs)
     gdf_clipped = gpd.clip(gdf, svalbard_gdf)  # Clip the data to the bounding box
     logging.info("GeoDataFrame clipped to Svalbard bounding box.")
 
-    # Step 2: Load the land contour shapefile
     logging.info(f"Loading land contour shapefile from {shapefile_path}...")
     land_gdf = gpd.read_file(shapefile_path)
-
-    # Ensure the CRS of the land contour matches the GeoDataFrame
-    land_gdf = land_gdf.to_crs(gdf.crs)
+    land_gdf = land_gdf.to_crs(gdf.crs)  # Ensure CRS matches
     logging.info("Land contour CRS matched to GeoDataFrame CRS.")
 
-    # Step 3: Mask out the land areas by performing a difference operation
     gdf_water_only = gpd.overlay(gdf_clipped, land_gdf, how="difference")
     logging.info("Land areas successfully masked out.")
 
     return gdf_water_only
 
 
+def is_recent_file(filepath, max_age_minutes=30):
+    """
+    Checks if the file exists and was modified within the specified time frame.
+
+    Parameters:
+        filepath (str): Path to the file to check.
+        max_age_minutes (int): Maximum allowed file age in minutes.
+
+    Returns:
+        bool: True if the file is recent, False otherwise.
+    """
+    if not os.path.exists(filepath):
+        return False
+
+    file_mod_time = datetime.fromtimestamp(os.path.getmtime(filepath))
+    return datetime.now() - file_mod_time <= timedelta(minutes=max_age_minutes)
+
+
 def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
                              output_geojson="ice_chart.geojson",
-                             url="https://cryo.met.no/sites/cryo/files/latest/NIS_arctic_latest_pl_a.zip"):
+                             url="https://cryo.met.no/sites/cryo/files/latest/NIS_arctic_latest_pl_a.zip",
+                             force=False):
     """
-    Downloads the latest zipped shapefile from MET Norway, processes it,
-    and generates a single GeoJSON file with all features grouped by the NIS_CLASS field.
+    Downloads and processes ice chart data, generating a GeoJSON file.
 
     Parameters:
         output_dir (str): Directory where files will be saved and the GeoJSON generated.
         output_geojson (str): Name of the output GeoJSON file.
         url (str): URL of the zipped shapefile to download.
+        force (bool): Force redownload and reprocess data even if GeoJSON exists and is recent.
+
     Returns:
         str: Path to the generated GeoJSON file.
     """
-    # Configure logging
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     logger = logging.getLogger(__name__)
 
-    # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
-    # Download the zip file
+    geojson_path = os.path.join(output_dir, output_geojson)
+
+    # Check if the GeoJSON file exists and is recent
+    if not force and is_recent_file(geojson_path, max_age_minutes=30):
+        logger.info(f"GeoJSON file {geojson_path} is recent. Skipping processing.")
+        return geojson_path
+
     zip_file_path = os.path.join(output_dir, "NIS_arctic_latest.zip")
     logger.info(f"Downloading data from {url}...")
     response = requests.get(url, stream=True)
@@ -79,19 +96,16 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         logger.error(f"Failed to download the file. Status code: {response.status_code}")
         raise Exception(f"Failed to download the file. Status code: {response.status_code}")
 
-    # Extract the zip file
     logger.info("Extracting downloaded files...")
     with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
         zip_ref.extractall(output_dir)
 
-    # Find the shapefile (.shp) in the extracted files
     shapefiles = [f for f in os.listdir(output_dir) if f.endswith(".shp")]
     if not shapefiles:
         logger.error("No shapefile found in the downloaded ZIP.")
         raise FileNotFoundError("No shapefile found in the downloaded ZIP.")
     shapefile_path = os.path.join(output_dir, shapefiles[0])
 
-    # Load the shapefile using GeoPandas
     logger.info(f"Loading shapefile {shapefile_path}...")
     try:
         gdf = gpd.read_file(shapefile_path)
@@ -99,7 +113,6 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         logger.error(f"Failed to load the shapefile: {e}")
         raise
 
-    # Clip and mask the GeoDataFrame
     try:
         gdf = clip_and_mask_water_area(gdf)
         logger.info("GeoDataFrame successfully clipped and masked.")
@@ -107,44 +120,28 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         logger.error(f"Failed to clip and mask: {e}")
         raise
 
-    # Fixed colors from the legend
     class_colors = {
-        "Fast Ice": "#808080",  # Gray
-        "Very Close Drift Ice": "#FF0000",  # Red
-        "Close Drift Ice": "#FFA500",  # Orange
-        "Open Drift Ice": "#FFFF00",  # Yellow
-        "Very Open Drift Ice": "#90EE90",  # Light Green
-        "Open Water": "#ADD8E6",  # Light Blue
+        "Fast Ice": "#808080", "Very Close Drift Ice": "#FF0000", "Close Drift Ice": "#FFA500",
+        "Open Drift Ice": "#FFFF00", "Very Open Drift Ice": "#90EE90", "Open Water": "#ADD8E6"
     }
 
-    # Filter out the 'Ice Free' field if present
     if "Ice Free" in gdf["NIS_CLASS"].unique():
         gdf = gdf[gdf["NIS_CLASS"] != "Ice Free"]
 
-    # Generate features for GeoJSON using fixed colors
     features = []
     for nis_class in class_colors.keys():
         if nis_class in gdf["NIS_CLASS"].unique():
             class_gdf = gdf[gdf["NIS_CLASS"] == nis_class]
             dissolved = class_gdf.dissolve(by="NIS_CLASS").geometry.iloc[0]
-
             feature = {
                 "type": "Feature",
-                "properties": {
-                    "name": nis_class,
-                    "color": class_colors[nis_class],
-                },
+                "properties": {"name": nis_class, "color": class_colors[nis_class]},
                 "geometry": mapping(dissolved),
             }
             features.append(feature)
-    # Create the GeoJSON structure
-    geojson_data = {
-        "type": "FeatureCollection",
-        "features": features,
-    }
 
-    # Save to a GeoJSON file
-    geojson_path = os.path.join(output_dir, output_geojson)
+    geojson_data = {"type": "FeatureCollection", "features": features}
+
     with open(geojson_path, "w") as f:
         json.dump(geojson_data, f)
     logger.info(f"GeoJSON file created: {geojson_path}")
@@ -152,10 +149,9 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
     return geojson_path
 
 
-# Example usage
 if __name__ == "__main__":
     try:
-        geojson_path = create_ice_chart_geojson()
+        geojson_path = create_ice_chart_geojson(force=False)
         print(f"Generated GeoJSON is available at: {geojson_path}")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
