@@ -155,7 +155,7 @@ def serve_libs(filename):
 
 @app.route('/api/maps/sea-ice', methods=['GET'])
 def serve_geojson():
-    GEOJSON_FILE = "./maps/ice_chart_data/chart_ice.geojson"
+    GEOJSON_FILE = "./maps/ice_chart_data/ice_chart.geojson"
     try:
         if not os.path.exists(GEOJSON_FILE):
             try:
