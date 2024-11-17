@@ -20,15 +20,13 @@ Routes:
     /api/fixed-station-data/<station_id>
 """
 
-from flask import Flask, jsonify, render_template, request, send_from_directory, abort, send_file
-import netCDF4 as nc
+from flask import Flask, jsonify, render_template, request, send_from_directory, send_file
 import json
-import numpy as np
 import importlib
 import sys
 import os
-from apscheduler.schedulers.background import BackgroundScheduler
 from import_functions.sea_ice_handler import create_ice_chart_geojson
+from utils.citation_utils import load_references
 
 sys.path.append(os.path.join(os.path.dirname(__file__), './import_functions'))
 
@@ -158,6 +156,15 @@ def serve_geojson():
             return jsonify({"error": "GeoJSON file not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/credits')
+def credits():
+    """
+    Renders the credits page dynamically based on configuration files and .bib.
+    """
+    references = load_references()
+    return render_template('credits.html', references=references)
+
 
 
 if __name__ == '__main__':

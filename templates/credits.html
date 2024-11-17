@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <title>Credits</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div id="menu">
+        <h1>Credits</h1>
+
+       <section>
+            <h2>Map Information</h2>
+            {% if references.map_sources %}
+                <ul>
+                    {% for citation in references.map_sources %}
+                        <li>{{ citation | safe }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No map information available.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Mobile Stations Data</h2>
+            {% if references.mobile_station_sources %}
+                <ul>
+                    {% for citation in references.mobile_station_sources %}
+                        <li>{{ citation | safe }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No mobile station information available.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Fixed Stations Data</h2>
+            {% if references.fixed_station_sources %}
+                <ul>
+                    {% for citation in references.fixed_station_sources %}
+                        <li>{{ citation | safe }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No fixed station information available.</p>
+            {% endif %}
+        </section>
+
+
+        <p>&copy; 2024 Svalbard Weather Information</p>
+    </div>
+</body>
+</html>
