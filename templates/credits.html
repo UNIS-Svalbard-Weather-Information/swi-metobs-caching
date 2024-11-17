@@ -3,15 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWI - Credits</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <title>Credits</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Map container fills the viewport */
+        #map {
+            position: relative;
+            height: 100vh; /* Full viewport height */
+            width: calc(100% - 300px); /* Adjust width to avoid the menu area */
+            margin-left: 300px; /* Align with menu width */
+            overflow: hidden; /* Prevent content from spilling out */
+        }
+
+        #map img.landscape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensure the image covers the entire container */
+            z-index: 1; /* Place the image behind all overlays */
+        }
+
+        .logo-overlay {
+            position: absolute;
+            bottom: 50px; /* Position logos slightly above the bottom edge */
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around; /* Evenly space logos */
+            align-items: flex-end; /* Align logos to the bottom */
+            gap: 20px; /* Adjust spacing between logos */
+            z-index: 3; /* Place logos above the image */
+        }
+
+        .logo-overlay a {
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .logo-overlay img {
+            height: 100px; /* Uniform height for all logos */
+            width: auto; /* Maintain aspect ratio */
+            transition: transform 0.3s;
+        }
+
+        .logo-overlay img:hover {
+            transform: scale(1.1); /* Slight zoom on hover */
+        }
+
+        /* Svalbard Information System Logo at the Top Center */
+        .svalbard-logo {
+            position: absolute;
+            top: 40px; /* Adjust distance from the top */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Offset to center the logo */
+            z-index: 3; /* Place above the landscape */
+        }
+
+        .svalbard-logo img {
+            height: 200px; /* Increased size for more prominence */
+            width: auto; /* Maintain aspect ratio */
+        }
+
+        #menu {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: #f9f9f9;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 4; /* Ensure the menu stays above all map content */
+        }
+    </style>
 </head>
 <body>
     <div id="menu">
+        <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center">
+        <br>
+        <br>
+        <a href="/">Home Page</a>
         <h1>Credits</h1>
-
-       <section>
+        <section>
             <h2>Map Information</h2>
             {% if references.map_sources %}
                 <ul>
@@ -23,7 +100,6 @@
                 <p>No map information available.</p>
             {% endif %}
         </section>
-
         <section>
             <h2>Mobile Stations Data</h2>
             {% if references.mobile_station_sources %}
@@ -36,7 +112,6 @@
                 <p>No mobile station information available.</p>
             {% endif %}
         </section>
-
         <section>
             <h2>Fixed Stations Data</h2>
             {% if references.fixed_station_sources %}
@@ -49,9 +124,40 @@
                 <p>No fixed station information available.</p>
             {% endif %}
         </section>
+        <section>
+            <h2>Contributors</h2>
+            <ul class="contributors-list">
+                <li>
+                    <a href="https://links.louispauchet.com/" target="_blank">Louis Pauchet</a> UNIS / INSA Rouen Normandie
+                </li>
+                <li>
+                    <a href="https://github.com/JulesBoulard" target="_blank">Jules Boulard</a> UNIS
+                </li>
+                <!-- Add more contributors as needed -->
+            </ul>
+        </section>
 
+        <p>Photo : Louis Pauchet - UNIS/INSA Rouen Normandie - 2024</p>
+    <br>
+    <br>
+    </div>
+    <div id="map">
+        <!-- Landscape Image -->
+        <img src="{{ url_for('static', filename='images/svalbard_landscape.jpg') }}" alt="Svalbard Landscape" class="landscape">
 
-        <p>&copy; 2024 Svalbard Weather Information</p>
+        <!-- Svalbard Information System Logo -->
+        <div class="svalbard-logo">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Svalbard Information System Logo">
+        </div>
+
+        <!-- Logo Overlay -->
+        <div class="logo-overlay">
+            {% for logo in logos %}
+                <a href="{{ logo.link }}" target="_blank">
+                    <img src="{{ logo.src }}" alt="Data Provider Logo">
+                </a>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>
