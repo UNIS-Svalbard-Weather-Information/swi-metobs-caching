@@ -20,7 +20,7 @@ Routes:
     /api/fixed-station-data/<station_id>
 """
 
-from flask import Flask, jsonify, render_template, request, send_from_directory, send_file
+from flask import Flask, jsonify, render_template, request, send_from_directory, send_file, url_for
 import json
 import importlib
 import sys
@@ -157,13 +157,39 @@ def serve_geojson():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/credits')
 def credits():
     """
     Renders the credits page dynamically based on configuration files and .bib.
+    Includes a landscape image and provider logos in place of the map, with links.
     """
+    # Load references
     references = load_references()
-    return render_template('credits.html', references=references)
+
+    # Path to data provider logo directory and link file
+    logo_dir = os.path.join(app.static_folder, "images/data_provider_logo")
+    link_file = os.path.join(logo_dir, "link.json")
+
+    # Load links from link.json
+    try:
+        with open(link_file, 'r') as f:
+            logo_links = json.load(f)
+    except FileNotFoundError:
+        logo_links = {}
+
+    # Dynamically fetch logos and their links
+    logos = [
+        {
+            "src": url_for('static', filename=f'images/data_provider_logo/{file}'),
+            "link": logo_links.get(file, "#")  # Default to '#' if no link is found
+        }
+        for file in os.listdir(logo_dir)
+        if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg'))
+    ]
+
+    # Render the template
+    return render_template('credits.html', references=references, logos=logos)
 
 
 
