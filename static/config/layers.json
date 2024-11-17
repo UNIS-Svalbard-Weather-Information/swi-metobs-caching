@@ -3,7 +3,8 @@
         {
             "name": "Topo Svalbard",
             "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer"
+            "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer",
+            "cite": "norwegian_polar_institute_np_2024"
         }
     ],
 
@@ -12,46 +13,53 @@
             "name": "Snowscooter driving area",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [6, 7, 8]
+            "layers": [6, 7, 8],
+            "cite": "norwegian_polar_institute_np_2024"
         },
 
         {
             "name": "Trafic rules",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [2, 3, 4, 5]
+            "layers": [2, 3, 4, 5],
+            "cite": "norwegian_polar_institute_np_2024"
         },
 
         {
             "name": "Boat landing sites",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [0]
+            "layers": [0],
+            "cite": "norwegian_polar_institute_np_2024"
+        },
+        {
+            "name": "Slope steepness (avalanche)",
+            "type": "arcgis",
+            "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
+            "layers": [1],
+            "cite" : "bratthet_snoskred"
+        },
+        {
+            "name": "Slope steepness (general)",
+            "type": "arcgis",
+            "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
+            "layers": [3],
+            "cite" : "bratthet_snoskred"
         },
 
-        {
-            "name": "Walrus haulout sites",
-            "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/F_Walrus_Haulout_Sites_Svalbard/MapServer",
-            "layers": [0]
-        },
-        {
-            "name": "Slope steepness",
-            "type": "arcgis",
-            "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
-            "layers": [5,6]
-        },
         {
             "name": "Runout area",
             "type": "arcgis",
             "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
-            "layers": [7, 8]
+            "layers": [7, 8],
+            "cite": "utlopsomradekart"
         },
         {
             "name": "Sea Ice",
             "type": "geojson",
             "url": "/api/maps/sea-ice",
-            "layers": [0]
+            "layers": [0],
+            "cite" : "ice_charts_cryo_met_no"
         }
     ]
 }   
