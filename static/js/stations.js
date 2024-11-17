@@ -508,7 +508,7 @@ function updateWindMarker(station, data, windImagesUrl) {
     
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection - 90}deg);" />`,
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection + 90}deg);" />`,
         iconSize: [80, 80],
         iconAnchor: [40, 40]
     });
@@ -529,19 +529,31 @@ function updateWindMarker(station, data, windImagesUrl) {
  * Gets the appropriate wind speed icon based on wind speed.
  * 
  * @param {string} basePath - The base path for wind images.
- * @param {number} windSpeed - The wind speed value.
+ * @param {number} windSpeed - The wind speed in meters per second.
+ * @param {number} windDirection - The wind direction value.
  * @returns {string} - The URL of the wind speed icon.
  */
 function getWindSpeedIcon(basePath, windSpeed, windDirection) {
-    if (windDirection==null || windSpeed==null) {
+    if (typeof basePath !== 'string' || basePath.trim() === '') {
+        throw new Error('Invalid base path');
+    }
+    if (windSpeed == null || windDirection == null ||
+        typeof windSpeed !== 'number' || typeof windDirection !== 'number') {
         return `${basePath}/null.gif`;
-    } else {
-        const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
-        let closest = windSpeeds.reduce((prev, curr) => Math.abs(curr - windSpeed) < Math.abs(prev - windSpeed) ? curr : prev);
-        return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
     }
 
+    // Convert wind speed from m/s to knots
+    const windSpeedKts = windSpeed * 1.94384;
+
+    // Predefined wind speeds in knots
+    const windSpeeds = [0, 5, 10, 15, 20, 25, 30, 35, 50, 55, 60, 65, 100, 105];
+    const closest = windSpeeds.reduce((prev, curr) =>
+        Math.abs(curr - windSpeedKts) < Math.abs(prev - windSpeedKts) ? curr : prev
+    );
+
+    return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
 }
+
 
 /**
  * Gets the color scale based on the variable and its min/max values.
