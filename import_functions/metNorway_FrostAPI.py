@@ -63,7 +63,7 @@ def request_data_to_FrostAPI(url, variables, duration, station_id):
             df = df.join(temp_df, how='outer')
 
     df = df.rename(columns={'index': 'datetime'})
-    df_resampled = df.resample('10T').interpolate()
+    df_resampled = df.resample('10min').interpolate()
 
     return df_resampled
 
