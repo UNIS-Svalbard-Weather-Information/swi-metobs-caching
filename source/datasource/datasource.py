@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
-
-config_files = [
-    "",
-    "",
-]
+import json
 
 class DataSource(ABC):
     """
@@ -25,6 +21,7 @@ class DataSource(ABC):
         """
         self.api_key = api_key
         self.logger = self._setup_logger()
+        self._cached_configs = None  # Cache for loaded configurations
 
     @abstractmethod
     def fetch_station_data(self, station_id):
@@ -36,7 +33,6 @@ class DataSource(ABC):
 
         Returns:
             dict: Metadata or configuration for the station.
-            None: If the method is not implemented or an error occurs.
         """
         pass
 
@@ -50,7 +46,6 @@ class DataSource(ABC):
 
         Returns:
             dict: Transformed real-time data.
-            None: If the method is not implemented or an error occurs.
         """
         pass
 
@@ -66,7 +61,6 @@ class DataSource(ABC):
 
         Returns:
             dict: Transformed historical data.
-            None: If the method is not implemented or an error occurs.
         """
         pass
 
@@ -81,7 +75,6 @@ class DataSource(ABC):
 
         Returns:
             dict: Processed and formatted real-time data.
-            None: If the method is not implemented or an error occurs.
         """
         pass
 
@@ -96,7 +89,6 @@ class DataSource(ABC):
 
         Returns:
             dict: Processed and formatted time series data.
-            None: If the method is not implemented or an error occurs.
         """
         pass
 
@@ -124,7 +116,7 @@ class DataSource(ABC):
         """
         self.logger.error(f"Error occurred: {error}")
 
-    def _load_configs_from_files(self, config_file):
+    def _load_configs_from_files(self, config_files):
         """
         Load configurations from a list of JSON files.
 
@@ -134,37 +126,37 @@ class DataSource(ABC):
         Returns:
             list: A combined list of configuration dictionaries from all files.
         """
+        if self._cached_configs is not None:
+            return self._cached_configs
+
         configs = []
         for file in config_files:
-            with open(file, 'r') as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    configs.extend(data)  # Add the list of configs if the JSON contains a list
-                else:
-                    configs.append(data)  # Add the single config if the JSON is a dictionary
+            try:
+                with open(file, 'r') as f:
+                    data = json.load(f)
+                    configs.extend(data if isinstance(data, list) else [data])
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                self._handle_error(e)
+
+        self._cached_configs = configs
         return configs
 
-    def get_variables(self, station_id):
+    def get_variables(self, station_id, config_files):
         """
-        Placeholder method to fetch a mapping of variable identifiers for a station.
-
-        This method should be implemented by subclasses to return a dictionary
-        mapping variable element IDs to their human-readable names.
+        Fetch a mapping of variable identifiers for a station.
 
         Args:
             station_id (str): The ID of the station.
+            config_files (list): List of file paths to configuration files.
 
         Returns:
-            dict: Mapping of variable element IDs to names.
-            None: If not implemented.
+            dict: Mapping of variable element IDs to names, or None if not found.
         """
+        if not station_id:
+            raise ValueError("station_id must be provided")
+
         configs = self._load_configs_from_files(config_files)
         for config in configs:
             if config.get("id") == station_id:
-                return config.get("variables")
+                return config.get("variables", None)
         return None
-
-
-
-
-
