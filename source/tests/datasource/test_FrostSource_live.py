@@ -1,5 +1,12 @@
+import sys
+import os
+
+# Dynamically add the root directory to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 import pytest
-from datasource.FrostSource import FrostSource
+from source.datasource.FrostSource import FrostSource
+from source.datasource.datasource import DataSource
 
 # Define test data
 TEST_STATIONS = [
