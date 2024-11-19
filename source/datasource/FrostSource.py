@@ -1,5 +1,5 @@
 import requests
-from datasource import DataSource
+from .datasource import DataSource
 
 class FrostSource(DataSource):
     """
