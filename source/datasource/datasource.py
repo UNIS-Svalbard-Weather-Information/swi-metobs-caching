@@ -2,6 +2,12 @@ from abc import ABC, abstractmethod
 import logging
 import json
 
+config_files = [
+    'static/config/fixed_stations.json',
+    'static/config/mobile_stations.json'
+]
+
+
 class DataSource(ABC):
     """
     An abstract base class for data sources that fetch and process weather or
@@ -141,7 +147,7 @@ class DataSource(ABC):
         self._cached_configs = configs
         return configs
 
-    def get_variables(self, station_id, config_files):
+    def get_variables(self, station_id, config_files=config_files):
         """
         Fetch a mapping of variable identifiers for a station.
 
