@@ -85,6 +85,15 @@ def create_ice_chart_geojson(output_dir="./maps/ice_chart_data",
         logger.info(f"GeoJSON file {geojson_path} is recent. Skipping processing.")
         return geojson_path
 
+    # Iterate through the files in the directory
+    for filename in os.listdir(output_dir):
+        # Check the file's extension
+        if not filename.endswith('.geojson'):
+            file_path = os.path.join(output_dir, filename)
+            # Remove the file
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
     zip_file_path = os.path.join(output_dir, "NIS_arctic_latest.zip")
     logger.info(f"Downloading data from {url}...")
     response = requests.get(url, stream=True)
