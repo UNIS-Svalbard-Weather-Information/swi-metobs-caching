@@ -1,150 +1,317 @@
 import sys
 import os
+from unittest.mock import patch, Mock, MagicMock
+from datetime import datetime, timedelta
+import pytest
+import requests
 
-# Dynamically add the root directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-import pytest
-import logging
-from unittest.mock import patch, Mock
 from source.datasource.FrostSource import FrostSource
-import json
 
 @pytest.fixture
 def frost_source():
-    """Fixture to create an instance of FrostSource."""
-    return FrostSource(client_id="test_client_id")
+    """
+    Fixture to create a FrostSource instance with mocked dependencies.
+    """
+    client_id = 'test_client_id'
+    source = FrostSource(client_id)
+    # Mock logger
+    source.logger = MagicMock()
+    # Mock config
+    source.config = MagicMock()
+    source.config.get_variable = MagicMock()
+    # Mock error handler
+    source._handle_error = MagicMock()
+    return source
 
+def test_init():
+    """
+    Test the initialization of FrostSource.
+    """
+    client_id = 'test_client_id'
+    source = FrostSource(client_id)
+    assert source.api_key == client_id
+    assert source.session.auth == (client_id, '')
 
-@patch("requests.Session.get")
+@patch('requests.Session.get')
 def test_fetch_station_data(mock_get, frost_source):
-    """Test fetch_station_data method."""
-    # Mock response data
-    mock_response = Mock()
-    mock_response.json.return_value = {"data": {"id": "123", "name": "Test Station"}}
-    mock_response.status_code = 200
+    """
+    Test fetching station data successfully.
+    """
+    station_id = 'SN18700'
+    expected_url = f"{frost_source.BASE_URL}/sources/v0.jsonld"
+    expected_params = {'ids': station_id}
+
+    # Mock response
+    mock_response = MagicMock()
+    mock_response.json.return_value = {'data': 'station_data'}
+    mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    # Call the method
-    result = frost_source.fetch_station_data("123")
+    result = frost_source.fetch_station_data(station_id)
 
-    # Assertions
-    assert result == {"data": {"id": "123", "name": "Test Station"}}
-    mock_get.assert_called_once_with(
-        "https://frost.met.no/sources/v0.jsonld", params={"ids": "123"}
-    )
+    mock_get.assert_called_once_with(expected_url, params=expected_params)
+    frost_source.logger.info.assert_called_with(f"Fetched station data for {station_id}")
+    assert result == {'data': 'station_data'}
 
+@patch('requests.Session.get')
+def test_fetch_station_data_error(mock_get, frost_source):
+    """
+    Test fetching station data with an error response.
+    """
+    station_id = 'SN18700'
+    mock_get.side_effect = requests.exceptions.HTTPError("Error")
 
-@patch("requests.Session.get")
+    result = frost_source.fetch_station_data(station_id)
+
+    frost_source._handle_error.assert_called_once()
+    assert result is None
+
+@patch('requests.Session.get')
 def test_fetch_realtime_data(mock_get, frost_source):
-    """Test fetch_realtime_data method."""
-    # Mock raw data and transformed data
-    mock_raw_data = {
-        "data": [
-            {
-                "referenceTime": "2023-01-01T12:00:00Z",
-                "observations": [{"elementId": "air_temperature", "value": 5.2}],
-            }
-        ]
+    """
+    Test fetching real-time data successfully.
+    """
+    station_id = 'SN18700'
+    frost_source.config.get_variable.return_value = {
+        'temperature': 'air_temperature',
+        'humidity': 'humidity'
     }
-    mock_transformed_data = {"id": "123", "timeseries": [{"temperature": 5.2, "timestamp": "2023-01-01T12:00:00Z"}]}
 
-    # Mock methods and response
-    mock_response = Mock()
-    mock_response.json.return_value = mock_raw_data
-    mock_response.status_code = 200
+    expected_url = f"{frost_source.BASE_URL}/observations/v0.jsonld"
+    expected_params = {
+        "sources": station_id,
+        "elements": "air_temperature,humidity",
+        "referencetime": "latest",
+        "maxage": "PT1H"
+    }
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {'data': 'realtime_data'}
+    mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    with patch.object(frost_source, "transform_realtime_data", return_value=mock_transformed_data) as mock_transform:
-        result = frost_source.fetch_realtime_data("123")
+    frost_source.transform_realtime_data = MagicMock(return_value={'transformed': 'data'})
 
-        # Assertions
-        assert result == mock_transformed_data
-        mock_get.assert_called_once_with(
-            "https://frost.met.no/observations/v0.jsonld",
-            params={
-                "sources": "123",
-                "elements": "air_temperature,humidity,wind_speed",
-                "referencetime": "latest",
-                "maxage": "PT1H",
-            },
-        )
-        mock_transform.assert_called_once_with(mock_raw_data, "123")
+    result = frost_source.fetch_realtime_data(station_id)
 
+    frost_source.config.get_variable.assert_called_with(station_id)
+    mock_get.assert_called_once_with(expected_url, params=expected_params)
+    frost_source.transform_realtime_data.assert_called_once_with({'data': 'realtime_data'}, station_id)
+    frost_source.logger.info.assert_called_with(f"Fetched real-time data for {station_id}")
+    assert result == {'transformed': 'data'}
 
-@patch("requests.Session.get")
+@patch('requests.Session.get')
+def test_fetch_realtime_data_error(mock_get, frost_source):
+    """
+    Test fetching real-time data with an error response.
+    """
+    station_id = 'SN18700'
+    frost_source.config.get_variable.return_value = {
+        'temperature': 'air_temperature',
+        'humidity': 'humidity'
+    }
+
+    mock_get.side_effect = requests.exceptions.HTTPError("Error")
+
+    result = frost_source.fetch_realtime_data(station_id)
+
+    frost_source._handle_error.assert_called_once()
+    assert result is None
+
+@patch('requests.Session.get')
 def test_fetch_timeseries_data(mock_get, frost_source):
-    """Test fetch_timeseries_data method."""
-    # Mock raw data and transformed data
-    mock_raw_data = {
-        "data": [
-            {
-                "referenceTime": "2023-01-01T12:00:00Z",
-                "observations": [{"elementId": "humidity", "value": 75}],
-            }
-        ]
-    }
-    mock_transformed_data = {"id": "123", "timeseries": [{"humidity": 75, "timestamp": "2023-01-01T12:00:00Z"}]}
+    """
+    Test fetching timeseries data successfully.
+    """
+    station_id = 'SN18700'
+    start_time = '2023-01-01T00:00:00Z'
+    end_time = '2023-01-01T12:00:00Z'
 
-    # Mock methods and response
-    mock_response = Mock()
-    mock_response.json.return_value = mock_raw_data
-    mock_response.status_code = 200
+    expected_url = f"{frost_source.BASE_URL}/observations/v0.jsonld"
+    expected_params = {
+        "sources": station_id,
+        "elements": "air_temperature,humidity",
+        "referencetime": f"{start_time}/{end_time}"
+    }
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {'data': 'timeseries_data'}
+    mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    with patch.object(frost_source, "transform_timeseries_data", return_value=mock_transformed_data) as mock_transform:
-        result = frost_source.fetch_timeseries_data(
-            "123", "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z"
-        )
+    frost_source.transform_timeseries_data = MagicMock(return_value={'transformed': 'data'})
 
-        # Assertions
-        assert result == mock_transformed_data
-        mock_get.assert_called_once_with(
-            "https://frost.met.no/observations/v0.jsonld",
-            params={
-                "sources": "123",
-                "elements": "air_temperature,humidity",
-                "referencetime": "2023-01-01T00:00:00Z/2023-01-02T00:00:00Z",
-            },
-        )
-        mock_transform.assert_called_once_with(mock_raw_data, "123")
+    result = frost_source.fetch_timeseries_data(station_id, start_time, end_time)
 
+    mock_get.assert_called_once_with(expected_url, params=expected_params)
+    frost_source.transform_timeseries_data.assert_called_once_with({'data': 'timeseries_data'}, station_id)
+    frost_source.logger.info.assert_called_with(
+        f"Fetched timeseries data for {station_id} from {start_time} to {end_time}"
+    )
+    assert result == {'transformed': 'data'}
 
-def test_transform_realtime_data(frost_source):
-    """Test transform_realtime_data method."""
-    raw_data = {
-        "data": [
-            {
-                "referenceTime": "2023-01-01T12:00:00Z",
-                "observations": [{"elementId": "air_temperature", "value": 5.2}],
-            }
-        ]
-    }
-    frost_source.get_variable = Mock(return_value={"air_temperature": "temperature"})
+@patch('requests.Session.get')
+def test_fetch_timeseries_data_error(mock_get, frost_source):
+    """
+    Test fetching timeseries data with an error response.
+    """
+    station_id = 'SN18700'
+    start_time = '2023-01-01T00:00:00Z'
+    end_time = '2023-01-01T12:00:00Z'
 
-    result = frost_source.transform_realtime_data(raw_data, "123")
+    mock_get.side_effect = requests.exceptions.HTTPError("Error")
 
-    assert result == {
-        "id": "123",
-        "timeseries": [{"temperature": 5.2, "timestamp": "2023-01-01T12:00:00Z"}],
-    }
+    result = frost_source.fetch_timeseries_data(station_id, start_time, end_time)
 
+    frost_source._handle_error.assert_called_once()
+    assert result is None
 
 def test_transform_timeseries_data(frost_source):
-    """Test transform_timeseries_data method."""
+    """
+    Test transforming raw timeseries data.
+    """
     raw_data = {
-        "data": [
+        'data': [
             {
-                "referenceTime": "2023-01-01T12:00:00Z",
-                "observations": [{"elementId": "humidity", "value": 75}],
+                'referenceTime': '2023-01-01T00:00:00Z',
+                'observations': [
+                    {'elementId': 'air_temperature', 'value': 5.0},
+                    {'elementId': 'humidity', 'value': 80.0}
+                ]
+            },
+            {
+                'referenceTime': '2023-01-01T01:00:00Z',
+                'observations': [
+                    {'elementId': 'air_temperature', 'value': 6.0},
+                    {'elementId': 'humidity', 'value': 82.0}
+                ]
             }
         ]
     }
-    frost_source.get_variable = Mock(return_value={"humidity": "humidity"})
-
-    result = frost_source.transform_timeseries_data(raw_data, "123")
-
-    assert result == {
-        "id": "123",
-        "timeseries": [{"humidity": 75, "timestamp": "2023-01-01T12:00:00Z"}],
+    station_id = 'SN18700'
+    frost_source.config.get_variable.return_value = {
+        'air_temperature': 'temperature',
+        'humidity': 'humidity'
     }
+
+    result = frost_source.transform_timeseries_data(raw_data, station_id)
+
+    expected_timeseries = [
+        {
+            'timestamp': '2023-01-01T00:00:00Z',
+            'temperature': 5.0,
+            'humidity': 80.0
+        },
+        {
+            'timestamp': '2023-01-01T01:00:00Z',
+            'temperature': 6.0,
+            'humidity': 82.0
+        }
+    ]
+
+    frost_source.logger.info.assert_called_with(
+        "Transformed raw time series data into the specified structure dynamically."
+    )
+    assert result == {'id': station_id, 'timeseries': expected_timeseries}
+
+def test_transform_timeseries_data_error(frost_source):
+    """
+    Test transforming raw timeseries data with an error.
+    """
+    raw_data = None
+    station_id = 'SN18700'
+    frost_source.config.get_variable.side_effect = Exception("Error")
+
+    result = frost_source.transform_timeseries_data(raw_data, station_id)
+
+    frost_source._handle_error.assert_called_once()
+    assert result is None
+
+def test_transform_realtime_data(frost_source):
+    """
+    Test transforming raw real-time data.
+    """
+    raw_data = {
+        'data': [
+            {
+                'referenceTime': '2023-01-01T01:00:00Z',
+                'observations': [
+                    {'elementId': 'air_temperature', 'value': 5.0}
+                ]
+            },
+            {
+                'referenceTime': '2023-01-01T00:30:00Z',
+                'observations': [
+                    {'elementId': 'humidity', 'value': 80.0}
+                ]
+            },
+            {
+                'referenceTime': '2022-12-31T23:00:00Z',
+                'observations': [
+                    {'elementId': 'wind_speed', 'value': 10.0}
+                ]
+            }
+        ]
+    }
+    station_id = 'SN18700'
+    frost_source.config.get_variable.return_value = {
+        'temperature': 'air_temperature',
+        'humidity': 'humidity',
+        'wind': 'wind_speed'
+    }
+
+    result = frost_source.transform_realtime_data(raw_data, station_id)
+
+    expected_observation = {
+        'timestamp': '2023-01-01T01:00:00.000Z',
+        'temperature': 5.0,
+        'humidity': 80.0
+        # 'wind' is excluded because its timestamp is more than 1 hour older than the most recent timestamp
+    }
+
+    frost_source.logger.info.assert_called_with(
+        "Transformed raw real-time data to include the latest observations within the last hour."
+    )
+    assert result == {'id': station_id, 'timeseries': [expected_observation]}
+
+
+def test_transform_realtime_data_error(frost_source):
+    """
+    Test transforming raw real-time data with an error.
+    """
+    raw_data = None
+    station_id = 'SN18700'
+    frost_source.config.get_variable.side_effect = Exception("Error")
+
+    result = frost_source.transform_realtime_data(raw_data, station_id)
+
+    frost_source._handle_error.assert_called_once()
+    assert result is None
+
+def test_transform_realtime_data_no_data(frost_source):
+    """
+    Test transforming raw real-time data when no valid data is found.
+    """
+    raw_data = {
+        'data': [
+            {
+                'referenceTime': '2023-01-01T01:00:00Z',
+                'observations': [
+                    {'elementId': 'wind_speed', 'value': 10.0}
+                ]
+            }
+        ]
+    }
+    station_id = 'SN18700'
+    frost_source.config.get_variable.return_value = {
+        'temperature': 'air_temperature',
+        'humidity': 'humidity'
+    }
+
+    result = frost_source.transform_realtime_data(raw_data, station_id)
+
+    frost_source.logger.warning.assert_called_with("No valid data found in real-time observations.")
+    assert result is None
+

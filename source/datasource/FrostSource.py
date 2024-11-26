@@ -163,55 +163,63 @@ class FrostSource(DataSource):
             station_id (str): The ID of the weather station.
 
         Returns:
-            dict: Transformed data containing the latest observation.
+            dict: Transformed data containing the latest observation for each variable.
             None: If an error occurs during transformation or if no valid data is found.
         """
         try:
             variable_mapping = self.config.get_variable(station_id)
             sources = raw_data.get('data', [])
 
-            # Initialize the latest observation with no timestamp
-            latest_observation = {"timestamp": None}
-            all_observations = {}
+            # Dictionary to store the latest observation for each variable
+            latest_observations = {}
+            # Variable to track the most recent timestamp among all observations
+            most_recent_timestamp = None
 
             for source in sources:
                 # Parse the source timestamp into a timezone-aware datetime object
                 source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
 
-                # Check if this is the most recent timestamp
-                if latest_observation["timestamp"] is None or source_timestamp > latest_observation["timestamp"]:
-                    latest_observation["timestamp"] = source_timestamp
+                # Update the most recent timestamp if necessary
+                if most_recent_timestamp is None or source_timestamp > most_recent_timestamp:
+                    most_recent_timestamp = source_timestamp
 
-                # Collect all observations
+                # Collect observations
                 for obs in source.get('observations', []):
-                    var = next((k for k, v in variable_mapping.items() if v == obs.get('elementId')), None)
-                    if var is not None:  # Ensure variable exists in mapping
-                        # Store the observation with its timestamp
-                        all_observations[var] = (source_timestamp, obs.get('value'))
+                    element_id = obs.get('elementId')
+                    value = obs.get('value')
+                    var = next((k for k, v in variable_mapping.items() if v == element_id), None)
 
-            # Consolidate all observations from the past hour
-            threshold_time = latest_observation["timestamp"] - timedelta(hours=1)
-            consolidated_observations = {}
+                    if var is not None:
+                        # Store the observation if it's the latest for the variable
+                        if var not in latest_observations or source_timestamp > latest_observations[var][0]:
+                            latest_observations[var] = (source_timestamp, value)
 
-            for var, (timestamp, value) in all_observations.items():
-                if timestamp >= threshold_time:  # Include observations within the 1-hour window
-                    consolidated_observations[var] = value
-
-            # Update the latest observation dictionary
-            latest_observation.update(consolidated_observations)
-
-            # Set the timestamp of the consolidated observation to the most recent timestamp
-            latest_observation["timestamp"] = latest_observation["timestamp"].strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-
-            if latest_observation:
-                self.logger.info("Transformed raw real-time data to include only the latest observation.")
-                return {
-                    "id": station_id,
-                    "timeseries": [latest_observation]  # Wrap in a list for consistency
-                }
-            else:
+            if not latest_observations or most_recent_timestamp is None:
                 self.logger.warning("No valid data found in real-time observations.")
                 return None
+
+            # Calculate the threshold time (1 hour before the most recent timestamp)
+            threshold_time = most_recent_timestamp - timedelta(hours=1)
+
+            # Include only observations within the last hour
+            consolidated_observations = {}
+            for var, (timestamp, value) in latest_observations.items():
+                if timestamp >= threshold_time:
+                    consolidated_observations[var] = value
+
+            if not consolidated_observations:
+                self.logger.warning("No valid data found in real-time observations.")
+                return None
+
+            # Assign the most recent timestamp to all variables
+            final_observation = {'timestamp': most_recent_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}
+            final_observation.update(consolidated_observations)
+
+            self.logger.info("Transformed raw real-time data to include the latest observations within the last hour.")
+            return {
+                "id": station_id,
+                "timeseries": [final_observation]
+            }
         except Exception as e:
             self._handle_error(e)
             return None
