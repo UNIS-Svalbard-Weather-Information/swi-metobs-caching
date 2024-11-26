@@ -1,4 +1,7 @@
 import requests
+from nbclient.client import timestamp
+from datetime import datetime, timedelta
+
 from .datasource import DataSource
 
 class FrostSource(DataSource):
@@ -60,12 +63,21 @@ class FrostSource(DataSource):
             None: If an error occurs during the request.
         """
         endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
+
+        stations_variable = self.config.get_variable(station_id)
+        variables = []
+        for var in stations_variable:
+            if not (stations_variable[var] == None):
+                variables.append(stations_variable[var])
+
         params = {
             "sources": station_id,
-            "elements": "air_temperature,humidity,wind_speed",
+            "elements": ",".join(variables),
             "referencetime": "latest",
             "maxage": "PT1H"  # Last hour
         }
+
+        #print(params)
         try:
             response = self.session.get(endpoint, params=params)
             response.raise_for_status()
@@ -118,7 +130,7 @@ class FrostSource(DataSource):
             None: If an error occurs during transformation.
         """
         try:
-            variable_mapping = self.get_variable(station_id)
+            variable_mapping = self.config.get_variable(station_id)
             observations = raw_data.get('data', [])
             timeseries = []
 
@@ -155,19 +167,41 @@ class FrostSource(DataSource):
             None: If an error occurs during transformation or if no valid data is found.
         """
         try:
-            variable_mapping = self.get_variable(station_id)
-            observations = raw_data.get('data', [])
-            latest_observation = {}
+            variable_mapping = self.config.get_variable(station_id)
+            sources = raw_data.get('data', [])
 
-            for item in observations:
-                timestamp = item.get('referenceTime')
-                for obs in item.get('observations', []):
-                    variable_name = variable_mapping.get(obs.get('elementId'))
-                    if variable_name:
-                        latest_observation[variable_name] = obs.get('value')
-                # Include the timestamp with the latest observation
-                if latest_observation:
-                    latest_observation["timestamp"] = timestamp
+            # Initialize the latest observation with no timestamp
+            latest_observation = {"timestamp": None}
+            all_observations = {}
+
+            for source in sources:
+                # Parse the source timestamp into a timezone-aware datetime object
+                source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
+
+                # Check if this is the most recent timestamp
+                if latest_observation["timestamp"] is None or source_timestamp > latest_observation["timestamp"]:
+                    latest_observation["timestamp"] = source_timestamp
+
+                # Collect all observations
+                for obs in source.get('observations', []):
+                    var = next((k for k, v in variable_mapping.items() if v == obs.get('elementId')), None)
+                    if var is not None:  # Ensure variable exists in mapping
+                        # Store the observation with its timestamp
+                        all_observations[var] = (source_timestamp, obs.get('value'))
+
+            # Consolidate all observations from the past hour
+            threshold_time = latest_observation["timestamp"] - timedelta(hours=1)
+            consolidated_observations = {}
+
+            for var, (timestamp, value) in all_observations.items():
+                if timestamp >= threshold_time:  # Include observations within the 1-hour window
+                    consolidated_observations[var] = value
+
+            # Update the latest observation dictionary
+            latest_observation.update(consolidated_observations)
+
+            # Set the timestamp of the consolidated observation to the most recent timestamp
+            latest_observation["timestamp"] = latest_observation["timestamp"].strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
             if latest_observation:
                 self.logger.info("Transformed raw real-time data to include only the latest observation.")
