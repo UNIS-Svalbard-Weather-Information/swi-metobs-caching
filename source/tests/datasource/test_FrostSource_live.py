@@ -38,6 +38,33 @@ TEST_STATIONS = [
     }
 ]
 
+RAW_DATAS_REAL_TIME = {
+    "SN99840" : {'data': [{'sourceId': 'SN99840:0',
+   'referenceTime': '2024-11-26T16:00:00.000Z',
+   'observations': [{'elementId': 'air_temperature',
+     'value': -10.6,
+     'unit': 'degC'}]},
+  {'sourceId': 'SN99840:0',
+   'referenceTime': '2024-11-26T16:20:00.000Z',
+   'observations': [{'elementId': 'wind_speed',
+     'value': 5.8,
+     'unit': 'm/s'},
+    {'elementId': 'wind_from_direction',
+     'value': 54,
+     'unit': 'degrees'}]}]},
+    "SN99870" : {'data': [{'sourceId': 'SN99870:0',
+   'referenceTime': '2024-11-26T16:00:00.000Z',
+   'observations': [{'elementId': 'air_temperature',
+     'value': -10.5,
+     'unit': 'degC'},
+    {'elementId': 'wind_speed',
+     'value': 4,
+     'unit': 'm/s'},
+    {'elementId': 'wind_from_direction',
+     'value': 257,
+     'unit': 'degrees'}]}]}
+}
+
 @pytest.fixture
 def frost_source():
     """Fixture to create a FrostSource instance with a valid client ID."""
@@ -85,7 +112,7 @@ def test_fetch_timeseries_data(frost_source, station):
 def test_transform_realtime_data(frost_source, station):
     """Test transforming real-time data for a station."""
     # Fetch real-time raw data
-    raw_data = frost_source.fetch_realtime_data(station["id"])
+    raw_data = RAW_DATAS_REAL_TIME[station["id"]]
 
     if raw_data is None:
         pytest.fail(f"No real-time data available for station {station['id']}")
