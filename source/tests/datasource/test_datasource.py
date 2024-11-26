@@ -80,31 +80,6 @@ def test_transform_timeseries_data(data_source):
     assert result == {"station_id": "123", "processed_data": [1, 2, 3]}
 
 
-@patch("builtins.open", new_callable=mock_open, read_data='[{"id": "123", "variables": {"var1": "Temperature"}}]')
-def test_load_configs_from_files(mock_file, data_source):
-    """Test _load_configs_from_files method."""
-    configs = data_source._load_configs_from_files(["test_config.json"])
-    assert configs == [{"id": "123", "variables": {"var1": "Temperature"}}]
-    mock_file.assert_called_once_with("test_config.json", "r")
-
-
-@patch.object(MockDataSource, "_load_configs_from_files",
-              return_value=[{"id": "123", "variables": {"var1": "Temperature"}}])
-def test_get_variables(mock_load_configs, data_source):
-    """Test get_variables method."""
-    # Mock configuration files list
-    config_files = ["test_config.json"]
-
-    # Call the method with the required arguments
-    variables = data_source.get_variables("123", config_files)
-
-    # Assert that the variables are correctly fetched
-    assert variables == {"var1": "Temperature"}
-
-    # Assert that the mock was called once with the correct arguments
-    mock_load_configs.assert_called_once_with(config_files)
-
-
 @patch.object(logging.Logger, "error")
 def test_handle_error(mock_error, data_source):
     """Test _handle_error method."""

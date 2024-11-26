@@ -1,6 +1,13 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 from abc import ABC, abstractmethod
 import logging
 import json
+from source.logger.logger import Logger
+from source.confighandler.confighandler import ConfigHandler
 
 config_files = [
     'static/config/fixed_stations.json',
@@ -26,8 +33,8 @@ class DataSource(ABC):
             api_key (str, optional): API key for authenticating with the data source.
         """
         self.api_key = api_key
-        self.logger = self._setup_logger()
-        self._cached_configs = None  # Cache for loaded configurations
+        self.logger = Logger.setup_logger(self.__class__.__name__)
+        self.config = ConfigHandler()
 
     @abstractmethod
     def fetch_station_data(self, station_id):
@@ -98,21 +105,6 @@ class DataSource(ABC):
         """
         pass
 
-    def _setup_logger(self):
-        """
-        Set up a logger for the data source.
-
-        Returns:
-            logging.Logger: Configured logger instance.
-        """
-        logger = logging.getLogger(self.__class__.__name__)
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-        return logger
-
     def _handle_error(self, error):
         """
         Log and handle errors during data fetching or processing.
@@ -121,48 +113,3 @@ class DataSource(ABC):
             error (Exception): The exception that occurred.
         """
         self.logger.error(f"Error occurred: {error}")
-
-    def _load_configs_from_files(self, config_files):
-        """
-        Load configurations from a list of JSON files.
-
-        Args:
-            config_files (list): List of file paths to the JSON configuration files.
-
-        Returns:
-            list: A combined list of configuration dictionaries from all files.
-        """
-        if self._cached_configs is not None:
-            return self._cached_configs
-
-        configs = []
-        for file in config_files:
-            try:
-                with open(file, 'r') as f:
-                    data = json.load(f)
-                    configs.extend(data if isinstance(data, list) else [data])
-            except (FileNotFoundError, json.JSONDecodeError) as e:
-                self._handle_error(e)
-
-        self._cached_configs = configs
-        return configs
-
-    def get_variables(self, station_id, config_files=config_files):
-        """
-        Fetch a mapping of variable identifiers for a station.
-
-        Args:
-            station_id (str): The ID of the station.
-            config_files (list): List of file paths to configuration files.
-
-        Returns:
-            dict: Mapping of variable element IDs to names, or None if not found.
-        """
-        if not station_id:
-            raise ValueError("station_id must be provided")
-
-        configs = self._load_configs_from_files(config_files)
-        for config in configs:
-            if config.get("id") == station_id:
-                return config.get("variables", None)
-        return None
