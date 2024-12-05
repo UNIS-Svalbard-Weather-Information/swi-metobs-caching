@@ -88,11 +88,12 @@ class FrostSource(DataSource):
             self._handle_error(e)
             return None
 
-    def fetch_timeseries_data(self, station_id, start_time, end_time):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
         """
         Query historical weather data for a specific time range.
 
         Args:
+            return_df: Return the data as a dictionary for API response or pandas dataframe.
             station_id (str): The ID of the weather station.
             start_time (str): The start time for the query in ISO 8601 format.
             end_time (str): The end time for the query in ISO 8601 format.
@@ -119,7 +120,7 @@ class FrostSource(DataSource):
             response.raise_for_status()
             raw_data = response.json()
             self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
-            return self.transform_timeseries_data(raw_data, station_id)
+            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
         except requests.exceptions.RequestException as e:
             self._handle_error(e)
             return None

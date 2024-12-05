@@ -63,11 +63,12 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    def fetch_timeseries_data(self, station_id, start_time, end_time):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
         """
         Query historical data for a specific station and time range.
 
         Args:
+            return_df: Return the data as a dictionary for API response or pandas dataframe.
             station_id (str): The ID of the station to fetch data for.
             start_time (str): The start of the time range in ISO 8601 format.
             end_time (str): The end of the time range in ISO 8601 format.

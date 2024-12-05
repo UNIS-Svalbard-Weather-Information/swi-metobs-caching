@@ -152,7 +152,7 @@ def test_fetch_timeseries_data(mock_get, frost_source):
     result = frost_source.fetch_timeseries_data(station_id, start_time, end_time)
 
     mock_get.assert_called_once_with(expected_url, params=expected_params)
-    frost_source.transform_timeseries_data.assert_called_once_with({'data': 'timeseries_data'}, station_id)
+    frost_source.transform_timeseries_data.assert_called_once_with({'data': 'timeseries_data'}, station_id, return_df=False)
     frost_source.logger.info.assert_called_with(
         f"Fetched timeseries data for {station_id} from {start_time} to {end_time}"
     )
