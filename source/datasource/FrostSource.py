@@ -167,6 +167,7 @@ class FrostSource(DataSource):
             # Resample if required
             if resample != "AUTO" and not df.empty:
                 df = df.resample(resample).mean()
+                df.dropna(inplace=True)
 
             # Return DataFrame or raw timeseries list
             if return_df:
