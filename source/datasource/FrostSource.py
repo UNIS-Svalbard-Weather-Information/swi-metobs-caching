@@ -124,13 +124,13 @@ class FrostSource(DataSource):
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='30min'):
+    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
         """
         Transform raw historical data into a time series format.
 
         Args:
             return_df (bool): Should a DataFrame be returned instead of raw data.
-            resample (str): Resampling interval for the data (e.g., '30min', '1H').
+            resample (str): Resampling interval for the data (e.g., '30min', '1H'), default = '60min'.
             raw_data (dict): Raw data retrieved from the Frost API.
             station_id (str): The ID of the weather station.
 

@@ -125,6 +125,12 @@ def test_fetch_timeseries_data(mock_get, frost_source):
     """
     Test fetching timeseries data successfully.
     """
+
+    frost_source.config.get_variable.return_value = {
+        'airTemperature': 'temperature',
+        'humidity': 'humidity'
+    }
+
     station_id = 'SN18700'
     start_time = '2023-01-01T00:00:00Z'
     end_time = '2023-01-01T12:00:00Z'
@@ -132,7 +138,7 @@ def test_fetch_timeseries_data(mock_get, frost_source):
     expected_url = f"{frost_source.BASE_URL}/observations/v0.jsonld"
     expected_params = {
         "sources": station_id,
-        "elements": "air_temperature,humidity",
+        "elements": "temperature,humidity",
         "referencetime": f"{start_time}/{end_time}"
     }
 
@@ -177,14 +183,14 @@ def test_transform_timeseries_data(frost_source):
             {
                 'referenceTime': '2023-01-01T00:00:00Z',
                 'observations': [
-                    {'elementId': 'air_temperature', 'value': 5.0},
+                    {'elementId': 'temperature', 'value': 5.0},
                     {'elementId': 'humidity', 'value': 80.0}
                 ]
             },
             {
                 'referenceTime': '2023-01-01T01:00:00Z',
                 'observations': [
-                    {'elementId': 'air_temperature', 'value': 6.0},
+                    {'elementId': 'temperature', 'value': 6.0},
                     {'elementId': 'humidity', 'value': 82.0}
                 ]
             }
@@ -192,7 +198,7 @@ def test_transform_timeseries_data(frost_source):
     }
     station_id = 'SN18700'
     frost_source.config.get_variable.return_value = {
-        'air_temperature': 'temperature',
+        'airTemperature': 'temperature',
         'humidity': 'humidity'
     }
 
@@ -200,13 +206,13 @@ def test_transform_timeseries_data(frost_source):
 
     expected_timeseries = [
         {
-            'timestamp': '2023-01-01T00:00:00Z',
-            'temperature': 5.0,
+            'timestamp': '2023-01-01T00:00:00.000Z',
+            'airTemperature': 5.0,
             'humidity': 80.0
         },
         {
-            'timestamp': '2023-01-01T01:00:00Z',
-            'temperature': 6.0,
+            'timestamp': '2023-01-01T01:00:00.000Z',
+            'airTemperature': 6.0,
             'humidity': 82.0
         }
     ]
