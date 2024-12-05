@@ -14,7 +14,7 @@ from source.logger.logger import Logger
 import pytest
 import json
 from unittest.mock import patch, mock_open, MagicMock
-from source.confighandler.confighandler import ConfigHandler
+from source.confighandler.confighandler import ConfigHandler, StationNotFoundError
 from source.logger.logger import Logger
 
 
@@ -85,8 +85,8 @@ def test_get_variable(mock_load_config, config_handler):
     variables = config_handler.get_variable("station_001")
     assert variables == {"temp": "Temperature"}
 
-    variables = config_handler.get_variable("station_002")
-    assert variables is None
+    with pytest.raises(StationNotFoundError):
+        config_handler.get_variable("station_002")
 
 
 @patch.object(ConfigHandler, "_load_config")

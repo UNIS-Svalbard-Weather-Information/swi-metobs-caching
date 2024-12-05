@@ -1,10 +1,23 @@
 import json
 from source.logger.logger import Logger
+import difflib
 
 config_files = [
     'static/config/fixed_stations.json',
     'static/config/mobile_stations.json'
 ]
+
+class StationNotFoundError(Exception):
+    """
+    Exception raised when a station is not found in the configuration files.
+    """
+    def __init__(self, station_id, suggestions=None):
+        message = f"Station ID '{station_id}' not found."
+        if suggestions:
+            message += f" Did you mean: {', '.join(suggestions)}?"
+        super().__init__(message)
+        self.station_id = station_id
+        self.suggestions = suggestions
 
 
 class ConfigHandler:
@@ -45,7 +58,12 @@ class ConfigHandler:
         for config in configs:
             if config.get("id") == station_id:
                 return config.get("variables", None)
-        return None
+
+        suggestions = difflib.get_close_matches(
+            station_id,
+            [config.get("id") for config in configs if "id" in config],
+            n=3, cutoff=0.6)
+        raise StationNotFoundError(station_id, suggestions)
 
     def get_metadata(self, station_id):
         """
