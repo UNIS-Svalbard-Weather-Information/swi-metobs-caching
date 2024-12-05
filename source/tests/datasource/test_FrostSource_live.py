@@ -65,13 +65,29 @@ RAW_DATAS_REAL_TIME = {
      'unit': 'degrees'}]}]}
 }
 
+RAW_DATAS_TIME_SERIE = {
+'data': [{'sourceId': 'SN99840:0',
+   'referenceTime': '2024-12-02T00:00:00.000Z',
+   'observations': [{'elementId': 'air_temperature',
+     'value': -12.1},
+    {'elementId': 'wind_speed',
+     'value': 2.6},
+    {'elementId': 'wind_speed',
+     'value': 2.6}]},
+  {'sourceId': 'SN99840:0',
+   'referenceTime': '2024-12-02T00:10:00.000Z',
+   'observations': [{'elementId': 'wind_speed',
+     'value': 3.2}]
+   }]
+}
+
 @pytest.fixture
 def frost_source():
     """Fixture to create a FrostSource instance with a valid client ID."""
     return FrostSource(client_id="01e39643-4912-4b63-9bbf-26de9e5aa359")
 
 
-@pytest.mark.integration
+#@pytest.mark.integration
 @pytest.mark.parametrize("station", TEST_STATIONS)
 def test_fetch_station_data(frost_source, station):
     """Test fetching metadata for a station using the real Frost API."""
@@ -82,7 +98,7 @@ def test_fetch_station_data(frost_source, station):
     print(result)
 
 
-@pytest.mark.integration
+#@pytest.mark.integration
 @pytest.mark.parametrize("station", TEST_STATIONS)
 def test_fetch_realtime_data(frost_source, station):
     """Test fetching real-time data for a station using the real Frost API."""
@@ -93,7 +109,7 @@ def test_fetch_realtime_data(frost_source, station):
     assert len(result["timeseries"]) > 0, f"No observations in real-time data for station {station['id']}"
 
 
-@pytest.mark.integration
+#@pytest.mark.integration
 @pytest.mark.parametrize("station", TEST_STATIONS)
 def test_fetch_timeseries_data(frost_source, station):
     """Test fetching historical time series data for a station using the real Frost API."""
@@ -107,7 +123,7 @@ def test_fetch_timeseries_data(frost_source, station):
     assert len(result["timeseries"]) > 0, f"No observations in time series data for station {station['id']}"
 
 
-@pytest.mark.integration
+#@pytest.mark.integration
 @pytest.mark.parametrize("station", TEST_STATIONS)
 def test_transform_realtime_data(frost_source, station):
     """Test transforming real-time data for a station."""
@@ -124,14 +140,14 @@ def test_transform_realtime_data(frost_source, station):
     assert len(transformed_data["timeseries"]) > 0, f"No transformed observations for station {station['id']}"
 
 
-@pytest.mark.integration
+#@pytest.mark.integration
 @pytest.mark.parametrize("station", TEST_STATIONS)
 def test_transform_timeseries_data(frost_source, station):
     """Test transforming historical data for a station."""
     # Fetch historical raw data
     start_time = "2023-01-01T00:00:00Z"
     end_time = "2023-01-02T00:00:00Z"
-    raw_data = frost_source.fetch_timeseries_data(station["id"], start_time, end_time)
+    raw_data = RAW_DATAS_TIME_SERIE
 
     if raw_data is None:
         pytest.fail(f"No time series data available for station {station['id']}")
