@@ -113,3 +113,29 @@ class DataSource(ABC):
             error (Exception): The exception that occurred.
         """
         self.logger.error(f"Error occurred: {error}")
+
+    def df_to_timeserie(self, df):
+        """
+        Convert a DataFrame to a list of time series observations.
+
+        Args:
+            df (pd.DataFrame): Input DataFrame where the index is the timestamp.
+
+        Returns:
+            list: A list of dictionaries representing time series data.
+        """
+        try:
+            keys = df.columns.tolist()  # Get column names
+            timeserie = []
+
+            for index, row in df.iterrows():
+                obs = {'timestamp': index.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}  # Use the index as the timestamp
+                for key in keys:
+                    obs[key] = float(f"{row[key]:.2f}")  # Access row data using the column name
+                timeserie.append(obs)
+
+            return timeserie
+
+        except Exception as e:
+            self._handle_error(e)
+            return None

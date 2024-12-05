@@ -1,6 +1,6 @@
 import requests
-from nbclient.client import timestamp
 from datetime import datetime, timedelta
+import pandas as pd
 
 from .datasource import DataSource
 
@@ -67,7 +67,7 @@ class FrostSource(DataSource):
         stations_variable = self.config.get_variable(station_id)
         variables = []
         for var in stations_variable:
-            if not (stations_variable[var] == None):
+            if stations_variable[var] is not None:
                 variables.append(stations_variable[var])
 
         params = {
@@ -102,9 +102,16 @@ class FrostSource(DataSource):
             None: If an error occurs during the request.
         """
         endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
+
+        stations_variable = self.config.get_variable(station_id)
+        variables = []
+        for var in stations_variable:
+            if stations_variable[var] is not None:
+                variables.append(stations_variable[var])
+
         params = {
             "sources": station_id,
-            "elements": "air_temperature,humidity",
+            "elements": ",".join(variables),
             "referencetime": f"{start_time}/{end_time}"
         }
         try:
@@ -117,39 +124,59 @@ class FrostSource(DataSource):
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id):
+    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='30min'):
         """
         Transform raw historical data into a time series format.
 
         Args:
+            return_df (bool): Should a DataFrame be returned instead of raw data.
+            resample (str): Resampling interval for the data (e.g., '30min', '1H').
             raw_data (dict): Raw data retrieved from the Frost API.
             station_id (str): The ID of the weather station.
 
         Returns:
             dict: Transformed data containing a list of timestamped observations.
+            pd.DataFrame: DataFrame with resampled and transformed data if `return_df` is True.
             None: If an error occurs during transformation.
         """
         try:
+            # Fetch variable mapping for the station
             variable_mapping = self.config.get_variable(station_id)
             observations = raw_data.get('data', [])
             timeseries = []
 
-            for item in observations:
-                timestamp = item.get('referenceTime')
-                observation_data = {}
-                for obs in item.get('observations', []):
-                    variable_name = variable_mapping.get(obs.get('elementId'))
+            for source in observations:
+                # Initialize a dictionary for each timestamp
+                record = {"timestamp": source.get('referenceTime')}
+                for obs in source.get('observations', []):
+                    element_id = obs.get('elementId')
+                    variable_name = next((k for k, v in variable_mapping.items() if v == element_id), None)
                     if variable_name:
-                        observation_data[variable_name] = obs.get('value')
-                if observation_data:
-                    observation_data["timestamp"] = timestamp
-                    timeseries.append(observation_data)
+                        record[variable_name] = obs.get('value')
+                        timeseries.append(record)
+
+            # Create DataFrame from the timeseries data
+            df = pd.DataFrame(timeseries)
+
+            # Ensure 'timestamp' is parsed as datetime
+            if not df.empty:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                df.set_index('timestamp', inplace=True)
+
+            # Resample if required
+            if resample != "AUTO" and not df.empty:
+                df = df.resample(resample).mean()
+
+            # Return DataFrame or raw timeseries list
+            if return_df:
+                return df
 
             self.logger.info("Transformed raw time series data into the specified structure dynamically.")
             return {
                 "id": station_id,
-                "timeseries": timeseries
+                "timeseries": self.df_to_timeserie(df)
             }
+
         except Exception as e:
             self._handle_error(e)
             return None
@@ -178,7 +205,6 @@ class FrostSource(DataSource):
             for source in sources:
                 # Parse the source timestamp into a timezone-aware datetime object
                 source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
-
                 # Update the most recent timestamp if necessary
                 if most_recent_timestamp is None or source_timestamp > most_recent_timestamp:
                     most_recent_timestamp = source_timestamp
