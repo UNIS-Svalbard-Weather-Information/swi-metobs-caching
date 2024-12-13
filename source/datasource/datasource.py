@@ -93,7 +93,7 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    def transform_timeseries_data(self, raw_data, station_id):
+    def transform_timeseries_data(self, raw_data, station_id, return_df, resample):
         """
         Process and format raw historical data into a standardized structure.
 
