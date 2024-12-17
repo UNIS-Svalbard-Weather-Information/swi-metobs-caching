@@ -32,11 +32,11 @@ napoleon_numpy_docstring = False
 
 # Paths
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', './docs/_build']
 
 # Theme
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_static_path = ['./docs/_static']
 
 # Master document
 master_doc = 'index'
