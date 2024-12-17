@@ -36,7 +36,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 
 
 # Theme
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['./docs/_static']
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+#html_static_path = ['./docs/_static']
 
 # Master document
 master_doc = 'index'
