@@ -3,27 +3,34 @@ import sys
 import subprocess
 import sphinx_rtd_theme
 
-# Add the project source directory to the path
+# Add the project's source directory to the path
 sys.path.insert(0, os.path.abspath('../source'))
 
-# Run sphinx-apidoc to regenerate .rst files for ./source/
+
+# Dynamically generate .rst files for ./source/ modules (recursive)
 def run_apidoc(_):
-    """Generate API documentation using sphinx-apidoc."""
-    source_dir = os.path.abspath('../source')
+    """Generate API documentation recursively using sphinx-apidoc."""
+    source_dir = os.path.abspath('../source')  # Your source directory
     output_dir = os.path.abspath('./source')  # Where .rst files will be stored
-    exclude_patterns = ['tests', '*/tests/*']  # Exclude test directories
+    exclude_patterns = ['tests', '*/tests/*']  # Exclude tests and other files
+
     cmd = [
         'sphinx-apidoc',
-        '--force',            # Overwrite existing files
-        '--module-first',     # Place module docstring before submodule docs
-        '-o', output_dir,     # Output directory
-        source_dir            # Source code directory
+        '--force',  # Overwrite existing files
+        '--module-first',  # Place module docstring before submodule docs
+        '--separate',  # Create separate files for each module
+        '-o', output_dir,  # Output directory for .rst files
+        source_dir,  # Source code directory
+        *exclude_patterns  # Patterns to exclude
     ]
-    subprocess.call(cmd)
+    print("Running sphinx-apidoc...")
+    subprocess.run(cmd, check=True)
 
-# Hook into Sphinx build lifecycle
+
+# Hook into the Sphinx build lifecycle
 def setup(app):
     app.connect('builder-inited', run_apidoc)
+
 
 # -- Project Information -----------------------------------------------------
 project = 'SWI - Svalbard Weather Information'
@@ -32,17 +39,13 @@ author = 'Louis Pauchet (UNIS - INSA Rouen) & Contributors'
 
 # -- General Configuration ---------------------------------------------------
 extensions = [
-    'sphinx.ext.autodoc',      # Auto-generate documentation from docstrings
+    'sphinx.ext.autodoc',  # Auto-generate documentation from docstrings
     'sphinx.ext.autosummary',  # Generate summary tables for modules
-    'sphinx.ext.napoleon',     # Support for Google/NumPy style docstrings
-    'sphinx.ext.viewcode',     # Link to source code
+    'sphinx.ext.napoleon',  # Support for Google/NumPy style docstrings
+    'sphinx.ext.viewcode',  # Link to source code
 ]
 
-# Napoleon settings
-napoleon_google_docstring = True
-napoleon_numpy_docstring = False
-
-# Autodoc settings
+# Autosummary settings
 autosummary_generate = True
 autodoc_default_options = {
     'members': True,
@@ -52,4 +55,6 @@ autodoc_default_options = {
 
 # Theme
 html_theme = 'sphinx_rtd_theme'
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# Ignore deprecated method
+html_theme_path = []
