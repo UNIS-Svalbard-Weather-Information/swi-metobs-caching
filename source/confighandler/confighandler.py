@@ -154,31 +154,46 @@ class ConfigHandler:
         Returns:
             str or None: The API key if found, otherwise None.
         """
+        logger = Logger.setup_logger("ConfigHandler")
         config_file = 'static/config/api.json'
 
         # Return cached credentials if available
         if self._cached_credential is not None:
-            return self._cached_credential.get(datasource)
+            api_key = self._cached_credential.get(datasource)
+            if api_key:  # Properly check for empty strings
+                logger.info(f"Using cached API key for datasource: {datasource}")
+            else:
+                logger.info(f"No API key required for datasource: {datasource} (cached).")
+            return api_key
 
         configs = []
         try:
             with open(config_file, 'r') as f:
                 data = json.load(f)
                 configs.extend(data if isinstance(data, list) else [data])
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            self._handle_error(e)
-            return None  # Return None if there's an error reading the file
+        except FileNotFoundError:
+            logger.error(f"API credential file '{config_file}' not found.")
+            return None
+        except json.JSONDecodeError:
+            logger.error(f"Error decoding JSON in '{config_file}'.")
+            return None
 
         # Store loaded configs in cache
         self._cached_configs = configs
 
         # Extract credentials and cache them
         self._cached_credential = {
-            item["datasource"]: item["api_key"]
-            for item in configs if "datasource" in item and "api_key" in item
+            item["datasource"]: item.get("api_key", None)  # Ensure None is stored for missing keys
+            for item in configs if "datasource" in item
         }
 
-        return self._cached_credential.get(datasource)
+        api_key = self._cached_credential.get(datasource, None)
+        if api_key:  # Properly check for empty strings
+            logger.info(f"API key retrieved successfully for datasource: {datasource}")
+        else:
+            logger.info(f"No API key required for datasource: {datasource}.")
+
+        return api_key
 
     def _handle_error(self, error):
         """
