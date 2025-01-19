@@ -14,7 +14,8 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.38166,
         "lon": 14.753,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
+        "datasource" : "IWINFixedSource"
 
     },
     {
@@ -32,8 +33,8 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.21056,
         "lon": 12.98685,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
-
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
+        "datasource" : "IWINFixedSource"
     },
     {
         "id": "narveneset",
@@ -50,7 +51,8 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.56343,
         "lon": 16.29687,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
+        "datasource" : "IWINFixedSource"
 
     },
     {
@@ -68,7 +70,8 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.45632,
         "lon": 15.46768,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
+        "datasource" : "IWINFixedSource"
 
     },
     {
@@ -86,7 +89,8 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.45792,
         "lon": 16.20082,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
+        "datasource" : "IWINFixedSource"
 
     },
     {
