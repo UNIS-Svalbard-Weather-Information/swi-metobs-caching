@@ -1,7 +1,7 @@
 import sys
 import os
 from unittest.mock import patch, Mock, MagicMock
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 import requests
 
@@ -282,7 +282,6 @@ def test_transform_realtime_data(frost_source):
     )
     assert result == {'id': station_id, 'timeseries': [expected_observation]}
 
-
 def test_transform_realtime_data_error(frost_source):
     """
     Test transforming raw real-time data with an error.
@@ -321,3 +320,64 @@ def test_transform_realtime_data_no_data(frost_source):
     frost_source.logger.warning.assert_called_with("No valid data found in real-time observations.")
     assert result is None
 
+def test_is_station_online_recent_data(frost_source):
+    """
+    Test is_station_online when the latest observation is recent.
+    """
+    station_id = "SN99857"
+    recent_timestamp = (datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(minutes=30)).isoformat()
+
+    mock_data = {
+        "timeseries": [
+            {"timestamp": recent_timestamp}
+        ]
+    }
+
+    with patch.object(frost_source, "fetch_realtime_data", return_value=mock_data):
+        assert frost_source.is_station_online(station_id, max_inactive_minutes=120) is True
+        frost_source.logger.info.assert_called()
+
+
+def test_is_station_online_old_data(frost_source):
+    """
+    Test is_station_online when the latest observation is too old.
+    """
+    station_id = "SN99857"
+    old_timestamp = (datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(minutes=150)).isoformat()
+
+    mock_data = {
+        "timeseries": [
+            {"timestamp": old_timestamp}
+        ]
+    }
+
+    with patch.object(frost_source, "fetch_realtime_data", return_value=mock_data):
+        assert frost_source.is_station_online(station_id, max_inactive_minutes=120) is False
+        frost_source.logger.info.assert_called()
+
+
+def test_is_station_online_no_data(frost_source):
+    """
+    Test is_station_online when no data is returned.
+    """
+    station_id = "SN99857"
+
+    with patch.object(frost_source, "fetch_realtime_data", return_value=None):
+        assert frost_source.is_station_online(station_id, max_inactive_minutes=120) is False
+        frost_source.logger.warning.assert_called()
+
+
+def test_is_station_online_invalid_timestamp(frost_source):
+    """
+    Test is_station_online when the timestamp is invalid.
+    """
+    station_id = "SN99857"
+    mock_data = {
+        "timeseries": [
+            {"timestamp": "invalid_timestamp"}
+        ]
+    }
+
+    with patch.object(frost_source, "fetch_realtime_data", return_value=mock_data):
+        assert frost_source.is_station_online(station_id, max_inactive_minutes=120) is False
+        frost_source.logger.error.assert_called()
