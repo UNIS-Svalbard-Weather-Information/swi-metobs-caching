@@ -17,14 +17,14 @@ class FrostSource(DataSource):
 
     BASE_URL = "https://frost.met.no"
 
-    def __init__(self, client_id):
+    def __init__(self, api_key):
         """
         Initialize the FrostSource instance with the given client ID.
 
         Args:
             client_id (str): The client ID for authenticating with the Frost API.
         """
-        super().__init__(api_key=client_id)
+        super().__init__(api_key=api_key)
         self.session = requests.Session()
         self.session.auth = (self.api_key, '')
 

@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 import pytest
 from source.datasource.FrostSource import FrostSource
 from source.datasource.datasource import DataSource
+from source.confighandler.confighandler import ConfigHandler
 
 # Define test data
 TEST_STATIONS = [
@@ -84,7 +85,8 @@ RAW_DATAS_TIME_SERIE = {
 @pytest.fixture
 def frost_source():
     """Fixture to create a FrostSource instance with a valid client ID."""
-    return FrostSource(client_id="01e39643-4912-4b63-9bbf-26de9e5aa359")
+    config = ConfigHandler()
+    return FrostSource(api_key=config.get_api_credential('FrostSource'))
 
 
 #@pytest.mark.integration
