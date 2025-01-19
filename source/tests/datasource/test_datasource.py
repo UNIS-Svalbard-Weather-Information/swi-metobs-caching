@@ -28,6 +28,9 @@ class MockDataSource(DataSource):
     def transform_timeseries_data(self, raw_data, station_id):
         return {"station_id": station_id, "processed_data": raw_data.get("data")}
 
+    def is_station_online(self, station_id):
+        return True if station_id == "123" else False
+
 
 # Fixtures
 @pytest.fixture
@@ -78,6 +81,12 @@ def test_transform_timeseries_data(data_source):
     raw_data = {"data": [1, 2, 3]}
     result = data_source.transform_timeseries_data(raw_data, "123")
     assert result == {"station_id": "123", "processed_data": [1, 2, 3]}
+
+
+def test_is_station_online(data_source):
+    """Test is_station_online method."""
+    assert data_source.is_station_online("123") is True
+    assert data_source.is_station_online("999") is False
 
 
 @patch.object(logging.Logger, "error")
