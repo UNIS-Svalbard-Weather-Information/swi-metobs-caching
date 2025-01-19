@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 import pytest
 import json
 from unittest.mock import patch, mock_open, MagicMock
-from source.confighandler.confighandler import ConfigHandler, StationNotFoundError
+from source.configHandler.confighandler import ConfigHandler, StationNotFoundError
 from source.logger.logger import Logger
 
 

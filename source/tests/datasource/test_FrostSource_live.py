@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 import pytest
 from source.datasource.FrostSource import FrostSource
 from source.datasource.datasource import DataSource
-from source.confighandler.confighandler import ConfigHandler
+from source.configHandler.confighandler import ConfigHandler
 
 # Define test data
 TEST_STATIONS = [
