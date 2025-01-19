@@ -36,6 +36,7 @@ class ConfigHandler:
         """
         self.config_files = config_files
         self._cached_configs = None
+        self._cached_credential = None
         self.logger = Logger.setup_logger(self.__class__.__name__)
 
     def get_variable(self, station_id):
@@ -142,6 +143,42 @@ class ConfigHandler:
 
         self._cached_configs = configs
         return configs
+
+    def get_api_credential(self, datasource):
+        """
+        Retrieve API credentials for a given datasource.
+
+        Args:
+            datasource (str): The name of the datasource to retrieve credentials for.
+
+        Returns:
+            str or None: The API key if found, otherwise None.
+        """
+        config_file = 'static/config/api.json'
+
+        # Return cached credentials if available
+        if self._cached_credential is not None:
+            return self._cached_credential.get(datasource)
+
+        configs = []
+        try:
+            with open(config_file, 'r') as f:
+                data = json.load(f)
+                configs.extend(data if isinstance(data, list) else [data])
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            self._handle_error(e)
+            return None  # Return None if there's an error reading the file
+
+        # Store loaded configs in cache
+        self._cached_configs = configs
+
+        # Extract credentials and cache them
+        self._cached_credential = {
+            item["datasource"]: item["api_key"]
+            for item in configs if "datasource" in item and "api_key" in item
+        }
+
+        return self._cached_credential.get(datasource)
 
     def _handle_error(self, error):
         """
