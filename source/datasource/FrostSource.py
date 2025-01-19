@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from .datasource import DataSource
@@ -251,3 +251,62 @@ class FrostSource(DataSource):
         except Exception as e:
             self._handle_error(e)
             return None
+
+    def is_station_online(self, station_id, max_inactive_minutes=120):
+        """
+        Determine whether a given station is 'online' by checking the timestamp of
+        its most recent real-time observation. If the latest data is less than
+        `max_age_hours` old, the station is considered online.
+
+        Args:
+            station_id (str): The ID of the weather station.
+            max_age_hours (int): Maximum age (in hours) of the latest observation
+                                 to still consider the station 'online'.
+
+        Returns:
+            bool: True if the station is considered online, False otherwise.
+        """
+        data = self.fetch_realtime_data(station_id)
+        if not data:
+            self.logger.warning(f"No data returned for station {station_id}.")
+            self.logger.info(f"Station {station_id} is considered OFFLINE.")
+            return False
+
+        #print(data)
+
+        # Check if the data structure is as expected
+        timeseries = data.get("timeseries")
+        if not timeseries or len(timeseries) == 0:
+            self.logger.warning(f"No timeseries entries for station {station_id}.")
+            self.logger.info(f"Station {station_id} is considered OFFLINE.")
+            return False
+
+        # We'll take the first (and presumably most recent) timeseries entry
+        latest_entry = timeseries[0]
+        timestamp_str = latest_entry.get("timestamp")
+        if not timestamp_str:
+            self.logger.warning(f"No 'timestamp' field for station {station_id}.")
+            self.logger.info(f"Station {station_id} is considered OFFLINE.")
+            return False
+
+        # Convert to Python datetime; handle trailing "Z" by replacing with UTC offset.
+        try:
+            latest_time = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+        except ValueError as e:
+            self.logger.error(f"Error parsing timestamp for station {station_id}: {e}")
+            return False
+
+        # Define the cutoff time
+        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc)  - timedelta(minutes=max_inactive_minutes)
+
+        # If the station reported data newer than the cutoff, it's "online"
+        if latest_time >= cutoff_time:
+            self.logger.info(
+                f"Station {station_id} last timestamp = {latest_time} (< {max_inactive_minutes}min old). Considered ONLINE."
+            )
+            return True
+        else:
+            self.logger.info(
+                f"Station {station_id} last timestamp = {latest_time}, older than {max_inactive_minutes}min. OFFLINE."
+            )
+            return False
