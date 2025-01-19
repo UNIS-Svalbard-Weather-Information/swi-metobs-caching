@@ -7,7 +7,7 @@ from .datasource import DataSource
 
 class IWINFixedSource(DataSource):
     def __init__(self, api_key=None):
-        super().__init__()
+        super().__init__(api_key=api_key)
 
     def fetch_station_data(self, station_id):
         """
