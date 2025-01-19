@@ -106,6 +106,19 @@ class DataSource(ABC):
         """
         pass
 
+    @abstractmethod
+    def is_station_online(self, station_id, max_inactive_minutes=120):
+        """
+
+        Args:
+            station_id (str): The ID of the station associated with the data.
+            max_inactive_minutes (int): The maximum number of minutes allowed for a station. Default is 120 minutes.
+
+        Returns:
+            bool: True if station online, False otherwise.
+        """
+        pass
+
     def _handle_error(self, error):
         """
         Log and handle errors during data fetching or processing.
