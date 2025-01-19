@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 import logging
 import json
 from source.logger.logger import Logger
-from source.confighandler.confighandler import ConfigHandler
+from source.configHandler.confighandler import ConfigHandler
 
 config_files = [
     'static/config/fixed_stations.json',

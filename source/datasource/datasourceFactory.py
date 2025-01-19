@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from source.logger.logger import Logger
-from source.confighandler.confighandler import ConfigHandler
+from source.configHandler.confighandler import ConfigHandler
 from source.datasource.FrostSource import FrostSource
 from source.datasource.IWINFixedSource import IWINFixedSource
 
