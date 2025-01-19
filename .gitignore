@@ -6,3 +6,4 @@ data/*
 *.psd
 *.ipynb
 maps/*
+cache/*
