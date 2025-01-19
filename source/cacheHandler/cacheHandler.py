@@ -1,6 +1,6 @@
 import sys
 import os
-import shutil
+
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
@@ -11,6 +11,7 @@ from source.logger.logger import Logger
 
 import json
 from datetime import datetime
+import shutil
 
 class CacheHandler:
     def __init__(self, directory='./cache/', path_config = None, cleaning_list = None):
@@ -151,7 +152,11 @@ class CacheHandler:
         self.logger.info(f"Starting cache clearing for {len(entries)} entries.")
 
         for entry in entries:
-            file_path = os.path.join(self.directory, self.path_config.get(entry))
+            file_path = self.path_config.get(entry)
+            if file_path is None:
+                self.logger.warning(f"No path configured for cache entry: {entry}")
+                continue
+            file_path = os.path.join(self.directory, file_path)
 
             if file_path:  # Ensure the path is valid
                 self.logger.debug(f"Attempting to delete cache entry: {file_path}")
