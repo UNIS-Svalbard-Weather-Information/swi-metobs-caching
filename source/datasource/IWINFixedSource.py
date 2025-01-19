@@ -168,5 +168,4 @@ class IWINFixedSource(DataSource):
             raise
 
     def is_station_online(self, station_id, max_inactive_minutes=120):
-        raise NotImplementedError("transform_timeseries_data must be implemented by the subclass.")
-
+        return False
