@@ -26,11 +26,7 @@ def get_datasource(station_id, config=None):
         DataSource: An instance of the correct subclass.
     """
     logger = Logger.setup_logger("get_datasource")
-    if config is None:
-        config = ConfigHandler()
-
-    print(config.get_metadata(station_id=station_id))
-    print(station_id)
+    config = ConfigHandler()
 
     logger.info(f"Fetching metadata for station_id: {station_id}")
     station = config.get_metadata(station_id)

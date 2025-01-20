@@ -43,7 +43,7 @@ class CacheHandler:
 
         state = []
 
-        for station_id in stations[:2]:
+        for station_id in stations:
             try:
                 self.logger.debug(f"Processing station status for: {station_id}")
                 datasource = get_datasource(station_id,  config=self.config)
