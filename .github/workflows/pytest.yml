@@ -31,13 +31,23 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
-
       - name: Run tests without live tests
-        run: pytest --cov=my_project --cov-report=xml --cov-report=term --ignore-glob='*live*.py'
+        run: pytest --cov=. --cov-report=xml --cov-report=term --ignore-glob='*live*.py' --maxfail=1 --exitfirst
 
+      - name: Debug - List all files before uploading coverage
+        run: ls -R
+
+      - name: Check if coverage report exists
+        run: |
+          if [ -f coverage.xml ]; then
+            echo "Coverage report found."
+          else
+            echo "ERROR: coverage.xml not found!"
+            exit 1
+          fi
 
       - name: Upload coverage report as GitHub Artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.python-version }}
-          path: coverage.xml
+          path: "**/coverage.xml"
