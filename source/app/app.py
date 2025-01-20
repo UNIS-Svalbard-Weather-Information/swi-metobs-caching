@@ -19,8 +19,6 @@ def create_app():
 
     # Initialize StationHandler once
     station_handler = CacheHandler()
-    station_handler.cache_stations_status()
-    station_handler.cache_realtime_data()
     app.config['STATION_HANDLER'] = station_handler
 
     def gather_data():
@@ -37,8 +35,8 @@ def create_app():
 
             time.sleep(10 * 60)  # 10 mi
 
-    #gathering_thread = threading.Thread(target=gather_data, daemon=True)
-    #gathering_thread.start()
+    gathering_thread = threading.Thread(target=gather_data, daemon=True)
+    gathering_thread.start()
 
     # Register Blueprints
     app.register_blueprint(api, url_prefix='/api')

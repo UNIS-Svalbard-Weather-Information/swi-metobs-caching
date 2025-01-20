@@ -68,6 +68,7 @@ class CacheHandler:
                     "variables": list(variables.keys()) if variables else [],
                     "status": "online" if is_online else "offline",
                     "last_updated": timestamp or "Unknown",
+                    "project" : metadata.get("project", "Unknown"),
                 }
 
                 state.append(infos)
