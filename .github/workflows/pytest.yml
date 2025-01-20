@@ -85,7 +85,7 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           
-          # Get the branch name dynamically
+          # Get the current branch name
           BRANCH_NAME=${{ github.ref_name }}
 
           # Ensure the latest branch is available and switch to it
@@ -94,7 +94,11 @@ jobs:
           
           mkdir -p docs
           mv coverage-badge.svg docs/
-          git add docs/coverage-badge.svg
+
+          # Update README.md with the correct badge for this branch
+          sed -i "s|!\[Coverage\](.*)|![Coverage](https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/$BRANCH_NAME/docs/coverage-badge.svg)|g" README.md
+
+          git add docs/coverage-badge.svg README.md
           git commit -m "Update coverage badge for $BRANCH_NAME" || echo "No changes to commit"
           git push origin $BRANCH_NAME
 
