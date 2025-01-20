@@ -3,7 +3,10 @@ name: Detect and Remove API Keys
 on:
   push:
     branches:
-      - "**"
+      - "**"  # Run on all branches
+  pull_request:
+    branches:
+      - "**"  # Run on all pull requests for any branch
 jobs:
   sanitize_api_keys:
     runs-on: ubuntu-latest
