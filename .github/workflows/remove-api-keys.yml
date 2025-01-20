@@ -3,11 +3,7 @@ name: Detect and Remove API Keys
 on:
   push:
     branches:
-      - main
-      - develop
-      - V1_backend
-      - V1_API
-      - V1
+      - "**"
 
 jobs:
   sanitize_api_keys:
