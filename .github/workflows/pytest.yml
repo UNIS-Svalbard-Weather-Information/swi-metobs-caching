@@ -84,9 +84,17 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git checkout main
+          
+          # Get the branch name dynamically
+          BRANCH_NAME=${{ github.ref_name }}
+
+          # Ensure the latest branch is available and switch to it
+          git fetch origin $BRANCH_NAME
+          git switch $BRANCH_NAME
+          
           mkdir -p docs
           mv coverage-badge.svg docs/
           git add docs/coverage-badge.svg
-          git commit -m "Update coverage badge" || echo "No changes to commit"
-          git push
+          git commit -m "Update coverage badge for $BRANCH_NAME" || echo "No changes to commit"
+          git push origin $BRANCH_NAME
+
