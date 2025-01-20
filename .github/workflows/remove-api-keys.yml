@@ -3,10 +3,11 @@ name: Detect and Remove API Keys
 on:
   push:
     branches:
-      - "**"  # Run on all branches 
+      - "**"  # Run on all branches
   pull_request:
     branches:
       - "**"  # Run on all pull requests for any branch
+
 jobs:
   sanitize_api_keys:
     runs-on: ubuntu-latest
@@ -32,8 +33,8 @@ jobs:
               prob = [float(string.count(c)) / len(string) for c in dict.fromkeys(list(string))]
               return -sum([p * math.log2(p) for p in prob])
 
-          # API key detection regex (adjust as needed)
-          API_KEY_REGEX = re.compile(r'[A-Za-z0-9+/=]{32,}')
+          # Improved API key detection regex (supports UUID keys)
+          API_KEY_REGEX = re.compile(r'([A-Za-z0-9+/=]{32,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
           ENTROPY_THRESHOLD = 4.5
 
           modified_files = []
