@@ -18,14 +18,22 @@ def create_app():
     CORS(app)
 
     # Initialize StationHandler once
-    station_handler = StationHandler()
+    station_handler = CacheHandler()
     app.config['STATION_HANDLER'] = station_handler
 
-    # Start a separate thread for data gathering
     def gather_data():
         while True:
-            station_handler.update_data()
-            time.sleep(10*60)  # 10 min
+            station_handler.cache_stations_status()
+            station_handler.cache_realtime_data()
+
+            # Explicitly clean up the old instance
+            old_handler = app.config['STATION_HANDLER']
+            del old_handler  # Help Python garbage collect the old instance
+
+            # Replace with a fresh instance
+            app.config['STATION_HANDLER'] = CacheHandler()
+
+            time.sleep(10 * 60)  # 10 mi
 
     gathering_thread = threading.Thread(target=gather_data, daemon=True)
     gathering_thread.start()
