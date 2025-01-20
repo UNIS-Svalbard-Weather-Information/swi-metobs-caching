@@ -85,6 +85,9 @@ class ConfigHandler:
         configs = self._load_config()
         for config in configs:
             if config.get("id") == station_id:
+                if "datasource" not in config:
+                    #config["datasource"] = "FrostDatasource"
+                    pass
                 return config
         return None
 
