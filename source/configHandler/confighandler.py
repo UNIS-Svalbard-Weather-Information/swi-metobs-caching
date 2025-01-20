@@ -164,6 +164,7 @@ class ConfigHandler:
                 logger.info(f"Using cached API key for datasource: {datasource}")
             else:
                 logger.info(f"No API key required for datasource: {datasource} (cached).")
+                return None
             return api_key
 
         configs = []
@@ -192,6 +193,7 @@ class ConfigHandler:
             logger.info(f"API key retrieved successfully for datasource: {datasource}")
         else:
             logger.info(f"No API key required for datasource: {datasource}.")
+            api_key = None
 
         return api_key
 

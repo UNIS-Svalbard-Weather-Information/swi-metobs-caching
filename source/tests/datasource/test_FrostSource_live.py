@@ -86,7 +86,13 @@ RAW_DATAS_TIME_SERIE = {
 def frost_source():
     """Fixture to create a FrostSource instance with a valid client ID."""
     config = ConfigHandler()
-    return FrostSource(api_key=config.get_api_credential('FrostSource'))
+
+    api_key = config.get_api_credential('FrostSource')
+
+    if api_key is None:
+        api_key = os.getenv("FROST_KEY")
+
+    return FrostSource(api_key=api_key)
 
 
 #@pytest.mark.integration
