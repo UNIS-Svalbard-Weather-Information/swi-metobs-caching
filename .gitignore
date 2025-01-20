@@ -7,3 +7,4 @@ data/*
 *.ipynb
 maps/*
 cache/*
+static/config/api.json
