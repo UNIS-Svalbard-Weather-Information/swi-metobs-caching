@@ -51,3 +51,42 @@ jobs:
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: "**/coverage.xml"
+
+  coverage-badge:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+
+      - name: Run tests and extract coverage percentage
+        id: coverage
+        run: |
+          coverage_percentage=$(pytest --cov=. --cov-report=term | grep -Eo '[0-9]+%' | head -1 | tr -d '%')
+          echo "COVERAGE_PERCENTAGE=${coverage_percentage}" >> $GITHUB_ENV
+
+      - name: Create Coverage Badge
+        run: |
+          curl -o coverage-badge.svg "https://img.shields.io/badge/coverage-${{ env.COVERAGE_PERCENTAGE }}%25-brightgreen"
+
+      - name: Commit Coverage Badge
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git checkout main
+          mkdir -p docs
+          mv coverage-badge.svg docs/
+          git add docs/coverage-badge.svg
+          git commit -m "Update coverage badge" || echo "No changes to commit"
+          git push
