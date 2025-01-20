@@ -1,0 +1,104 @@
+name: Run Tests with pytest
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests without live tests
+        run: pytest --cov=. --cov-report=xml --cov-report=term --ignore-glob='*live*.py' --maxfail=1 --exitfirst
+
+      - name: Debug - List all files before uploading coverage
+        run: ls -R
+
+      - name: Check if coverage report exists
+        run: |
+          if [ -f coverage.xml ]; then
+            echo "Coverage report found."
+          else
+            echo "ERROR: coverage.xml not found!"
+            exit 1
+          fi
+
+      - name: Upload coverage report as GitHub Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: "**/coverage.xml"
+
+  coverage-badge:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+
+      - name: Run tests and extract coverage percentage
+        id: coverage
+        run: |
+          coverage_percentage=$(pytest --cov=. --cov-report=term | grep -Eo '[0-9]+%' | head -1 | tr -d '%')
+          echo "COVERAGE_PERCENTAGE=${coverage_percentage}" >> $GITHUB_ENV
+
+      - name: Create Coverage Badge
+        run: |
+          curl -o coverage-badge.svg "https://img.shields.io/badge/coverage-${{ env.COVERAGE_PERCENTAGE }}%25-brightgreen"
+
+      - name: Commit Coverage Badge
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          
+          # Get the current branch name
+          BRANCH_NAME=${{ github.ref_name }}
+
+          # Ensure the latest branch is available and switch to it
+          git fetch origin $BRANCH_NAME
+          git switch $BRANCH_NAME
+          
+          mkdir -p docs
+          mv coverage-badge.svg docs/
+
+          # Update README.md with the correct badge for this branch
+          sed -i "s|!\[Coverage\](.*)|![Coverage](https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/$BRANCH_NAME/docs/coverage-badge.svg)|g" README.md
+
+          git add docs/coverage-badge.svg README.md
+          git commit -m "Update coverage badge for $BRANCH_NAME" || echo "No changes to commit"
+          git push origin $BRANCH_NAME
+
