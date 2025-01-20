@@ -1,7 +1,7 @@
 [
   {
     "datasource" : "FrostSource",
-    "api_key" : "01e39643-4912-4b63-29abf-26de9e5ab368"
+    "api_key" : "[YOUR API KEY]"
   },
   {
     "datasource" : "IWINFixedSource",
