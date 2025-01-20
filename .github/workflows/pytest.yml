@@ -31,10 +31,10 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
 
-      - name: Run tests with coverage
-        run: pytest --cov=my_project --cov-report=xml --cov-report=term
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
+
+      - name: Run tests without live tests
+        run: pytest --cov=my_project --cov-report=xml --cov-report=term --ignore-glob='*live*.py'
+
 
       - name: Upload coverage report as GitHub Artifact
         uses: actions/upload-artifact@v4
