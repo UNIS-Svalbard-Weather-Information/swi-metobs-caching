@@ -13,7 +13,7 @@ api = Blueprint('api', __name__)
 def online_stations():
     station_handler = current_app.config['STATION_HANDLER']
     station_type = request.args.get('type', 'all')
-    stations = station_handler.get_cached_online_stations(type=type)
+    stations = station_handler.get_cached_online_stations(type=station_type)
     return jsonify(stations), 200
 
 @api.route('/station-data/<station_id>', methods=['GET'])

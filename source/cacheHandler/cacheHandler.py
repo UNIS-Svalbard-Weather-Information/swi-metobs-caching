@@ -43,22 +43,22 @@ class CacheHandler:
 
         state = []
 
-        for station in stations:
+        for station_id in stations[:2]:
             try:
-                self.logger.debug(f"Processing station status for: {station}")
-                datasource = get_datasource(station,  config=self.config)
-                is_online = datasource.is_station_online(station)
-                self.logger.debug(f"Station {station} online status: {'online' if is_online else 'offline'}")
+                self.logger.debug(f"Processing station status for: {station_id}")
+                datasource = get_datasource(station_id,  config=self.config)
+                is_online = datasource.is_station_online(station_id)
+                self.logger.debug(f"Station {station_id} online status: {'online' if is_online else 'offline'}")
 
                 if is_online:
-                    self.online_stations.append(station)
+                    self.online_stations.append(station_id)
 
-                metadata = self.config.get_metadata(station) or {}
-                variables = self.config.get_variable(station)
+                metadata = self.config.get_metadata(station_id) or {}
+                variables = self.config.get_variable(station_id)
                 timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 infos = {
-                    "id": station,
+                    "id": station_id,
                     "name": metadata.get("name", "Unknown"),
                     "type": metadata.get("type", "Unknown"),
                     "location": {
@@ -71,10 +71,10 @@ class CacheHandler:
                 }
 
                 state.append(infos)
-                self.logger.info(f"Successfully processed station {station}")
+                self.logger.info(f"Successfully processed station {station_id}")
 
             except Exception as e:
-                self.logger.error(f"Error processing station {station}: {e}", exc_info=True)
+                self.logger.error(f"Error processing station {station_id}: {e}", exc_info=True)
 
         self.logger.info(f"Finished caching station statuses. Total stations processed: {len(state)}")
 
@@ -145,6 +145,8 @@ class CacheHandler:
         }
 
         self._write_cache(result, filename)
+
+        return result
 
     def _clear_cache(self, entries):
         """Private method to clear cache entries, with logging."""
