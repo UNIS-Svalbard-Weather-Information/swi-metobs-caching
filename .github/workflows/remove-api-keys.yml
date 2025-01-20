@@ -3,9 +3,7 @@ name: Detect and Remove API Keys
 on:
   push:
     branches:
-      - main
-      - develop
-
+      - "**"
 jobs:
   sanitize_api_keys:
     runs-on: ubuntu-latest
