@@ -46,7 +46,7 @@ class CacheHandler:
         for station in stations:
             try:
                 self.logger.debug(f"Processing station status for: {station}")
-                datasource = get_datasource(station)
+                datasource = get_datasource(station,  config=self.config)
                 is_online = datasource.is_station_online(station)
                 self.logger.debug(f"Station {station} online status: {'online' if is_online else 'offline'}")
 
@@ -104,7 +104,7 @@ class CacheHandler:
         for station in self.online_stations:
             try:
                 self.logger.debug(f"Fetching real-time data for station: {station}")
-                datasource = get_datasource(station)
+                datasource = get_datasource(station,  config=self.config)
 
                 data = datasource.fetch_realtime_data(station)
 
