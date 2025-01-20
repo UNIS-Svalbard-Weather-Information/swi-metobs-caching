@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Dynamically add the root directory to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+
 import requests
 from datetime import datetime, timedelta
 import pandas as pd
@@ -8,10 +14,13 @@ import os
 from generic_functions import get_station_settings
 from dateutil import parser
 
+from source.configHandler.confighandler import ConfigHandler
+
 data_directory = "./data/"
 
 def request_data_to_FrostAPI(url, variables, duration, station_id):
-    client_id = '01e39643-4912-4b63-9bbf-26de9e5aa359'
+    config = ConfigHandler()
+    client_id = config.get_api_credential("FrostSource")
     data_dict = {}
     now = datetime.utcnow()
 
