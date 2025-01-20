@@ -1,22 +1,20 @@
 [
     {
-        "id": "bohemanneset",
+        "id": "SN99885",
         "name": "Bohemanneset",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/%Y/%m/lighthouse_AWS_Bohemanneset_Table_10min_%Y%m%d.nc",
+        "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
-            "airTemperature": "temperature",
+            "airTemperature": "air_temperature",
             "seaSurfaceTemperature": null,
             "windSpeed": "wind_speed",
-            "windDirection": "wind_direction",
-            "relativeHumidity": "relative_humidity"
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": null
         },
         "icon": "/static/images/lighthouse.png",
         "lat": 78.38166,
         "lon": 14.753,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
-        "datasource" : "IWINFixedSource"
-
+        "import_function" : "metNorway_FrostAPI.metNorway_FrostAPI"
     },
     {
         "id": "daudmannsodden",
