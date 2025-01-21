@@ -175,18 +175,30 @@ class CacheHandler:
         return None
 
     def get_cached_station_metadata(self, station_id):
-        filename = os.path.join(self.path_config.get('station_metadata_single', 'stations_metadata'), f"{station_id}.json")
+        self.logger.info(f"Fetching metadata for station ID: {station_id}")
+        try:
+            filename = os.path.join(self.path_config.get('station_metadata_single', 'stations_metadata'),
+                                    f"{station_id}.json")
+            cached_data = self._read_cache(filename)
+            if cached_data is not None:
+                return cached_data
 
-        cached_data = self._read_cache(filename)
-        if cached_data is not None:
-            return cached_data
+            stations_metadata = self._read_cache(self.path_config.get('station_status', 'cache_stations_status.json'))
+            if not stations_metadata:
+                self.logger.warning("No station metadata found in cache.")
+                return None
 
-        stations_metadata = self._read_cache(self.path_config.get('station_status','cache_stations_status.json'))
+            for station in stations_metadata:
+                if station.get('id') == station_id:
+                    self._write_cache(station, filename)
+                    return station
 
-        for station in stations_metadata:
-            if station.get('id', None) == station_id:
-                self._write_cache(station, filename)
-                return station
+            self.logger.warning(f"Station ID {station_id} not found in metadata cache.")
+            return None
+
+        except Exception as e:
+            self.logger.error(f"Unexpected error retrieving metadata for station {station_id}: {e}")
+            return None
 
 
     def _clear_cache(self, entries):

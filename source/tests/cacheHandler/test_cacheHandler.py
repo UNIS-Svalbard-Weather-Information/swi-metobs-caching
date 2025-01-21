@@ -59,7 +59,8 @@ def cache_handler(temp_cache_dir, mock_config_handler):
     path_config = {
         'station_metadata': 'cache_stations_status.json',
         'realtime_data': '111_data_realtime/',
-        'online': '000_status_online_stations/'
+        'online': '000_status_online_stations/',
+        'offline' : '000_status_offline_stations/'
     }
 
     ch = CacheHandler(directory=str(temp_cache_dir), path_config=path_config, cleaning_list=['online'])
@@ -206,7 +207,7 @@ class TestCacheHandler:
         temp_cache_dir
     ):
         """
-        Test the get_cached_online_stations method writes a file with online stations info.
+        Test the get_cached_online_stations method writes a file with online/offline stations info.
         """
         metadata_path = temp_cache_dir / "cache_stations_status.json"
         stations_status = [
@@ -228,17 +229,118 @@ class TestCacheHandler:
         with metadata_path.open("w", encoding="utf-8") as f:
             json.dump(stations_status, f)
 
-        cache_handler.get_cached_online_stations(type="all")
-
+        # Test for online stations
+        result_online = cache_handler.get_cached_online_stations(type="all", status='online')
         online_stations_file = temp_cache_dir / "000_status_online_stations" / "all.json"
         assert online_stations_file.exists()
 
         with online_stations_file.open("r", encoding="utf-8") as f:
-            data = json.load(f)
+            data_online = json.load(f)
 
-        assert "online_stations" in data
-        assert len(data["online_stations"]) == 1
-        assert data["online_stations"][0]["id"] == "station1"
+        assert "online_stations" in data_online
+        assert len(data_online["online_stations"]) == 1
+        assert data_online["online_stations"][0]["id"] == "station1"
+
+        # Test for offline stations
+        result_offline = cache_handler.get_cached_online_stations(type="all", status='offline')
+        offline_stations_file = temp_cache_dir / "000_status_offline_stations" / "all.json"
+        assert offline_stations_file.exists()
+
+        with offline_stations_file.open("r", encoding="utf-8") as f:
+            data_offline = json.load(f)
+
+        assert "offline_stations" in data_offline
+        assert len(data_offline["offline_stations"]) == 1
+        assert data_offline["offline_stations"][0]["id"] == "station2"
+
+    def test_get_cached_realtime_data(
+            self,
+            cache_handler,
+            temp_cache_dir
+    ):
+        """
+        Test the get_cached_realtime_data method retrieves cached real-time data correctly.
+        """
+        station_id = "station1"
+        realtime_data_path = temp_cache_dir / "111_data_realtime"
+        realtime_data_path.mkdir(parents=True, exist_ok=True)
+        realtime_file = realtime_data_path / f"{station_id}.json"
+
+        realtime_data = {"temp": 22.5, "humidity": 60}
+        with realtime_file.open("w", encoding="utf-8") as f:
+            json.dump(realtime_data, f)
+
+        # Update cache_handler path_config to use the temp directory
+        cache_handler.path_config["realtime_data"] = str(realtime_data_path)
+
+        # Test valid data retrieval
+        result = cache_handler.get_cached_realtime_data(station_id)
+        assert result == realtime_data, "Real-time data should match the cached content."
+
+        # Test missing file scenario
+        missing_station_id = "station2"
+        result_missing = cache_handler.get_cached_realtime_data(missing_station_id)
+        assert result_missing is None, "Should return None if the cache file is missing."
+
+        # Test corrupted JSON file scenario
+        corrupted_file = realtime_data_path / f"{station_id}_corrupt.json"
+        corrupted_file.write_text("{invalid_json: true}")
+
+        cache_handler.path_config["realtime_data"] = str(realtime_data_path)
+        result_corrupt = cache_handler.get_cached_realtime_data(f"{station_id}_corrupt")
+        assert result_corrupt is None, "Should return None if the cache file has invalid JSON."
+
+    def test_get_cached_station_metadata(
+        self,
+        cache_handler,
+        temp_cache_dir
+    ):
+        """
+        Test the get_cached_station_metadata method retrieves cached station metadata correctly.
+        """
+        station_id = "station1"
+        metadata_path = temp_cache_dir / "stations_metadata"
+        metadata_path.mkdir(parents=True, exist_ok=True)
+        metadata_file = metadata_path / f"{station_id}.json"
+
+        station_metadata = {
+            "id": "station1",
+            "name": "Test Station",
+            "type": "weather",
+            "location": {"lat": 12.34, "lon": 56.78}
+        }
+        with metadata_file.open("w", encoding="utf-8") as f:
+            json.dump(station_metadata, f)
+
+        # Update cache_handler path_config to use the temp directory
+        cache_handler.path_config["station_metadata_single"] = str(metadata_path)
+
+        # Test valid data retrieval
+        result = cache_handler.get_cached_station_metadata(station_id)
+        assert result == station_metadata, "Station metadata should match the cached content."
+
+        # Test missing file scenario
+        missing_station_id = "station2"
+        result_missing = cache_handler.get_cached_station_metadata(missing_station_id)
+        assert result_missing is None, "Should return None if the cache file is missing."
+
+        # Test retrieving from station status when metadata is missing
+        station_status_path = temp_cache_dir / "cache_stations_status.json"
+        station_status_data = [
+            {
+                "id": "station2",
+                "name": "Fallback Station",
+                "type": "weather",
+                "location": {"lat": 98.76, "lon": 54.32}
+            }
+        ]
+        with station_status_path.open("w", encoding="utf-8") as f:
+            json.dump(station_status_data, f)
+
+        cache_handler.path_config["station_status"] = str(station_status_path)
+        result_fallback = cache_handler.get_cached_station_metadata("station2")
+        assert result_fallback == station_status_data[0], "Should retrieve metadata from station status if missing in direct metadata."
+
 
     def test_clear_cache(
         self,
