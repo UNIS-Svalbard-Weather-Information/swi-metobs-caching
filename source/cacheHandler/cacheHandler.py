@@ -23,9 +23,11 @@ class CacheHandler:
 
         if path_config is None:
             self.path_config = {
-                'station_metadata' : 'cache_stations_status.json',
+                'station_status' : 'cache_stations_status.json',
+                'station_metadata_single' : './000_stations_metadata/',
                 'realtime_data' : './111_data_realtime/',
                 'online' : './000_status_online_stations/',
+                'offline': './000_status_offline_stations/',
             }
         else:
             self.path_config = path_config
@@ -80,7 +82,7 @@ class CacheHandler:
 
         self.logger.info(f"Finished caching station statuses. Total stations processed: {len(state)}")
 
-        self._write_cache(state, self.path_config.get('station_metadata', 'cache_stations_status.json'))
+        self._write_cache(state, self.path_config.get('station_status', 'cache_stations_status.json'))
 
         self._clear_cache(self.cleaning_list)
 
@@ -125,30 +127,67 @@ class CacheHandler:
 
         self.logger.info("Finished caching real-time data.")
 
-    def get_cached_online_stations(self, type="all"):
-        filename = os.path.join(self.path_config.get('online', '/status_online/'), f"{type}.json")
+    def get_cached_online_stations(self, type="all", status='online'):
+        filename = os.path.join(self.path_config.get(status, '/status_online/'), f"{type}.json")
 
         cached_data = self._read_cache(filename)
         if cached_data is not None:
             return cached_data
 
-        cached_stations = self._read_cache(self.path_config.get('station_metadata', 'cache_stations_status.json'))
+        cached_stations = self._read_cache(self.path_config.get('station_status', 'cache_stations_status.json'))
 
         result_list = []
         for station in cached_stations:
-            if station.get('status', 'offline') == 'online':
+            if station.get('status', 'offline') == status:
                 if type == "all" or station.get('type') == type:
                     result_list.append(
                         {key: station[key] for key in ["id", "name", "type", "location"] if key in station}
                     )
 
         result = {
-            "online_stations": result_list,
+            f"{status}_stations": result_list,
         }
 
         self._write_cache(result, filename)
 
         return result
+
+    def get_cached_realtime_data(self, station_id):
+        self.logger.info(f"Fetching real-time data for station ID: {station_id}")
+        try:
+            realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
+            filename = os.path.join(realtime_data_path, f"{station_id}.json")
+
+            cached_data = self._read_cache(filename)
+            if cached_data is None:
+                self.logger.warning(f"Cache file contains no valid data for station ID {station_id}")
+            else:
+                self.logger.info(f"Successfully retrieved cached data for station ID {station_id}")
+
+            return cached_data
+
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Invalid JSON format in cache file for station ID {station_id}: {e}", exc_info=True)
+        except Exception as e:
+            self.logger.critical(f"Unexpected error while fetching real-time data for station ID {station_id}: {e}",
+                                 exc_info=True)
+
+        return None
+
+    def get_cached_station_metadata(self, station_id):
+        filename = os.path.join(self.path_config.get('station_metadata_single', 'stations_metadata'), f"{station_id}.json")
+
+        cached_data = self._read_cache(filename)
+        if cached_data is not None:
+            return cached_data
+
+        stations_metadata = self._read_cache(self.path_config.get('station_status','cache_stations_status.json'))
+
+        for station in stations_metadata:
+            if station.get('id', None) == station_id:
+                self._write_cache(station, filename)
+                return station
+
 
     def _clear_cache(self, entries):
         """Private method to clear cache entries, with logging."""
