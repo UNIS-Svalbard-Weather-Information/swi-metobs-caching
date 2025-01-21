@@ -69,6 +69,7 @@ class CacheHandler:
                     "status": "online" if is_online else "offline",
                     "last_updated": timestamp or "Unknown",
                     "project" : metadata.get("project", "Unknown"),
+                    "icon" : metadata.get("icon", "/static/images/red_dot.png"),
                 }
 
                 state.append(infos)

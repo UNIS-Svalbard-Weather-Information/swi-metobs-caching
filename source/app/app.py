@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 from source.app.api import api
 from source.app.pages import pages
@@ -13,8 +13,13 @@ from source.cacheHandler.cacheHandler import CacheHandler
 import threading
 import time
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+LIBS_FOLDER = os.path.join(PROJECT_ROOT, "libs")
+
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__,
+                template_folder=os.path.join(PROJECT_ROOT, "templates"),
+                static_folder=os.path.join(PROJECT_ROOT, "static"))
     CORS(app)
 
     # Initialize StationHandler once
@@ -41,6 +46,11 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(pages)
+
+    # Serve JavaScript libraries from the libs folder
+    @app.route('/libs/<path:filename>')
+    def serve_libs(filename):
+        return send_from_directory(LIBS_FOLDER, filename)
 
     return app
 
