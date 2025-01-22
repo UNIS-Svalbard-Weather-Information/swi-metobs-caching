@@ -15,6 +15,7 @@ import time
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 LIBS_FOLDER = os.path.join(PROJECT_ROOT, "libs")
+STATIC_FOLDER = os.path.join(PROJECT_ROOT, "static")
 
 def create_app():
     app = Flask(__name__,
@@ -51,6 +52,13 @@ def create_app():
     @app.route('/libs/<path:filename>')
     def serve_libs(filename):
         return send_from_directory(LIBS_FOLDER, filename)
+
+    # Serve static folders
+
+    @app.route('/static/<path:filename>')
+    def serve_static(filename):
+        return send_from_directory(STATIC_FOLDER, filename)
+
 
     return app
 
