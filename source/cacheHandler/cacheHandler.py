@@ -33,7 +33,7 @@ class CacheHandler:
             self.path_config = path_config
 
         if cleaning_list is None:
-            self.cleaning_list = ['online']
+            self.cleaning_list = ['online', 'offline']
         else:
             self.cleaning_list = cleaning_list
 
