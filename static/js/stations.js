@@ -436,7 +436,7 @@ function updateFixedStationData(station, windImagesUrl) {
         delete trackLayers[station.id];
     }
 
-    fetchFixedStationData(station, 'now')
+    fetchStationData(station, 'now')
         .then(data => {
             if (data) {
                 updateFixedStationMarker(station, data);
@@ -448,40 +448,50 @@ function updateFixedStationData(station, windImagesUrl) {
 /**
  * Creates the popup content for a station.
  * 
- * @param {string} stationName - The name of the station.
- * @param {Object} dataPoint - The data point to display.
+ * @param {Object} station - The station object containing metadata.
+ * @param {Object|null} dataPoint - The latest measurement from the timeseries.
  * @returns {string} - The HTML content for the popup.
  */
 function createPopupContent(station, dataPoint) {
-    const date = new Date(dataPoint.time * 1000);
-    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-    const windDirectionLetter = getWindDirectionLetter(dataPoint.windDirection);
+    if (!dataPoint) {
+        return `<strong>${station.name}</strong><br>No recent data available.`;
+    }
 
-    const variables = station.variables;
+    // Convert timestamp to a readable format
+    const date = new Date(dataPoint.timestamp);
+    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    const windDirectionLetter = dataPoint.windDirection !== undefined
+        ? getWindDirectionLetter(dataPoint.windDirection)
+        : 'N/A';
+
+    // Available variables in the station metadata
+    const variables = station.variables || [];
+
     let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
 
-    if (variables.airTemperature) {
+    if (variables.includes("airTemperature")) {
         content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
     }
 
-    if (variables.seaSurfaceTemperature) {
+    if (variables.includes("seaSurfaceTemperature")) {
         content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
     }
 
-    if (variables.windSpeed) {
+    if (variables.includes("windSpeed")) {
         content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
     }
 
-    if (variables.windDirection) {
+    if (variables.includes("windDirection")) {
         content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
     }
 
-    if (variables.relativeHumidity) {
+    if (variables.includes("relativeHumidity")) {
         content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
     }
 
     return content;
 }
+
 
 /**
  * Converts wind direction in degrees to a compass direction letter.
@@ -521,10 +531,10 @@ function updateBoatMarker(station, data, variable) {
 }
 
 /**
- * Updates the marker for a fixed station.
- * 
+ * Updates the marker for a fixed station using the new API format.
+ *
  * @param {Object} station - The fixed station data.
- * @param {Object|null} data - The data to display.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  */
 function updateFixedStationMarker(station, data) {
     const Icon = L.icon({
@@ -533,45 +543,75 @@ function updateFixedStationMarker(station, data) {
         iconAnchor: [16, 16]
     });
 
+    // Remove existing marker if it exists
     if (fixedStationMarkers[station.id]) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station, data.latest);
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
 
-    const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
+    // Create popup content using latest data
+    const variableInfo = createPopupContent(station, latestData);
+
+    // Add the marker to the map
+    const Marker = L.marker([station.location.lat, station.location.lon], { icon: Icon }).addTo(map);
     Marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = Marker;
 }
 
+
 /**
- * Updates the wind marker for a station.
- * 
+ * Updates the wind marker for a station using the new API format.
+ *
  * @param {Object} station - The station data.
- * @param {Object} data - The data to display.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateWindMarker(station, data, windImagesUrl) {
-    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed, data.windDirection);
-    
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
+
+    if (!latestData) {
+        console.warn(`No wind data available for station ${station.id}`);
+        return; // Exit function if there's no valid data
+    }
+
+    // Get wind speed and direction from the latest data
+    const windSpeed = latestData.windSpeed;
+    const windDirection = latestData.windDirection;
+
+    // Generate wind icon URL based on speed & direction
+    const iconUrl = getWindSpeedIcon(windImagesUrl, windSpeed, windDirection);
+
+    // Create a rotated wind icon
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection + 90}deg);" />`,
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  
+               style="transform: rotate(${windDirection + 90}deg);" />`,
         iconSize: [80, 80],
         iconAnchor: [40, 40]
     });
 
+    // Remove existing wind marker if it exists
     if (windMarkers[station.id]) {
         map.removeLayer(windMarkers[station.id]);
     }
 
-    const windMarker = L.marker([data.lat, data.lon], { 
+    // Add new wind marker with updated position and icon
+    const windMarker = L.marker([station.location.lat, station.location.lon], {
         icon: windRotatedIcon,
     }).addTo(map);
 
-    windMarker.bindPopup(createPopupContent(station, data.latest));
+    // Attach popup with latest data
+    windMarker.bindPopup(createPopupContent(station, latestData));
     windMarkers[station.id] = windMarker;
 }
+
 
 /**
  * Gets the appropriate wind speed icon based on wind speed.
