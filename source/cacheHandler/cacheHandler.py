@@ -141,7 +141,7 @@ class CacheHandler:
             if station.get('status', 'offline') == status:
                 if type == "all" or station.get('type') == type:
                     result_list.append(
-                        {key: station[key] for key in ["id", "name", "type", "location"] if key in station}
+                        {key: station[key] for key in ["id", "name", "type", "location", "project"] if key in station}
                     )
 
         result = {
