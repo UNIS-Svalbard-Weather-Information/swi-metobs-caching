@@ -121,6 +121,10 @@ class ConfigHandler:
         """
         Load configurations from a list of JSON files.
 
+        Each configuration dictionary is augmented with a 'station_type'
+        field. If the configuration contains the key 'mobile', the station_type
+        is set to 'mobile'; otherwise it defaults to 'fixed'.
+
         Returns:
             list: A combined list of configuration dictionaries from all files.
 
@@ -140,13 +144,21 @@ class ConfigHandler:
             try:
                 with open(file, 'r') as f:
                     data = json.load(f)
-                    configs.extend(data if isinstance(data, list) else [data])
+                    # Ensure we have a list of config dictionaries
+                    config_list = data if isinstance(data, list) else [data]
+                    for config in config_list:
+                        # Add station type: if the config contains the key 'mobile',
+                        # mark it as 'mobile', otherwise default to 'fixed'
+                        if 'mobile' in file:
+                            config['type'] = 'mobile'
+                        else:
+                            config['type'] = 'fixed'
+                    configs.extend(config_list)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 self._handle_error(e)
 
         self._cached_configs = configs
         return configs
-
     def get_api_credential(self, datasource):
         """
         Retrieve API credentials for a given datasource.

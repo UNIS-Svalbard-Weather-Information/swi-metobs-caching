@@ -35,54 +35,76 @@ let mobileStations = [];
 let fixedStations = [];
 
 /**
+ * Array to store offline station data.
+ * @type {Array.<Object>}
+ */
+let offlineStations = [];
+
+/**
  * Object to store the visibility state for each station.
  * @type {Object.<string, boolean>}
  */
 let stationVisibility = {};
 
 /**
- * Loads station data from provided URLs and initializes the map controls.
- * 
- * @param {string} mobileStationConfigUrl - URL to fetch mobile station configuration.
- * @param {string} fixedStationConfigUrl - URL to fetch fixed station configuration.
+ * Loads both online and offline stations from the API and initializes the map controls.
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
-function loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
+function loadStations(windImagesUrl) {
+    const onlineStationsUrl = "/api/station/online?type=all";
+    const offlineStationsUrl = "/api/station/offline?type=all";
+
     Promise.all([
-        fetch(mobileStationConfigUrl).then(response => response.json()),
-        fetch(fixedStationConfigUrl).then(response => response.json())
+        fetch(onlineStationsUrl).then(response => response.json()),
+        fetch(offlineStationsUrl).then(response => response.json())
     ])
-    .then(([mobileStationsData, fixedStationsData]) => {
-        mobileStations = mobileStationsData;
-        fixedStations = fixedStationsData;
+    .then(([onlineData, offlineData]) => {
+        // Ensure responses contain valid station lists
+        const onlineStations = onlineData.online_stations || [];
+        const offlineStationsList = offlineData.online_stations || [];
 
-        // Initialize visibility state
-        mobileStations.forEach(station => stationVisibility[station.id] = true);
-        fixedStations.forEach(station => stationVisibility[station.id] = true);
+        // Separate online stations into fixed and mobile categories
+        mobileStations = onlineStations.filter(station => station.type === "mobile");
+        fixedStations = onlineStations.filter(station => station.type === "fixed");
 
+        // Assign offline stations separately
+        offlineStations = offlineStationsList;
+
+        // Initialize visibility state (only online stations are visible by default)
+        onlineStations.forEach(station => stationVisibility[station.id] = true);
+        offlineStations.forEach(station => stationVisibility[station.id] = false);
+
+        // Initialize UI with both online and offline stations
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
+        // Fetch initial parameters and update station data
         const initialDuration = parseInt(document.getElementById('track-duration-select').value, 10);
         const initialVariable = document.getElementById('variable-select-dropdown').value;
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
     })
     .catch(error => {
-        console.error('Error loading stations:', error);
+        console.error("Error loading stations:", error);
     });
 }
 
+
 /**
  * Initializes the project controls UI with checkboxes for each station.
- * 
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
+
 function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
+    projectControls.innerHTML = ""; // Clear existing UI before adding new elements
+
     const projects = {};
 
-    // Collect all stations into their respective projects
-    const allStations = [...mobileStations, ...fixedStations];
+    // Collect all stations (online and offline)
+    const allStations = [...mobileStations, ...fixedStations, ...offlineStations];
+
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
         if (!projects[project]) {
@@ -117,7 +139,7 @@ function initializeProjectControls(windImagesUrl) {
         };
 
         // Styling the button
-        projectLabel.style.marginLeft = '10px';  // Adjust as needed
+        projectLabel.style.marginLeft = '10px';
 
         // Adding master checkbox and button to project header
         projectHeader.appendChild(projectCheckbox);
@@ -125,7 +147,7 @@ function initializeProjectControls(windImagesUrl) {
 
         const stationListDiv = document.createElement('div');
         stationListDiv.classList.add('station-list');
-        stationListDiv.style.display = 'none';  // Initially hidden
+        stationListDiv.style.display = 'none'; // Initially hidden
 
         // Create UI for each station within the project
         projects[project].forEach(station => {
@@ -135,7 +157,8 @@ function initializeProjectControls(windImagesUrl) {
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
-            stationCheckbox.checked = true;
+            stationCheckbox.checked = station.status === "online"; // Checked only if online
+            stationCheckbox.disabled = station.status === "offline"; // Disable checkbox for offline stations
             stationCheckbox.addEventListener('change', () => {
                 toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
             });
@@ -143,6 +166,12 @@ function initializeProjectControls(windImagesUrl) {
             const stationLabel = document.createElement('label');
             stationLabel.setAttribute('for', `station-${station.id}`);
             stationLabel.textContent = station.name;
+
+            if (station.status === "offline") {
+                // Apply strikethrough and grey color for offline stations
+                stationLabel.style.textDecoration = "line-through";
+                stationLabel.style.color = "grey";
+            }
 
             stationDiv.appendChild(stationCheckbox);
             stationDiv.appendChild(stationLabel);
@@ -155,6 +184,7 @@ function initializeProjectControls(windImagesUrl) {
         projectControls.appendChild(projectDiv);
     }
 }
+
 
 /**
  * Initializes event listeners for track duration and variable selection changes.
