@@ -178,7 +178,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             });
 
             // Load stations (mobile and fixed) and wind overlays
-            loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
+            loadStations(windImagesUrl);
 
             // Initialize Leaflet Draw for custom geometry drawing
             initializeLeafletDraw();
