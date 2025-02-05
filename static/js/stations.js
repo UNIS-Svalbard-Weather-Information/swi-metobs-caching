@@ -62,14 +62,12 @@ function loadStations(windImagesUrl) {
     .then(([onlineData, offlineData]) => {
         // Ensure responses contain valid station lists
         const onlineStations = onlineData.online_stations || [];
-        const offlineStationsList = offlineData.online_stations || [];
+        offlineStations = offlineData.offline_stations || [];
 
         // Separate online stations into fixed and mobile categories
         mobileStations = onlineStations.filter(station => station.type === "mobile");
         fixedStations = onlineStations.filter(station => station.type === "fixed");
 
-        // Assign offline stations separately
-        offlineStations = offlineStationsList;
 
         // Initialize visibility state (only online stations are visible by default)
         onlineStations.forEach(station => stationVisibility[station.id] = true);
@@ -246,7 +244,7 @@ async function fetchMobileStationData(station, duration) {
         return data;
     } catch (error) {
         //console.error('Error fetching mobile station data:', error);
-        updateStationUIOnError(station.id);
+        //updateStationUIOnError(station.id);
         return null;
     }
 }
@@ -268,7 +266,7 @@ function fetchFixedStationData(station, duration) {
         })
         .catch(error => {
             //console.error('Error fetching mobile station data:', error);
-            updateStationUIOnError(station.id); 
+            //updateStationUIOnError(station.id);
             return null;
         });
 }
@@ -603,14 +601,4 @@ function getColorScale(variable, minValue, maxValue) {
     };
 
     return colorScale[variable];
-}
-
-function updateStationUIOnError(stationId) {
-    const stationElement = document.getElementById(`station-${stationId}`);
-    if (stationElement) {
-        stationElement.style.textDecoration = "line-through";
-        stationElement.style.color = "grey";
-        const parent = stationElement.parentElement;
-        parent.appendChild(stationElement); // Move to the end of the list
-    }
 }
