@@ -269,27 +269,6 @@ async function fetchMobileStationData(station, duration) {
     }
 }
 
-/**
- * Fetches data for a specific fixed station.
- * 
- * @param {Object} station - The fixed station id.
- * @param {number} duration - The duration for which to fetch the data.
- * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
- */
-function fetchFixedStationData(station, duration) {
-    return fetch(`/api/fixed-station-data/${station.id}?duration=${duration}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            //console.error('Error fetching mobile station data:', error);
-            //updateStationUIOnError(station.id);
-            return null;
-        });
-}
 
 /**
  * Toggles the visibility of a station's data on the map.
@@ -447,7 +426,7 @@ function updateFixedStationData(station, windImagesUrl) {
 
 /**
  * Creates the popup content for a station.
- * 
+ *
  * @param {Object} station - The station object containing metadata.
  * @param {Object|null} dataPoint - The latest measurement from the timeseries.
  * @returns {string} - The HTML content for the popup.
