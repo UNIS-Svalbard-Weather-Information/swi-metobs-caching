@@ -87,13 +87,11 @@ function loadStations(windImagesUrl) {
     });
 }
 
-
 /**
  * Initializes the project controls UI with checkboxes for each station.
  *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
-
 function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
     projectControls.innerHTML = ""; // Clear existing UI before adding new elements
@@ -225,6 +223,28 @@ function updateStationsData(duration, windImagesUrl, variable) {
         }
     });
 }
+
+/**
+ * Fetches data for a specific station.
+ *
+ * @param {Object} station - The station object containing its ID.
+ * @param {string} dataType - The type of data to fetch (e.g., "now" or other time-based queries).
+ * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of an error.
+ */
+function fetchStationData(station, dataType = "now") {
+    return fetch(`/api/station-data/${station.id}?data=${dataType}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`API error: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error(`Error fetching data for station ${station.id}:`, error);
+            return null;
+        });
+}
+
 
 /**
  * Fetches data for a specific mobile station.
@@ -416,7 +436,7 @@ function updateFixedStationData(station, windImagesUrl) {
         delete trackLayers[station.id];
     }
 
-    fetchFixedStationData(station, 0)
+    fetchFixedStationData(station, 'now')
         .then(data => {
             if (data) {
                 updateFixedStationMarker(station, data);
