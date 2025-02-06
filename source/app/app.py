@@ -3,12 +3,13 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, send_file, jsonify
 from flask_cors import CORS
 from source.app.api import api
 from source.app.pages import pages
 
 from source.cacheHandler.cacheHandler import CacheHandler
+from source.maps_processing.sea_ice_map_processing import SeaIceCache
 
 import threading
 import time
@@ -16,6 +17,7 @@ import time
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 LIBS_FOLDER = os.path.join(PROJECT_ROOT, "libs")
 STATIC_FOLDER = os.path.join(PROJECT_ROOT, "static")
+MAPS_FOLDER = os.path.join(PROJECT_ROOT, "maps")
 
 def create_app():
     app = Flask(__name__,
@@ -25,12 +27,14 @@ def create_app():
 
     # Initialize StationHandler once
     station_handler = CacheHandler()
+    sea_ice_handler = SeaIceCache()
     app.config['STATION_HANDLER'] = station_handler
 
     def gather_data():
         while True:
             station_handler.cache_stations_status()
             station_handler.cache_realtime_data()
+            sea_ice_handler.create_ice_chart_geojson()
 
             # Explicitly clean up the old instance
             old_handler = app.config['STATION_HANDLER']
@@ -59,6 +63,16 @@ def create_app():
     def serve_static(filename):
         return send_from_directory(STATIC_FOLDER, filename)
 
+    @app.route('/maps/ice_chart', methods=['GET'])
+    def serve_geojson():
+        path = os.path.join(MAPS_FOLDER, "ice_chart.geojson")
+        try:
+            if os.path.exists(path):
+                return send_file(path, mimetype='application/json')
+            else:
+                return jsonify({"error": "GeoJSON file not found"}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     return app
 

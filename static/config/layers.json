@@ -57,7 +57,7 @@
         {
             "name": "Sea Ice",
             "type": "geojson",
-            "url": "/api/maps/sea-ice",
+            "url": "/maps/ice_chart",
             "layers": [0],
             "cite" : "ice_charts_cryo_met_no"
         }
