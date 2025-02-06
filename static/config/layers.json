@@ -10,27 +10,18 @@
 
     "additionalLayers": [
         {
-            "name": "Snowscooter driving area",
+            "name": "Landing location in tourism activities",
             "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [6, 7, 8],
-            "cite": "norwegian_polar_institute_np_2024"
+            "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/ilandstigningslokaliteter_svalbard/MapServer",
+            "layers": [0,1,2,3],
+            "cite": "None"
         },
-
         {
-            "name": "Trafic rules",
+            "name": "Motor traffic rules",
             "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [2, 3, 4, 5],
-            "cite": "norwegian_polar_institute_np_2024"
-        },
-
-        {
-            "name": "Boat landing sites",
-            "type": "arcgis",
-            "url": "https://geodata.npolar.no/arcgis/rest/services/Temadata/Transportation_Svalbard/MapServer/",
-            "layers": [0],
-            "cite": "norwegian_polar_institute_np_2024"
+            "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
+            "layers": [0,1,2,3,4],
+            "cite": "None"
         },
         {
             "name": "Slope steepness (avalanche)",
