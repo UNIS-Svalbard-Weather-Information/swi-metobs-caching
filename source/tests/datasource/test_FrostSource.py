@@ -84,7 +84,7 @@ def test_fetch_realtime_data(mock_get, frost_source):
         "sources": station_id,
         "elements": "air_temperature,humidity",
         "referencetime": "latest",
-        "maxage": "PT1H"
+        #"maxage": "PT1H"
     }
 
     mock_response = MagicMock()
