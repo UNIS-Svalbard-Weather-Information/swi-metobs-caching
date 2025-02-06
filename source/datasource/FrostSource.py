@@ -74,7 +74,7 @@ class FrostSource(DataSource):
             "sources": station_id,
             "elements": ",".join(variables),
             "referencetime": "latest",
-            "maxage": "PT1H"  # Last hour
+            #"maxage": "PT1H"  # Last hour
         }
 
         #print(params)

@@ -35,54 +35,72 @@ let mobileStations = [];
 let fixedStations = [];
 
 /**
+ * Array to store offline station data.
+ * @type {Array.<Object>}
+ */
+let offlineStations = [];
+
+/**
  * Object to store the visibility state for each station.
  * @type {Object.<string, boolean>}
  */
 let stationVisibility = {};
 
 /**
- * Loads station data from provided URLs and initializes the map controls.
- * 
- * @param {string} mobileStationConfigUrl - URL to fetch mobile station configuration.
- * @param {string} fixedStationConfigUrl - URL to fetch fixed station configuration.
+ * Loads both online and offline stations from the API and initializes the map controls.
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
-function loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
+function loadStations(windImagesUrl) {
+    const onlineStationsUrl = "/api/station/online?type=all";
+    const offlineStationsUrl = "/api/station/offline?type=all";
+
     Promise.all([
-        fetch(mobileStationConfigUrl).then(response => response.json()),
-        fetch(fixedStationConfigUrl).then(response => response.json())
+        fetch(onlineStationsUrl).then(response => response.json()),
+        fetch(offlineStationsUrl).then(response => response.json())
     ])
-    .then(([mobileStationsData, fixedStationsData]) => {
-        mobileStations = mobileStationsData;
-        fixedStations = fixedStationsData;
+    .then(([onlineData, offlineData]) => {
+        // Ensure responses contain valid station lists
+        const onlineStations = onlineData.online_stations || [];
+        offlineStations = offlineData.offline_stations || [];
 
-        // Initialize visibility state
-        mobileStations.forEach(station => stationVisibility[station.id] = true);
-        fixedStations.forEach(station => stationVisibility[station.id] = true);
+        // Separate online stations into fixed and mobile categories
+        mobileStations = onlineStations.filter(station => station.type === "mobile");
+        fixedStations = onlineStations.filter(station => station.type === "fixed");
 
+
+        // Initialize visibility state (only online stations are visible by default)
+        onlineStations.forEach(station => stationVisibility[station.id] = true);
+        offlineStations.forEach(station => stationVisibility[station.id] = false);
+
+        // Initialize UI with both online and offline stations
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
+        // Fetch initial parameters and update station data
         const initialDuration = parseInt(document.getElementById('track-duration-select').value, 10);
         const initialVariable = document.getElementById('variable-select-dropdown').value;
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
     })
     .catch(error => {
-        console.error('Error loading stations:', error);
+        console.error("Error loading stations:", error);
     });
 }
 
 /**
  * Initializes the project controls UI with checkboxes for each station.
- * 
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
+    projectControls.innerHTML = ""; // Clear existing UI before adding new elements
+
     const projects = {};
 
-    // Collect all stations into their respective projects
-    const allStations = [...mobileStations, ...fixedStations];
+    // Collect all stations (online and offline)
+    const allStations = [...mobileStations, ...fixedStations, ...offlineStations];
+
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
         if (!projects[project]) {
@@ -117,7 +135,7 @@ function initializeProjectControls(windImagesUrl) {
         };
 
         // Styling the button
-        projectLabel.style.marginLeft = '10px';  // Adjust as needed
+        projectLabel.style.marginLeft = '10px';
 
         // Adding master checkbox and button to project header
         projectHeader.appendChild(projectCheckbox);
@@ -125,7 +143,7 @@ function initializeProjectControls(windImagesUrl) {
 
         const stationListDiv = document.createElement('div');
         stationListDiv.classList.add('station-list');
-        stationListDiv.style.display = 'none';  // Initially hidden
+        stationListDiv.style.display = 'none'; // Initially hidden
 
         // Create UI for each station within the project
         projects[project].forEach(station => {
@@ -135,7 +153,8 @@ function initializeProjectControls(windImagesUrl) {
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
-            stationCheckbox.checked = true;
+            stationCheckbox.checked = station.status === "online"; // Checked only if online
+            stationCheckbox.disabled = station.status === "offline"; // Disable checkbox for offline stations
             stationCheckbox.addEventListener('change', () => {
                 toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
             });
@@ -143,6 +162,12 @@ function initializeProjectControls(windImagesUrl) {
             const stationLabel = document.createElement('label');
             stationLabel.setAttribute('for', `station-${station.id}`);
             stationLabel.textContent = station.name;
+
+            if (station.status === "offline") {
+                // Apply strikethrough and grey color for offline stations
+                stationLabel.style.textDecoration = "line-through";
+                stationLabel.style.color = "grey";
+            }
 
             stationDiv.appendChild(stationCheckbox);
             stationDiv.appendChild(stationLabel);
@@ -155,6 +180,7 @@ function initializeProjectControls(windImagesUrl) {
         projectControls.appendChild(projectDiv);
     }
 }
+
 
 /**
  * Initializes event listeners for track duration and variable selection changes.
@@ -199,6 +225,28 @@ function updateStationsData(duration, windImagesUrl, variable) {
 }
 
 /**
+ * Fetches data for a specific station.
+ *
+ * @param {Object} station - The station object containing its ID.
+ * @param {string} dataType - The type of data to fetch (e.g., "now" or other time-based queries).
+ * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of an error.
+ */
+function fetchStationData(station, dataType = "now") {
+    return fetch(`/api/station-data/${station.id}?data=${dataType}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`API error: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error(`Error fetching data for station ${station.id}:`, error);
+            return null;
+        });
+}
+
+
+/**
  * Fetches data for a specific mobile station.
  * 
  * @param {Object} station - The mobile station data.
@@ -216,32 +264,11 @@ async function fetchMobileStationData(station, duration) {
         return data;
     } catch (error) {
         //console.error('Error fetching mobile station data:', error);
-        updateStationUIOnError(station.id);
+        //updateStationUIOnError(station.id);
         return null;
     }
 }
 
-/**
- * Fetches data for a specific fixed station.
- * 
- * @param {Object} station - The fixed station id.
- * @param {number} duration - The duration for which to fetch the data.
- * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
- */
-function fetchFixedStationData(station, duration) {
-    return fetch(`/api/fixed-station-data/${station.id}?duration=${duration}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            //console.error('Error fetching mobile station data:', error);
-            updateStationUIOnError(station.id); 
-            return null;
-        });
-}
 
 /**
  * Toggles the visibility of a station's data on the map.
@@ -388,7 +415,7 @@ function updateFixedStationData(station, windImagesUrl) {
         delete trackLayers[station.id];
     }
 
-    fetchFixedStationData(station, 0)
+    fetchStationData(station, 'now')
         .then(data => {
             if (data) {
                 updateFixedStationMarker(station, data);
@@ -399,41 +426,51 @@ function updateFixedStationData(station, windImagesUrl) {
 
 /**
  * Creates the popup content for a station.
- * 
- * @param {string} stationName - The name of the station.
- * @param {Object} dataPoint - The data point to display.
+ *
+ * @param {Object} station - The station object containing metadata.
+ * @param {Object|null} dataPoint - The latest measurement from the timeseries.
  * @returns {string} - The HTML content for the popup.
  */
 function createPopupContent(station, dataPoint) {
-    const date = new Date(dataPoint.time * 1000);
-    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-    const windDirectionLetter = getWindDirectionLetter(dataPoint.windDirection);
+    if (!dataPoint) {
+        return `<strong>${station.name}</strong><br>No recent data available.`;
+    }
 
-    const variables = station.variables;
+    // Convert timestamp to a readable format
+    const date = new Date(dataPoint.timestamp);
+    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    const windDirectionLetter = dataPoint.windDirection !== undefined
+        ? getWindDirectionLetter(dataPoint.windDirection)
+        : 'N/A';
+
+    // Available variables in the station metadata
+    const variables = station.variables || [];
+
     let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
 
-    if (variables.airTemperature) {
+    if (variables.includes("airTemperature")) {
         content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
     }
 
-    if (variables.seaSurfaceTemperature) {
+    if (variables.includes("seaSurfaceTemperature")) {
         content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
     }
 
-    if (variables.windSpeed) {
+    if (variables.includes("windSpeed")) {
         content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
     }
 
-    if (variables.windDirection) {
+    if (variables.includes("windDirection")) {
         content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
     }
 
-    if (variables.relativeHumidity) {
+    if (variables.includes("relativeHumidity")) {
         content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
     }
 
     return content;
 }
+
 
 /**
  * Converts wind direction in degrees to a compass direction letter.
@@ -473,10 +510,10 @@ function updateBoatMarker(station, data, variable) {
 }
 
 /**
- * Updates the marker for a fixed station.
- * 
+ * Updates the marker for a fixed station using the new API format.
+ *
  * @param {Object} station - The fixed station data.
- * @param {Object|null} data - The data to display.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  */
 function updateFixedStationMarker(station, data) {
     const Icon = L.icon({
@@ -485,45 +522,75 @@ function updateFixedStationMarker(station, data) {
         iconAnchor: [16, 16]
     });
 
+    // Remove existing marker if it exists
     if (fixedStationMarkers[station.id]) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station, data.latest);
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
 
-    const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
+    // Create popup content using latest data
+    const variableInfo = createPopupContent(station, latestData);
+
+    // Add the marker to the map
+    const Marker = L.marker([station.location.lat, station.location.lon], { icon: Icon }).addTo(map);
     Marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = Marker;
 }
 
+
 /**
- * Updates the wind marker for a station.
- * 
+ * Updates the wind marker for a station using the new API format.
+ *
  * @param {Object} station - The station data.
- * @param {Object} data - The data to display.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateWindMarker(station, data, windImagesUrl) {
-    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed, data.windDirection);
-    
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
+
+    if (!latestData) {
+        console.warn(`No wind data available for station ${station.id}`);
+        return; // Exit function if there's no valid data
+    }
+
+    // Get wind speed and direction from the latest data
+    const windSpeed = latestData.windSpeed;
+    const windDirection = latestData.windDirection;
+
+    // Generate wind icon URL based on speed & direction
+    const iconUrl = getWindSpeedIcon(windImagesUrl, windSpeed, windDirection);
+
+    // Create a rotated wind icon
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection + 90}deg);" />`,
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  
+               style="transform: rotate(${windDirection + 90}deg);" />`,
         iconSize: [80, 80],
         iconAnchor: [40, 40]
     });
 
+    // Remove existing wind marker if it exists
     if (windMarkers[station.id]) {
         map.removeLayer(windMarkers[station.id]);
     }
 
-    const windMarker = L.marker([data.lat, data.lon], { 
+    // Add new wind marker with updated position and icon
+    const windMarker = L.marker([station.location.lat, station.location.lon], {
         icon: windRotatedIcon,
     }).addTo(map);
 
-    windMarker.bindPopup(createPopupContent(station, data.latest));
+    // Attach popup with latest data
+    windMarker.bindPopup(createPopupContent(station, latestData));
     windMarkers[station.id] = windMarker;
 }
+
 
 /**
  * Gets the appropriate wind speed icon based on wind speed.
@@ -573,14 +640,4 @@ function getColorScale(variable, minValue, maxValue) {
     };
 
     return colorScale[variable];
-}
-
-function updateStationUIOnError(stationId) {
-    const stationElement = document.getElementById(`station-${stationId}`);
-    if (stationElement) {
-        stationElement.style.textDecoration = "line-through";
-        stationElement.style.color = "grey";
-        const parent = stationElement.parentElement;
-        parent.appendChild(stationElement); // Move to the end of the list
-    }
 }
