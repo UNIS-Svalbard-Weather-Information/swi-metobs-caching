@@ -149,8 +149,6 @@ body {
 @media (min-width: 769px) {
   .legend-container {
     max-width: 400px;  /* Matches the menu width */
-    /* Optionally set width to 100% so it fills the available space up to 300px */
-    width: 100%;
   }
 }
 
