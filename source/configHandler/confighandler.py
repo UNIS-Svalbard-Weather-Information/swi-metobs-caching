@@ -170,7 +170,7 @@ class ConfigHandler:
             str or None: The API key if found, otherwise None.
         """
         logger = Logger.setup_logger("ConfigHandler")
-        config_file = 'static/config/api.json'
+        config_file = 'private/api.json'
 
         # Return cached credentials if available
         if self._cached_credential is not None:
