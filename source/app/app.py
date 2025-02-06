@@ -19,6 +19,8 @@ LIBS_FOLDER = os.path.join(PROJECT_ROOT, "libs")
 STATIC_FOLDER = os.path.join(PROJECT_ROOT, "static")
 MAPS_FOLDER = os.path.join(PROJECT_ROOT, "maps")
 
+PRIVATE_FILES_LIST = ['api.json']
+
 def create_app():
     app = Flask(__name__,
                 template_folder=os.path.join(PROJECT_ROOT, "templates"),
@@ -61,6 +63,10 @@ def create_app():
 
     @app.route('/static/<path:filename>')
     def serve_static(filename):
+        # Split the filename by '/' and check if any part matches a restricted file
+        if any(part in PRIVATE_FILES_LIST for part in filename.split('/')):
+            return f"We have file not found for {filename}", 404
+
         return send_from_directory(STATIC_FOLDER, filename)
 
     @app.route('/maps/ice_chart', methods=['GET'])
