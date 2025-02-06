@@ -30,6 +30,50 @@ body {
     max-height: 100vh;
 }
 
+/* The toggle button styling */
+#menu-toggle {
+  display: none; /* hidden on larger screens */
+  background: #fff;
+  border: none;
+  font-size: 24px;
+  padding: 10px;
+  cursor: pointer;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  /* Position the menu off-canvas by default */
+  #menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* adjust as needed */
+    height: 100%;
+    transform: translateX(-100%);
+    overflow-y: auto;
+    z-index: 1000;
+  }
+  /* When open, slide in the menu */
+  #menu.open {
+    transform: translateX(0);
+  }
+  /* Show the toggle button on small screens */
+  #menu-toggle {
+    display: block;
+  }
+  /* Optionally, adjust the map so it fills the screen when the menu is hidden */
+  #map {
+    width: 100%;
+    left: 0;
+    margin-left: 0;
+  }
+}
+
 /* Menu Headings */
 #menu h2 {
     margin-top: 0;
@@ -99,6 +143,27 @@ body {
     z-index: 1000; /* Ensure it stays above other elements */
     position: relative; /* Ensure it stays in place relative to the map */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Big Screen: Constrain legend max-width to menu width */
+@media (min-width: 769px) {
+  .legend-container {
+    max-width: 400px;  /* Matches the menu width */
+    /* Optionally set width to 100% so it fills the available space up to 300px */
+    width: 100%;
+  }
+}
+
+/* Small Screen: Use the full height and allow horizontal resizing */
+@media (max-width: 768px) {
+  .legend-container {
+    max-height: 30vh;
+    width: 80%;        /* Set an initial width; adjust as desired */
+    resize: horizontal;  /* Allow user to drag to reduce or expand width */
+    overflow: auto;      /* Ensure content is scrollable if needed */
+    /* Optionally, you might want to remove max-width on small screens */
+    max-width: 80%;
+  }
 }
 
 /* Legend Items */
