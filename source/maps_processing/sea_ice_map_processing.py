@@ -1,6 +1,6 @@
 import sys
 import os
-
+from time import strftime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
@@ -98,10 +98,16 @@ class SeaIceCache:
                         "geometry": mapping(dissolved),
                     })
 
+            # Extract date from filename
+            match = re.search(r"NIS_arctic_(\d{8})_pl_a\.shp", shapefile_path)
+            if match:
+                date_str = match.group(1)
+                date_obj = datetime.strptime(date_str, "%Y%m%d")
+
             geojson_data = {
                 "type": "FeatureCollection",
                 "features": features,
-                "date": datetime.now().isoformat(),
+                "date": date_obj.isoformat(),
                 "lastDownload": datetime.now().isoformat()
             }
 
