@@ -77,6 +77,10 @@ function loadStations(windImagesUrl) {
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
+        const initialDuration = parseInt(document.getElementById('track-duration-select').value, 10);
+        const initialVariable = document.getElementById('variable-select-dropdown').value;
+        updateStationsData(initialDuration, windImagesUrl, initialVariable);
+
         setInterval(() => {
             const duration = parseInt(document.getElementById('track-duration-select').value, 10);
             const variable = document.getElementById('variable-select-dropdown').value;
