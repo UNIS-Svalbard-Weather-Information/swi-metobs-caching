@@ -157,8 +157,7 @@ body {
 /* Small Screen: Use the full height and allow horizontal resizing */
 @media (max-width: 768px) {
   .legend-container {
-    max-height: 30vh;
-    width: 80%;        /* Set an initial width; adjust as desired */
+    max-height: 25vh;
     resize: horizontal;  /* Allow user to drag to reduce or expand width */
     overflow: auto;      /* Ensure content is scrollable if needed */
     /* Optionally, you might want to remove max-width on small screens */
@@ -328,5 +327,21 @@ body {
     text-align: center;
 }
 
+@media (max-width: 768px) {
+  /* Lower the Leaflet Draw toolbar by adjusting its top position */
+  .leaflet-top.leaflet-left .leaflet-draw {
+    top: 60px !important; /* Adjust the value (e.g., 60px) as needed */
+  }
+
+  /* Lower the Zoom Control */
+  .leaflet-top.leaflet-left .leaflet-control-zoom {
+    top: 60px !important; /* Adjust this value to position the zoom control as desired */
+  }
+
+  /* Lower the Distance Measurement Control */
+  .leaflet-top.leaflet-left .leaflet-control-measure {
+    top: 60px !important; /* Adjust as needed */
+  }
+}
 
 
