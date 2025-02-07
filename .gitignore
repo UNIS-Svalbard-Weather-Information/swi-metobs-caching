@@ -8,3 +8,4 @@ data/*
 maps/*
 cache/*
 static/config/api.json
+private
