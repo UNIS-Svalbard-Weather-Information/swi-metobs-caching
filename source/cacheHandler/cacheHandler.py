@@ -15,6 +15,27 @@ import shutil
 
 class CacheHandler:
     def __init__(self, directory='./cache/', path_config = None, cleaning_list = None):
+        """
+            Initialize a CacheHandler instance to manage caching of station data.
+
+            Args:
+                directory (str): The base directory where cache files are stored.
+                    Default is './cache/'.
+                path_config (dict, optional): A dictionary mapping cache entry names to file paths.
+                    If None, defaults to:
+                        {
+                            'station_status': 'cache_stations_status.json',
+                            'station_metadata_single': './000_stations_metadata/',
+                            'realtime_data': './111_data_realtime/',
+                            'online': './000_status_online_stations/',
+                            'offline': './000_status_offline_stations/',
+                        }
+                cleaning_list (list, optional): A list of cache entry keys to be cleared during cache operations.
+                    Default is ['online', 'offline'].
+
+            Returns:
+                None
+        """
         self.directory = directory
         self.logger = Logger.setup_logger("CacheHandler")
         self.config = ConfigHandler()
@@ -38,6 +59,20 @@ class CacheHandler:
             self.cleaning_list = cleaning_list
 
     def cache_stations_status(self):
+        """
+        Retrieve and cache the status and metadata for all stations.
+
+        This method iterates over all available stations, checks if they are online, retrieves their metadata and available
+        variables, and compiles a status report with a timestamp for each station. The resulting list of station states is
+        written to a JSON cache file. Additionally, it clears specific cache entries as defined by the cleaning list.
+
+        Args:
+            None
+
+        Returns:
+            list: A list of dictionaries, each containing station information such as id, name, type, location, variables,
+                  status (online/offline), last_updated timestamp, project, and icon.
+        """
         self.logger.info("Starting to cache station statuses...")
 
         stations = self.config.get_stations(type="all")
@@ -89,7 +124,19 @@ class CacheHandler:
         return state
 
     def cache_realtime_data(self):
-        """Fetches and caches real-time data for online stations."""
+        """
+        Retrieve and cache real-time data for online stations.
+
+        This method fetches real-time data from each online station using the appropriate data source. If the list of online
+        stations is not already populated, it calls cache_stations_status to update it. For each online station, the real-time
+        data is written to a JSON file located in the path specified by the 'realtime_data' key in path_config.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
 
         self.logger.info("Starting to cache realtime data...")
 
@@ -128,6 +175,21 @@ class CacheHandler:
         self.logger.info("Finished caching real-time data.")
 
     def get_cached_online_stations(self, type="all", status='online'):
+        """
+        Retrieve cached station information filtered by type and status.
+
+        This method attempts to read a cache file containing stations filtered by the given status (online/offline). If the
+        filtered cache file does not exist, it reads the complete station status cache, filters the data based on the provided
+        station type and status, writes the filtered result to a new cache file, and returns the filtered data.
+
+        Args:
+            type (str): The station type to filter by. Use "all" to include stations of any type.
+            status (str): The station status to filter by ('online' or 'offline').
+
+        Returns:
+            dict: A dictionary with a key (e.g., 'online_stations') mapping to a list of station dictionaries. Each station
+                  dictionary includes keys: id, name, type, location, project, status, icon, and variables.
+        """
         filename = os.path.join(self.path_config.get(status, '/status_online/'), f"{type}.json")
 
         cached_data = self._read_cache(filename)
@@ -153,6 +215,20 @@ class CacheHandler:
         return result
 
     def get_cached_realtime_data(self, station_id):
+        """
+        Retrieve cached real-time data for a specific station.
+
+        This method reads and returns the cached real-time data for the station with the provided station_id from the file
+        specified by the 'realtime_data' path in path_config. If the file is missing or contains invalid data, appropriate
+        warnings or error messages are logged.
+
+        Args:
+            station_id (str): The unique identifier of the station whose real-time data is to be retrieved.
+
+        Returns:
+            dict: A dictionary containing the station's real-time data if available.
+            None: If no data is found or an error occurs.
+        """
         self.logger.info(f"Fetching real-time data for station ID: {station_id}")
         try:
             realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
@@ -175,6 +251,20 @@ class CacheHandler:
         return None
 
     def get_cached_station_metadata(self, station_id):
+        """
+        Retrieve and cache metadata for a specific station.
+
+        This method attempts to read a dedicated metadata file for the specified station from the path defined in
+        'station_metadata_single'. If the file is not found, it retrieves the station's metadata from the overall station
+        status cache, writes the metadata to the dedicated file, and returns the metadata.
+
+        Args:
+            station_id (str): The unique identifier of the station whose metadata is to be retrieved.
+
+        Returns:
+            dict: A dictionary containing the station's metadata, including keys such as name, type, location, project, and icon.
+            None: If the metadata is not found or an error occurs.
+        """
         self.logger.info(f"Fetching metadata for station ID: {station_id}")
         try:
             filename = os.path.join(self.path_config.get('station_metadata_single', 'stations_metadata'),
@@ -202,7 +292,19 @@ class CacheHandler:
 
 
     def _clear_cache(self, entries):
-        """Private method to clear cache entries, with logging."""
+        """
+        Clear specified cache entries by deleting their corresponding files or directories.
+
+        This private method iterates over the list of cache entry keys provided, retrieves each corresponding path from
+        path_config, constructs the full path by joining with the base cache directory, and deletes the file or directory using
+        the _delete_path method.
+
+        Args:
+            entries (list): A list of keys corresponding to cache entries to be cleared (e.g., ['online', 'offline']).
+
+        Returns:
+            None
+        """
 
         self.logger.info(f"Starting cache clearing for {len(entries)} entries.")
 
@@ -223,7 +325,19 @@ class CacheHandler:
 
 
     def _write_cache(self, json_data, filename):
-        """Writes a JSON dictionary to a file, ensuring subdirectories exist."""
+        """
+        Write JSON-serializable data to a cache file.
+
+        This private method constructs the full file path by combining the base cache directory with the provided filename,
+        ensures that any necessary subdirectories exist, and writes the data as JSON to the file.
+
+        Args:
+            json_data (dict or list): The data to be written to the cache file in JSON format.
+            filename (str): The relative path (including filename) where the data should be written.
+
+        Returns:
+            None
+        """
 
         # Construct the full file path
         file_path = os.path.join(self.directory, filename)
@@ -239,7 +353,20 @@ class CacheHandler:
             self.logger.error(f"Error writing cache to {file_path}: {e}", exc_info=True)
 
     def _read_cache(self, struct):
-        """Reads a JSON dictionary from a file in the specified directory."""
+        """
+        Read and return JSON data from a cache file.
+
+        This private method constructs the full file path by joining the base cache directory with the provided structure,
+        attempts to read and parse the JSON data from the file, and returns it. If the file is not found or an error occurs,
+        an appropriate message is logged and None is returned.
+
+        Args:
+            struct (str): The relative file path or structure identifier for the cache file to be read.
+
+        Returns:
+            dict or list: The JSON data from the cache file if successfully read.
+            None: If the file is not found or an error occurs during reading.
+        """
         file_path = os.path.join(self.directory, struct)
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -257,7 +384,19 @@ class CacheHandler:
             return
 
     def _delete_path(self, path):
-        """Private method to delete a file or directory recursively, with logging."""
+        """
+        Delete the specified file or directory.
+
+        This private method checks whether the provided path corresponds to a file or a directory. If it is a file, it
+        is deleted using os.remove; if it is a directory, it is deleted recursively using shutil.rmtree. Appropriate log messages
+        are recorded based on the outcome.
+
+        Args:
+            path (str): The path to the file or directory to be deleted.
+
+        Returns:
+            None
+        """
         try:
             if os.path.isfile(path):  # Check if it's a file
                 os.remove(path)
