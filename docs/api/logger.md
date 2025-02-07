@@ -1,0 +1,3 @@
+# Logger Documentation
+
+::: logger.logger
