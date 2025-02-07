@@ -69,6 +69,10 @@ def create_app():
 
         return send_from_directory(STATIC_FOLDER, filename)
 
+    @app.route('/manifest.json')
+    def serve_manifest():
+        return send_file(os.path.join(STATIC_FOLDER, "manifest.json"))
+
     @app.route('/maps/ice_chart', methods=['GET'])
     def serve_geojson():
         path = os.path.join(MAPS_FOLDER, "ice_chart.geojson")
