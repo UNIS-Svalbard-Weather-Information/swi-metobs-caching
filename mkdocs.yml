@@ -17,10 +17,11 @@ plugins:
 
 nav:
   - Home: index.md
-  - API:
+  - API : api.md
+  - Backend:
       #- App: api/app_api.md
-      - Cache Handler: api/cacheHandler.md
-      - Config Handler: api/confighandler.md
-      - Datasource: api/datasource.md
-      - Logger: api/logger.md
-      - Maps Processing: api/maps_processing.md
+      - Cache Handler: backend/cacheHandler.md
+      - Config Handler: backend/confighandler.md
+      - Datasource: backend/datasource.md
+      - Logger: backend/logger.md
+      - Maps Processing: backend/maps_processing.md
