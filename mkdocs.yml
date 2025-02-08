@@ -1,13 +1,16 @@
 site_name: Svalbard Weather Information
 docs_dir: docs
 theme:
-  name: material
-  features:
-    - navigation.instant
-    - navigation.tracking
-    - search.suggest
-    - content.code.annotate
-    - content.tabs.link
+  name: readthedocs
+
+#theme:
+#  name: material
+#  features:
+#    - navigation.instant
+#    - navigation.tracking
+#    - search.suggest
+#    - content.code.annotate
+#    - content.tabs.link
 
 
 plugins:
@@ -17,8 +20,10 @@ plugins:
 
 nav:
   - Home: index.md
-  - API : api.md
-  - Backend:
+  - User : user/user_guide.md
+  - API :
+    - AW Stations Enpoints : api.md
+  - Backend Codebase:
       #- App: api/app_api.md
       - Cache Handler: backend/cacheHandler.md
       - Config Handler: backend/confighandler.md
