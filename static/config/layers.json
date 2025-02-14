@@ -14,56 +14,64 @@
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/ilandstigningslokaliteter_svalbard/MapServer",
             "layers": [0,1,2,3],
-            "cite": "None"
+            "cite": "landing_areas_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Speed restriction in from of birds cliffs",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [0],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Traffic lane for residents and necessary commercial traffic",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [1],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Traffic lane for travelers / tourism",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [2],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Traffic regulation for residents",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [3],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Traffic regulation for travelers / tourism",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [4],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Regulation"
         },
         {
             "name": "Slope steepness (avalanche)",
             "type": "arcgis",
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
             "layers": [1],
-            "cite" : "bratthet_snoskred"
+            "cite" : "bratthet_snoskred",
+            "category" : "Avalanche"
         },
         {
             "name": "Slope steepness (general)",
             "type": "arcgis",
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
             "layers": [3],
-            "cite" : "bratthet_snoskred"
+            "cite" : "bratthet_snoskred",
+            "category" : "Terrain"
         },
 
         {
@@ -71,14 +79,16 @@
             "type": "arcgis",
             "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
             "layers": [7, 8],
-            "cite": "utlopsomradekart"
+            "cite": "utlopsomradekart",
+            "category" : "Avalanche"
         },
         {
             "name": "Sea Ice",
             "type": "geojson",
             "url": "/maps/ice_chart",
             "layers": [0],
-            "cite" : "ice_charts_cryo_met_no"
+            "cite" : "ice_charts_cryo_met_no",
+            "category" : "Sea Ice"
         }
     ]
 }   
