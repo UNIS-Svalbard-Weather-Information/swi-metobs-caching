@@ -4,7 +4,8 @@
             "name": "Topo Svalbard",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer",
-            "cite": "norwegian_polar_institute_np_2024"
+            "cite": "norwegian_polar_institute_np_2024",
+            "category" : "Base Layers"
         }
     ],
 
@@ -15,7 +16,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/ilandstigningslokaliteter_svalbard/MapServer",
             "layers": [0,1,2,3],
             "cite": "landing_areas_svalbard",
-            "category" : "Regulation"
+            "category" : "Boat Regulation"
         },
         {
             "name": "Speed restriction in from of birds cliffs",
@@ -23,7 +24,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [0],
             "cite": "motorferdsel_svalbard",
-            "category" : "Regulation"
+            "category" : "Boat Regulation"
         },
         {
             "name": "Traffic lane for residents and necessary commercial traffic",
@@ -31,7 +32,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [1],
             "cite": "motorferdsel_svalbard",
-            "category" : "Regulation"
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic lane for travelers / tourism",
@@ -39,7 +40,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [2],
             "cite": "motorferdsel_svalbard",
-            "category" : "Regulation"
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic regulation for residents",
@@ -47,7 +48,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [3],
             "cite": "motorferdsel_svalbard",
-            "category" : "Regulation"
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic regulation for travelers / tourism",
@@ -55,7 +56,7 @@
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [4],
             "cite": "motorferdsel_svalbard",
-            "category" : "Regulation"
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Slope steepness (avalanche)",
