@@ -58,11 +58,14 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         .then(response => response.json())
         .then(layerConfig => {
             // Create a Leaflet map instance with the default extent (latitude, longitude, zoom level)
-            map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
+            const map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
 
             // Define containers for base layers and additional layers
-            const baseLayers = {};
-            const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
+            const baseLayersTree = {
+                label: 'Base Layers',
+                children: []
+            };
+            const additionalLayers = {};
 
             // Create a legend control and add it to the map
             const legendControl = L.control({ position: 'bottomright' });
@@ -76,7 +79,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             };
             legendControl.addTo(map);
 
-            // Process and add base maps to the map
+            // Process and add base maps to the map with categories
             layerConfig.baseMaps.forEach(layer => {
                 let layerObj;
                 switch (layer.type) {
@@ -94,18 +97,22 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                         });
                         break;
                 }
-                baseLayers[layer.name] = layerObj;
+
+                // Add the layer to the base layers tree
+                addLayerToTree(baseLayersTree, layer.category, layer.name, layerObj);
 
                 // Add the first base map to the map by default
-                if (Object.keys(baseLayers).length === 1) {
+                if (Object.keys(baseLayersTree.children).length === 1) {
                     layerObj.addTo(map);
                 }
-
-                // Add base layer to the control panel
-                layerControl.addBaseLayer(layerObj, layer.name);
             });
 
-            // Process and add additional layers to the map
+            // Process and add additional layers to the map with categories
+            const overlayLayersTree = {
+                label: 'Overlay Layers',
+                children: []
+            };
+
             layerConfig.additionalLayers.forEach(layer => {
                 let layerObj;
                 switch (layer.type) {
@@ -143,7 +150,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
 
                                 // Add the GeoJSON layer to additional layers
                                 additionalLayers[layer.name] = geojsonLayer;
-                                layerControl.addOverlay(geojsonLayer, layer.name);
+                                addLayerToTree(overlayLayersTree, layer.category, layer.name, geojsonLayer);
 
                                 // Update legend and controls when the layer is toggled
                                 geojsonLayer.on('add', function () {
@@ -162,7 +169,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
 
                 // Add the non-GeoJSON layer to additional layers
                 additionalLayers[layer.name] = layerObj;
-                layerControl.addOverlay(layerObj, layer.name);
+                addLayerToTree(overlayLayersTree, layer.category, layer.name, layerObj);
 
                 // Update legend and controls when the layer is toggled
                 layerObj.on('add', function () {
@@ -177,6 +184,11 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                 });
             });
 
+            // Add the layer control with tree structure to the map
+            L.control.layers.tree(baseLayersTree, overlayLayersTree, {
+                collapsed: false
+            }).addTo(map);
+
             // Load stations (mobile and fixed) and wind overlays
             loadStations(windImagesUrl);
 
@@ -190,6 +202,19 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
 }
+
+// Helper function to add layers to the tree structure
+function addLayerToTree(tree, category, name, layer) {
+    let categoryNode = tree.children.find(child => child.label === category);
+    if (!categoryNode) {
+        categoryNode = { label: category, children: [] };
+        tree.children.push(categoryNode);
+    }
+    categoryNode.children.push({ label: name, layer });
+}
+
+
+
 
 
 /**
