@@ -64,7 +64,8 @@
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
             "layers": [1],
             "cite" : "bratthet_snoskred",
-            "category" : "Avalanche"
+            "category" : "Avalanche",
+            "default" : true
         },
         {
             "name": "Slope steepness (general)",
@@ -81,7 +82,8 @@
             "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
             "layers": [7, 8],
             "cite": "utlopsomradekart",
-            "category" : "Avalanche"
+            "category" : "Avalanche",
+            "default" : true
         },
         {
             "name": "Sea Ice",
@@ -89,7 +91,8 @@
             "url": "/maps/ice_chart",
             "layers": [0],
             "cite" : "ice_charts_cryo_met_no",
-            "category" : "Sea Ice"
+            "category" : "Sea Ice",
+            "default" : true
         }
     ]
 }   

@@ -15,6 +15,10 @@ pages = Blueprint('pages', __name__)
 def index():
     return render_template('index.html')
 
+@pages.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
 @pages.route('/credits')
 def credits():
     """
