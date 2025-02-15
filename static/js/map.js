@@ -58,14 +58,14 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         .then(response => response.json())
         .then(layerConfig => {
             // Create a Leaflet map instance with the default extent (latitude, longitude, zoom level)
-            const map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
+            map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
 
             // Define containers for base layers and additional layers
             const baseLayersTree = {
                 label: 'Base Layers',
                 children: []
             };
-            const additionalLayers = {};
+            additionalLayers = {};
 
             // Create a legend control and add it to the map
             const legendControl = L.control({ position: 'bottomright' });
@@ -186,7 +186,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
 
             // Add the layer control with tree structure to the map
             L.control.layers.tree(baseLayersTree, overlayLayersTree, {
-                collapsed: false
+                collapsed: true
             }).addTo(map);
 
             // Load stations (mobile and fixed) and wind overlays
