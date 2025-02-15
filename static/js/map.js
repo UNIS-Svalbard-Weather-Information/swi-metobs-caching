@@ -211,7 +211,6 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
         });
 }
 
-
 // Helper function to add layers to the tree structure
 function addLayerToTree(tree, category, name, layer) {
     let categoryNode = tree.children.find(child => child.label === category);
@@ -221,10 +220,6 @@ function addLayerToTree(tree, category, name, layer) {
     }
     categoryNode.children.push({ label: name, layer });
 }
-
-
-
-
 
 /**
  * Initializes the Leaflet Measure tool on the map.
