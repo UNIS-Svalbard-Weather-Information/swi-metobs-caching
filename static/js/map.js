@@ -95,7 +95,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
 
                 addLayerToTree(baseLayersTree, layer.category, layer.name, layerObj);
 
-                if (Object.keys(baseLayersTree.children).length === 1) {
+                if (layer.default || Object.keys(baseLayersTree.children).length === 1) {
                     layerObj.addTo(map);
                 }
             });
@@ -121,6 +121,12 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                             const geojsonLayer = L.geoJSON(geojsonData, { style });
                             additionalLayers[layer.name] = geojsonLayer;
                             addLayerToTree(overlayLayersTree, layer.category, layer.name, geojsonLayer);
+
+                            if (layer.default) {
+                                geojsonLayer.addTo(map);
+                                activeLayers[layer.name] = layer;
+                                legendControl.update(); // Update legend when adding default GeoJSON layers
+                            }
 
                             geojsonLayer.on('add', function () {
                                 activeLayers[layer.name] = layer;
@@ -157,6 +163,12 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                     additionalLayers[layer.name] = layerObj;
                     addLayerToTree(overlayLayersTree, layer.category, layer.name, layerObj);
 
+                    if (layer.default) {
+                        layerObj.addTo(map);
+                        activeLayers[layer.name] = layer;
+                        legendControl.update(); // Update legend when adding default additional layers
+                    }
+
                     layerObj.on('add', function () {
                         activeLayers[layer.name] = layer;
                         legendControl.update();
@@ -182,6 +194,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
             });
         });
 }
+
 
 // Helper function to add layers to the tree structure
 function addLayerToTree(tree, category, name, layer) {
