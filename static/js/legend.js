@@ -166,13 +166,6 @@ function updateLegend(legendControl) {
     });
 }
 
-
-
-
-
-
-
-
 function updateColorBar(variable, minValue, maxValue, colorScale) {
     // Remove the existing color bar if it exists
     d3.select('.colorBar').remove();
@@ -327,7 +320,6 @@ function updateColorBar2(variable, minValue, maxValue, colorScale) {
     };
     colorBar.addTo(map);
 }
-
 
 function showPopup(event, message) {
     // Check if a popup already exists
