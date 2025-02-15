@@ -105,6 +105,8 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                 children: []
             };
 
+            const geoJsonLayers = [];
+
             const geoJsonPromises = layerConfig.additionalLayers.map(layer => {
                 if (layer.type === 'geojson') {
                     return fetch(layer.url)
@@ -125,7 +127,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                             if (layer.default) {
                                 geojsonLayer.addTo(map);
                                 activeLayers[layer.name] = layer;
-                                legendControl.update(); // Update legend when adding default GeoJSON layers
+                                legendControl.update();
                             }
 
                             geojsonLayer.on('add', function () {
@@ -138,6 +140,8 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                                 legendControl.update();
                                 removeOpacityControl(layer.name);
                             });
+
+                            geoJsonLayers.push({ layer, geojsonLayer });
                         });
                 } else {
                     let layerObj;
@@ -166,7 +170,7 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                     if (layer.default) {
                         layerObj.addTo(map);
                         activeLayers[layer.name] = layer;
-                        legendControl.update(); // Update legend when adding default additional layers
+                        legendControl.update();
                     }
 
                     layerObj.on('add', function () {
@@ -191,6 +195,18 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                 initializeLeafletDraw();
                 initializeLeafletMeasure();
                 document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
+
+                // Set up interval to refetch GeoJSON data every minute
+                setInterval(() => {
+                    geoJsonLayers.forEach(({ layer, geojsonLayer }) => {
+                        fetch(layer.url)
+                            .then(response => response.json())
+                            .then(geojsonData => {
+                                geojsonLayer.clearLayers().addData(geojsonData);
+                                legendControl.update(); // Update legend after refetching data
+                            });
+                    });
+                }, 900000); // 900000 milliseconds = 15 minute
             });
         });
 }
