@@ -231,8 +231,10 @@ class MapsCaching:
 
             # Compute gradient in x and y direction
             gradient_x, gradient_y = np.gradient(elevation, x_res, y_res)
-            aspect = np.arctan2(-gradient_y, gradient_x) * (180 / np.pi)
-            aspect = np.where(aspect < 0, 90 - aspect, 270 - aspect)
+            aspect = np.arctan2(-gradient_y, gradient_x)
+
+            # Convert radians to degrees and use modulo to ensure range [0, 360)
+            aspect = np.rad2deg(aspect) % 360
 
             # Save the aspect raster
             aspect_path = os.path.join(self.path, 'managed', f'{res}_aspect_raster.tif')
