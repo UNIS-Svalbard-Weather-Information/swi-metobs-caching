@@ -2,7 +2,10 @@ import sys
 import os
 import requests
 from datetime import datetime, timedelta
+
+
 from source.logger.logger import Logger
+from source.maps_processing.maps_caching import MapsCaching
 
 class AvalancheForecastProcessing:
     def __init__(self, n_days_forecast=2, regions_list=None):
@@ -14,6 +17,7 @@ class AvalancheForecastProcessing:
         self.regions = {region_id: {} for region_id in self.regions_list}
         self.n_days_forecast = n_days_forecast
         self.logger.info("AvalancheForecastProcessing initialized.")
+        self.maps_cache = MapsCaching()
 
     def fetch_region_data(self, api_url='https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api/Region/A'):
         """
