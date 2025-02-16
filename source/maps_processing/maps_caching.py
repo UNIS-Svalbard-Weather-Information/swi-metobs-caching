@@ -25,24 +25,11 @@ class MapsCaching:
     """
     A class to manage the downloading and processing of Digital Elevation Models (DEMs),
     computing steepness rasters, and creating steepness contours.
-
-    Attributes:
-        path (str): The base path where files will be stored.
-        force (bool): If True, forces the recreation of layers even if they already exist.
-        DEM_res (dict): A dictionary mapping DEM resolutions to their download URLs.
-        logger (Logger): A logger instance for logging messages.
-        DEM_path (str): The file path to the downloaded DEM.
-        steepness_raster_path (str): The file path to the computed steepness raster.
-        contour_path (str): The file path to the created steepness contour shapefile.
     """
 
     def __init__(self, path='./static/maps/', force=False):
         """
         Initializes the MapsCaching instance and ensures the managed directory exists.
-
-        Args:
-            path (str): The base path where files will be stored.
-            force (bool): If True, forces the recreation of layers even if they already exist.
         """
         self.path = path
         self.force = force
@@ -68,9 +55,6 @@ class MapsCaching:
     def _find_existing_DEM(self):
         """
         Finds an existing DEM file in the managed directory.
-
-        Returns:
-            str: The file path to the existing DEM, or None if not found.
         """
         managed_path = os.path.join(self.path, 'managed')
         for res in self.DEM_res.keys():
@@ -83,9 +67,6 @@ class MapsCaching:
     def _find_existing_steepness_raster(self):
         """
         Finds an existing steepness raster file in the managed directory.
-
-        Returns:
-            str: The file path to the existing steepness raster, or None if not found.
         """
         managed_path = os.path.join(self.path, 'managed')
         for res in self.DEM_res.keys():
@@ -98,9 +79,6 @@ class MapsCaching:
     def _find_existing_contour(self):
         """
         Finds an existing contour file in the managed directory.
-
-        Returns:
-            str: The file path to the existing contour, or None if not found.
         """
         managed_path = os.path.join(self.path, 'managed')
         for file in os.listdir(managed_path):
@@ -111,9 +89,6 @@ class MapsCaching:
     def _download_DEM(self, res='DTM50'):
         """
         Downloads the DEM file from the specified URL and extracts it.
-
-        Args:
-            res (str): The resolution of the DEM to download.
         """
         url = self.DEM_res.get(res)
         if not url:
@@ -126,7 +101,6 @@ class MapsCaching:
             response = requests.get(url)
             response.raise_for_status()
 
-            # Use a temporary directory for extraction
             with tempfile.TemporaryDirectory() as temp_dir:
                 zip_path = os.path.join(temp_dir, 'temp.zip')
 
@@ -155,11 +129,7 @@ class MapsCaching:
     def _compute_steepness_raster(self, res='DTM50'):
         """
         Computes the steepness raster from the DEM file.
-
-        Args:
-            res (str): The resolution of the DEM to use.
         """
-        # Ensure DEM is downloaded
         self.get_DEM(res)
 
         if not self.DEM_path:
@@ -176,11 +146,9 @@ class MapsCaching:
                 x_res = profile['transform'][0]
                 y_res = -profile['transform'][4]
 
-                # Compute gradient in x and y direction
                 gradient_x, gradient_y = np.gradient(elevation, x_res, y_res)
                 slope = np.arctan(np.sqrt(gradient_x**2 + gradient_y**2)) * (180 / np.pi)
 
-                # Save the slope raster
                 steepness_path = os.path.join(self.path, 'managed', f'{res}_steepness_raster.tif')
                 with rasterio.open(
                     steepness_path,
@@ -205,17 +173,7 @@ class MapsCaching:
         """
         Creates a shapefile with smoothed polygons representing areas within a specified steepness range,
         optionally filtered by orientation.
-
-        Args:
-            min_steepness (float): The minimum steepness value for the contour.
-            max_steepness (float): The maximum steepness value for the contour.
-            res (str): The resolution of the DEM to use.
-            orientation (str): The orientation to filter the contour by (e.g., 'N', 'NE', 'E', etc.).
-
-        Returns:
-            str: The file path to the created contour shapefile.
         """
-        # Ensure steepness raster is computed
         self.get_steepness_raster(res)
         aspect_path = self.get_aspect_raster(res)
 
@@ -230,7 +188,6 @@ class MapsCaching:
         self.logger.info(f"Creating steepness contour for range {min_steepness}-{max_steepness} degrees")
 
         try:
-            # Set tolerance based on resolution
             tolerance = np.sqrt((50 if res == 'DTM50' else 20) ** 2 * 2)
 
             with rasterio.open(self.steepness_raster_path) as src_steepness:
@@ -246,24 +203,15 @@ class MapsCaching:
                         mask = mask & orientation_mask
 
                 shapes_gen = shapes(mask.astype(np.uint8), mask=mask, transform=src_steepness.transform)
-
-                # Create a GeoDataFrame from the shapes
                 polygons = [shape(geom) for geom, value in shapes_gen if value == 1]
 
-                # Debugging output
                 self.logger.info(f"Generated {len(polygons)} polygons for orientation {orientation}")
-                feature_type = []
-                for i, poly in enumerate(polygons):
-                    feature_type.append(poly.geom_type)
-
+                feature_type = [poly.geom_type for poly in polygons]
                 self.logger.info(f"Types are: {np.unique(feature_type)}")
 
-                # Simplify polygons
                 polygons = [poly.simplify(tolerance) for poly in polygons]
-
                 gdf = gpd.GeoDataFrame({'geometry': polygons}, crs=src_steepness.crs)
 
-                # Save to shapefile
                 contour_path = os.path.join(self.path, 'managed',
                                             f'{res}_steepness_contour_{min_steepness}_{max_steepness}_{orientation if orientation else ""}.shp')
                 gdf.to_file(contour_path, driver='ESRI Shapefile')
@@ -278,11 +226,7 @@ class MapsCaching:
     def _compute_aspect_raster(self, res='DTM50'):
         """
         Computes the aspect raster from the DEM file.
-
-        Args:
-            res (str): The resolution of the DEM to use.
         """
-        # Ensure DEM is downloaded
         self.get_DEM(res)
 
         if not self.DEM_path:
@@ -299,14 +243,10 @@ class MapsCaching:
                 x_res = profile['transform'][0]
                 y_res = -profile['transform'][4]
 
-                # Compute gradient in x and y direction
                 gradient_x, gradient_y = np.gradient(elevation, x_res, y_res)
                 aspect = np.arctan2(-gradient_y, gradient_x)
-
-                # Convert radians to degrees and use modulo to ensure range [0, 360)
                 aspect = np.rad2deg(aspect) % 360
 
-                # Save the aspect raster
                 aspect_path = os.path.join(self.path, 'managed', f'{res}_aspect_raster.tif')
                 with rasterio.open(
                         aspect_path,
@@ -331,12 +271,6 @@ class MapsCaching:
     def get_DEM(self, res='DTM50'):
         """
         Gets the file path to the DEM, downloading it if necessary.
-
-        Args:
-            res (str): The resolution of the DEM to use.
-
-        Returns:
-            str: The file path to the DEM.
         """
         if self.force or not self.DEM_path:
             self._download_DEM(res)
@@ -348,12 +282,6 @@ class MapsCaching:
     def get_steepness_raster(self, res='DTM50'):
         """
         Gets the file path to the steepness raster, computing it if necessary.
-
-        Args:
-            res (str): The resolution of the DEM to use.
-
-        Returns:
-            str: The file path to the steepness raster.
         """
         if self.force or not self.steepness_raster_path:
             self._compute_steepness_raster(res)
@@ -362,38 +290,9 @@ class MapsCaching:
             return None
         return self.steepness_raster_path
 
-    def get_steepness_contour(self, min_steepness, max_steepness, res='DTM50'):
-        """
-        Gets the file path to the steepness contour shapefile, creating it if necessary.
-
-        Args:
-            min_steepness (float): The minimum steepness value for the contour.
-            max_steepness (float): The maximum steepness value for the contour.
-            res (str): The resolution of the DEM to use.
-
-        Returns:
-            str: The file path to the steepness contour shapefile.
-        """
-        contour_filename = f'steepness_contour_{min_steepness}_{max_steepness}.shp'
-        contour_path = os.path.join(self.path, 'managed', contour_filename)
-
-        if self.force or not os.path.exists(contour_path):
-            self.contour_path = self._create_steepness_contour(min_steepness, max_steepness, res)
-        else:
-            self.logger.info(f"Steepness contour already exists at {contour_path}")
-            self.contour_path = contour_path
-
-        return self.contour_path
-
     def get_aspect_raster(self, res='DTM50'):
         """
         Gets the file path to the aspect raster, computing it if necessary.
-
-        Args:
-            res (str): The resolution of the DEM to use.
-
-        Returns:
-            str: The file path to the aspect raster.
         """
         aspect_filename = f'{res}_aspect_raster.tif'
         aspect_path = os.path.join(self.path, 'managed', aspect_filename)
@@ -405,27 +304,39 @@ class MapsCaching:
 
         return aspect_path
 
+    def get_steepness_contour(self, min_steepness, max_steepness, res='DTM50'):
+        """
+        Gets the file path to the steepness contour shapefile, creating it if necessary.
+        """
+        contour_filename = f'{res}_steepness_contour_{min_steepness}_{max_steepness}_.shp'
+        contour_path = os.path.join(self.path, 'managed', contour_filename)
+
+        self.logger.info(f"Checking for existing contour file at {contour_path}")
+
+        if self.force or not os.path.exists(contour_path):
+            self.logger.info(f"Contour file not found or force flag is set. Creating new contour file.")
+            self.contour_path = self._create_steepness_contour(min_steepness, max_steepness, res)
+        else:
+            self.logger.info(f"Steepness contour already exists at {contour_path}")
+            self.contour_path = contour_path
+
+        return self.contour_path
+
     def get_steepness_contour_direction(self, orientation, min_steepness=25, max_steepness=55, res='DTM50'):
         """
         Gets the file path to the steepness contour shapefile, creating it if necessary,
         optionally filtered by orientation.
-
-        Args:
-            min_steepness (float): The minimum steepness value for the contour.
-            max_steepness (float): The maximum steepness value for the contour.
-            res (str): The resolution of the DEM to use.
-            orientation (str): The orientation to filter the contour by (e.g., 'N', 'NE', 'E', etc.).
-
-        Returns:
-            str: The file path to the steepness contour shapefile.
         """
-        contour_filename = f'steepness_contour_{min_steepness}_{max_steepness}_{orientation if orientation else ""}.shp'
+        contour_filename = f'{res}_steepness_contour_{min_steepness}_{max_steepness}_{orientation if orientation else ""}.shp'
         contour_path = os.path.join(self.path, 'managed', contour_filename)
 
+        self.logger.info(f"Checking for existing contour file with orientation at {contour_path}")
+
         if self.force or not os.path.exists(contour_path):
+            self.logger.info(f"Contour file with orientation not found or force flag is set. Creating new contour file.")
             self.contour_path = self._create_steepness_contour(min_steepness, max_steepness, res, orientation)
         else:
-            self.logger.info(f"Steepness contour already exists at {contour_path}")
+            self.logger.info(f"Steepness contour with orientation already exists at {contour_path}")
             self.contour_path = contour_path
 
         return self.contour_path
