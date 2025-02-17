@@ -63,7 +63,7 @@ class AvalancheForecastProcessing:
             api_url = f"https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api/AvalancheWarningByRegion/Detail/{region_id}/2/{start_day}/{end_day}"
 
             try:
-                self.logger.info(f"Fetching forecast data for region {region_id} from {api_url}")
+                self.logger.info(f"Fetching forecast data for region {region_id} ({self.regions.get(region_id).get('name', 'Unknown Region')}) from {api_url}")
                 response = requests.get(api_url)
                 response.raise_for_status()
                 forecast_data = response.json()

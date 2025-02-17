@@ -9,6 +9,7 @@ import numpy as np
 import geopandas as gpd
 from shapely.geometry import shape, Polygon
 from source.logger.logger import Logger
+from tqdm import tqdm
 
 ORIENTATION_RANGES = {
     'N': [(315, 360), (0, 45)],
@@ -111,17 +112,30 @@ class MapsCaching:
             self.logger.error(f"Resolution {res} not found.")
             return
 
-        self.logger.info(f"Downloading DEM with resolution {res} from {url}")
+        self.logger.info(f"Starting download of DEM with resolution {res} from {url}")
 
         try:
-            response = requests.get(url)
+            response = requests.get(url, stream=True)
             response.raise_for_status()
+
+            total_size = int(response.headers.get('content-length', 0))
+            block_size = 1024  # 1 Kibibyte
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 zip_path = os.path.join(temp_dir, 'temp.zip')
 
-                with open(zip_path, 'wb') as file:
-                    file.write(response.content)
+                with open(zip_path, 'wb') as file, tqdm(
+                    desc=f"Downloading {res} DEM",
+                    total=total_size,
+                    unit='iB',
+                    unit_scale=True,
+                    unit_divisor=1024,
+                ) as bar:
+                    for data in response.iter_content(block_size):
+                        file.write(data)
+                        bar.update(len(data))
+
+                self.logger.info("Download complete. Extracting files...")
 
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     zip_ref.extractall(temp_dir)
@@ -155,7 +169,7 @@ class MapsCaching:
             self.logger.error("DEM not available. Please download DEM first.")
             return
 
-        self.logger.info(f"Computing steepness raster from {self.DEM_path}")
+        self.logger.info(f"Starting computation of steepness raster from {self.DEM_path}")
 
         try:
             with rasterio.open(self.DEM_path) as src:
@@ -165,6 +179,7 @@ class MapsCaching:
                 x_res = profile['transform'][0]
                 y_res = -profile['transform'][4]
 
+                self.logger.info("Calculating gradients...")
                 gradient_x, gradient_y = np.gradient(elevation, x_res, y_res)
                 slope = np.arctan(np.sqrt(gradient_x**2 + gradient_y**2)) * (180 / np.pi)
 
@@ -213,7 +228,7 @@ class MapsCaching:
             self.logger.error("Aspect raster not available.")
             return None
 
-        self.logger.info(f"Creating steepness contour for range {min_steepness}-{max_steepness} degrees")
+        self.logger.info(f"Starting creation of steepness contour for range {min_steepness}-{max_steepness} degrees with orientation {orientation if orientation is not None else 'all'}")
 
         try:
             tolerance = np.sqrt((50 if res == 'DTM50' else 20) ** 2 * 2)
@@ -231,13 +246,14 @@ class MapsCaching:
                         mask = mask & orientation_mask
 
                 shapes_gen = shapes(mask.astype(np.uint8), mask=mask, transform=src_steepness.transform)
-                polygons = [shape(geom) for geom, value in shapes_gen if value == 1]
+                polygons = [shape(geom) for geom, value in tqdm(shapes_gen, desc="Generating polygons", unit="polygon") if value == 1]
 
                 self.logger.info(f"Generated {len(polygons)} polygons for orientation {orientation}")
                 feature_type = [poly.geom_type for poly in polygons]
                 self.logger.info(f"Types are: {np.unique(feature_type)}")
 
-                polygons = [poly.simplify(tolerance) for poly in polygons]
+                self.logger.info("Simplifying polygons...")
+                polygons = [poly.simplify(tolerance) for poly in tqdm(polygons, desc="Simplifying polygons", unit="polygon")]
                 gdf = gpd.GeoDataFrame({'geometry': polygons}, crs=src_steepness.crs)
 
                 contour_path = os.path.join(self.path, 'managed',
@@ -267,7 +283,7 @@ class MapsCaching:
             self.logger.error("DEM not available. Please download DEM first.")
             return
 
-        self.logger.info(f"Computing aspect raster from {self.DEM_path}")
+        self.logger.info(f"Starting computation of aspect raster from {self.DEM_path}")
 
         try:
             with rasterio.open(self.DEM_path) as src:
@@ -277,6 +293,7 @@ class MapsCaching:
                 x_res = profile['transform'][0]
                 y_res = -profile['transform'][4]
 
+                self.logger.info("Calculating gradients...")
                 gradient_x, gradient_y = np.gradient(elevation, x_res, y_res)
                 aspect = np.arctan2(-gradient_y, gradient_x)
                 aspect = np.rad2deg(aspect) % 360
@@ -313,6 +330,7 @@ class MapsCaching:
             str: Path to the DEM file, or None if download failed.
         """
         if self.force or not self.DEM_path:
+            self.logger.info("DEM not found or force flag is set. Downloading DEM...")
             self._download_DEM(res)
         if not self.DEM_path:
             self.logger.error("DEM download failed.")
@@ -330,6 +348,7 @@ class MapsCaching:
             str: Path to the steepness raster file, or None if computation failed.
         """
         if self.force or not self.steepness_raster_path:
+            self.logger.info("Steepness raster not found or force flag is set. Computing steepness raster...")
             self._compute_steepness_raster(res)
         if not self.steepness_raster_path:
             self.logger.error("Steepness raster computation failed.")
@@ -350,6 +369,7 @@ class MapsCaching:
         aspect_path = os.path.join(self.path, 'managed', aspect_filename)
 
         if self.force or not os.path.exists(aspect_path):
+            self.logger.info("Aspect raster not found or force flag is set. Computing aspect raster...")
             aspect_path = self._compute_aspect_raster(res)
         else:
             self.logger.info(f"Aspect raster already exists at {aspect_path}")
