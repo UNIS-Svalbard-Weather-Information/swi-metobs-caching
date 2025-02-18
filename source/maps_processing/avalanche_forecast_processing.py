@@ -3,12 +3,14 @@ import os
 import requests
 from datetime import datetime, timedelta
 import geopandas as gpd
+import pandas as pd
 import rasterio
 from rasterio.features import geometry_mask
 import numpy as np
 from shapely.geometry import mapping, shape
 import geojson
 import matplotlib.pyplot as plt
+import json
 
 
 from source.logger.logger import Logger
@@ -18,13 +20,15 @@ class AvalancheForecastProcessing:
     def __init__(self, n_days_forecast=2, regions_list=None):
         self.logger = Logger.setup_logger('AvalancheForecastProcessing')
         if regions_list is None:
-            self.regions_list = ['3001', '3002', '3003', '3004']
+            #self.regions_list = ['3001', '3002', '3003', '3004']
+            self.regions_list = ['3003']
         else:
-            self.regions_list = regions_list
+            self.regions_list = [str(elem) for elem in regions_list]
         self.regions = {region_id: {} for region_id in self.regions_list}
         self.n_days_forecast = n_days_forecast
-        self.logger.info("AvalancheForecastProcessing initialized.")
         self.maps_cache = MapsCaching()
+        self.export_directory = './maps/avalanche_forecast'
+        self.logger.info("AvalancheForecastProcessing initialized.")
 
     def _binary_to_directions(self, binary_string):
         try:
@@ -139,6 +143,21 @@ class AvalancheForecastProcessing:
             self.logger.error(f"Error creating GeoJSON: {e}")
             return None
 
+    def _save_geojson_to_file(self, geojson_obj, file_name):
+        try:
+            # Ensure the export directory exists
+            os.makedirs(self.export_directory, exist_ok=True)
+
+            # Construct the full file path
+            file_path = os.path.join(self.export_directory, f"{str(file_name)}.geojson")
+
+            # Save the GeoJSON object to the file
+            with open(file_path, 'w') as file:
+                json.dump(geojson_obj, file, indent=2)
+            self.logger.info(f"GeoJSON saved successfully to {file_path}")
+        except Exception as e:
+            self.logger.error(f"Error saving GeoJSON to file: {e}")
+
     def fetch_region_data(self, api_url='https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api/Region/A'):
         """
         Fetch region data from the API and store it in a dictionary.
@@ -232,3 +251,60 @@ class AvalancheForecastProcessing:
         else:
             self.logger.warning(f"Region {region_id} not found.")
         return region_info
+
+    def _create_forecast_layer_region(self, region_info):
+        try:
+            region_name = region_info['name']
+            polygon = region_info['polygon']
+            forecasts = region_info['forecast']
+
+            self.logger.info(f"Region {region_name} info retrieved.")
+
+            for date, forecast in forecasts.items():
+                gdf_dict_list = []
+                self.logger.info(f"Processing forecast for date: {forecast['ValidFrom']}")
+
+                # Correct the condition to check 'MainText' in the current forecast
+                if forecast.get('AvalancheProblems') is None or forecast.get('MainText') == "No Rating":
+                    continue
+
+                for problem in forecast['AvalancheProblems']:
+                    if problem is None:
+                        continue
+                    label = problem['AvalancheProblemTypeName']
+                    description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']})"
+                    orientation_list = self._binary_to_directions(problem['ValidExpositions'])
+                    shape_path_list = [self.maps_cache.get_steepness_contour_direction(elem) for elem in
+                                       orientation_list]
+
+                    gdf_problem = self._merge_shapefiles(shape_path_list)
+
+                    e1, e2 = problem['ExposedHeight1'], problem['ExposedHeight2']
+                    h_fill = problem['ExposedHeightFill']
+
+                    if h_fill == 0:
+                        e1, e2 = None, None
+                    elif h_fill == 1:
+                        e2 = None
+                    elif h_fill == 2:
+                        e1 = None
+
+                    gdf_problem = self._clip_polygons_by_elevation(gdf_problem, self.maps_cache.get_DEM(), e1, e2)
+
+                    gdf_dict_list.append({
+                        'gdf': gdf_problem,
+                        'label': label,
+                        'description': description,
+                    })
+
+                geojson = self._create_geojson_from_dicts(gdf_dict_list)
+                geojson["date"] = forecast.get('PublishTime')
+                geojson["lastDownload"] = datetime.now().isoformat()
+                geojson[
+                    "description"] = f"<strong>Danger Level{forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
+
+                self._save_geojson_to_file(geojson, date)
+
+        except Exception as e:
+            self.logger.error(f"Error processing forecast: {e}")
+
