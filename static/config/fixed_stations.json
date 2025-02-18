@@ -3,13 +3,12 @@
         "id": "SN99885",
         "name": "Bohemanneset",
         "project": "IWIN Lighthouse",
-        "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
         "lat": 78.38166,
@@ -35,23 +34,21 @@
         "datasource" : "IWINFixedSource"
     },
     {
-        "id": "narveneset",
+        "id": "SN99881",
         "name": "Narveneset",
         "project": "IWIN Lighthouse",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Narveneset/10min/%Y/%m/lighthouse_AWS_Narveneset_Table_10min_%Y%m%d.nc",
         "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
+            "airTemperature": "air_temperature",
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
-            "windDirection": "wind_direction",
+            "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
         "lat": 78.56343,
         "lon": 16.29687,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
-        "datasource" : "IWINFixedSource"
-
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
     },
     {
         "id": "kappthordsen",
@@ -59,10 +56,10 @@
         "project": "IWIN Lighthouse",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_KappThordsen/10min/%Y/%m/lighthouse_AWS_KappThordsen_Table_10min_%Y%m%d.nc",
         "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
+            "airTemperature": "air_temperature",
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
-            "windDirection": "wind_direction",
+            "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
@@ -78,10 +75,10 @@
         "project": "IWIN Lighthouse",
         "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Gasoyane/10min/%Y/%m/lighthouse_AWS_Gasoyane_Table_10min_%Y%m%d.nc",
         "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
+            "airTemperature": "air_temperature",
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
-            "windDirection": "wind_direction",
+            "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
@@ -98,10 +95,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.9633,
@@ -115,10 +112,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1905,
@@ -132,10 +129,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1805,
@@ -149,10 +146,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2342,
@@ -166,10 +163,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.143,
@@ -183,10 +180,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.0648,
@@ -200,10 +197,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 77.0002,
@@ -217,10 +214,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.0625,
@@ -234,10 +231,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1888,
@@ -251,10 +248,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2022,
@@ -268,10 +265,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 80.0555,
@@ -285,10 +282,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.3313,
@@ -302,10 +299,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2097,
@@ -319,10 +316,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
-            "windSpeed": "mean(wind_speed PT1M)",
-            "windDirection": "mean(wind_from_direction PT1M)",
-            "relativeHumidity": null
+            "airPressure" : "air_pressure",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.202,
@@ -336,10 +333,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
-            "windSpeed": "mean(wind_speed PT1M)",
-            "windDirection": "mean(wind_from_direction PT1M)",
-            "relativeHumidity": null
+            "airPressure" : "air_pressure",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2128,
@@ -353,10 +350,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1965,
@@ -370,10 +367,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2453,
@@ -387,10 +384,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
-            "windSpeed": "mean(wind_speed PT1M)",
-            "windDirection": "mean(wind_from_direction PT1M)",
-            "relativeHumidity": null
+            "airPressure" : "air_pressure",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2148,
@@ -404,10 +401,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2508,
@@ -421,10 +418,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2278,
@@ -438,10 +435,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 76.5097,
@@ -455,10 +452,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 77.6873,
@@ -472,10 +469,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.9273,
@@ -489,10 +486,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.3002,
@@ -506,10 +503,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2017,
@@ -523,10 +520,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.6568,
@@ -540,10 +537,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1823,
@@ -557,10 +554,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 80.6518,
@@ -574,10 +571,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.918,
@@ -591,10 +588,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.1793,
@@ -608,10 +605,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.2127,
@@ -625,10 +622,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.0092,
@@ -642,10 +639,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 76.4733,
@@ -659,10 +656,10 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.9218,
@@ -676,14 +673,31 @@
         "url": "https://frost.met.no/observations/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
-            "seaSurfaceTemperature": null,
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": null
+            "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/metAWS.png",
         "lat": 78.18,
         "lon": 16.41,
+        "import_function": "metNorway_FrostAPI.metNorway_FrostAPI"
+    },
+        {
+        "id": "SN99810",
+        "name": "Revnosa - Agardh",
+        "project": "Met Norway",
+        "url": "https://frost.met.no/observations/v0.jsonld",
+        "variables": {
+            "airTemperature": "air_temperature",
+            "airPressure" : "air_pressure",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": "relative_humidity"
+        },
+        "icon": "/static/images/metAWS.png",
+        "lat": 78.035,
+        "lon": 18.77,
         "import_function": "metNorway_FrostAPI.metNorway_FrostAPI"
     }
 ]
