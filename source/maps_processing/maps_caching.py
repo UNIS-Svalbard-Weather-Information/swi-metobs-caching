@@ -203,16 +203,19 @@ class MapsCaching:
         except Exception as e:
             self.logger.error(f"Failed to compute steepness raster: {e}")
 
-    def _create_steepness_contour(self, min_steepness, max_steepness, res='DTM50', orientation=None):
+    def _create_steepness_contour(self, min_steepness, max_steepness, res='DTM50', orientations=None,
+                                  elevation_start=None, elevation_end=None):
         """
         Creates a shapefile with smoothed polygons representing areas within a specified steepness range,
-        optionally filtered by orientation.
+        optionally filtered by orientation and elevation range.
 
         Args:
             min_steepness (float): The minimum steepness value.
             max_steepness (float): The maximum steepness value.
             res (str): The resolution of the DEM to use.
-            orientation (str, optional): The orientation to filter the contours by.
+            orientations (str, optional): The orientation to filter the contours by.
+            elevation_start (float, optional): The minimum elevation value.
+            elevation_end (float, optional): The maximum elevation value.
 
         Returns:
             str: Path to the created contour file, or None if creation failed.
@@ -224,11 +227,14 @@ class MapsCaching:
             self.logger.error("Steepness raster not available.")
             return None
 
-        if orientation and not aspect_path:
+        if orientations and not aspect_path:
             self.logger.error("Aspect raster not available.")
             return None
 
-        self.logger.info(f"Starting creation of steepness contour for range {min_steepness}-{max_steepness} degrees with orientation {orientation if orientation is not None else 'all'}")
+        self.logger.info(
+            f"Starting creation of steepness contour for range {min_steepness}-{max_steepness} degrees with orientation {orientations if orientations else 'all'} "
+            f"and elevation range {elevation_start}-{elevation_end} meters."
+        )
 
         try:
             tolerance = np.sqrt((50 if res == 'DTM50' else 20) ** 2 * 2)
@@ -237,27 +243,39 @@ class MapsCaching:
                 steepness = src_steepness.read(1)
                 mask = (steepness >= min_steepness) & (steepness <= max_steepness)
 
-                if orientation:
+                if orientations:
                     with rasterio.open(aspect_path) as src_aspect:
                         aspect = src_aspect.read(1)
                         orientation_mask = np.zeros_like(aspect, dtype=bool)
-                        for min_aspect, max_aspect in ORIENTATION_RANGES[orientation]:
-                            orientation_mask |= (aspect >= min_aspect) & (aspect < max_aspect)
+                        for orientation in orientations:
+                            for min_aspect, max_aspect in ORIENTATION_RANGES[orientation]:
+                                orientation_mask |= (aspect >= min_aspect) & (aspect < max_aspect)
                         mask = mask & orientation_mask
 
-                shapes_gen = shapes(mask.astype(np.uint8), mask=mask, transform=src_steepness.transform)
-                polygons = [shape(geom) for geom, value in tqdm(shapes_gen, desc="Generating polygons", unit="polygon") if value == 1]
+                if elevation_start is not None or elevation_end is not None:
+                    with rasterio.open(self.DEM_path) as src_dem:
+                        elevation = src_dem.read(1)
+                        if elevation_start is not None:
+                            mask = mask & (elevation >= elevation_start)
+                        if elevation_end is not None:
+                            mask = mask & (elevation <= elevation_end)
 
-                self.logger.info(f"Generated {len(polygons)} polygons for orientation {orientation}")
+                shapes_gen = shapes(mask.astype(np.uint8), mask=mask, transform=src_steepness.transform)
+                polygons = [shape(geom) for geom, value in tqdm(shapes_gen, desc="Generating polygons", unit="polygon")
+                            if value == 1]
+
+                self.logger.info(f"Generated {len(polygons)} polygons for orientation {orientations}")
                 feature_type = [poly.geom_type for poly in polygons]
                 self.logger.info(f"Types are: {np.unique(feature_type)}")
 
                 self.logger.info("Simplifying polygons...")
-                polygons = [poly.simplify(tolerance) for poly in tqdm(polygons, desc="Simplifying polygons", unit="polygon")]
+                polygons = [poly.simplify(tolerance) for poly in
+                            tqdm(polygons, desc="Simplifying polygons", unit="polygon")]
+
                 gdf = gpd.GeoDataFrame({'geometry': polygons}, crs=src_steepness.crs)
 
-                contour_path = os.path.join(self.path, 'managed',
-                                            f'{res}_steepness_contour_{min_steepness}_{max_steepness}_{orientation if orientation else ""}.shp')
+                contour_filename = f'{res}_steepness_contour_{min_steepness}_{max_steepness}_{"_".join(sorted(orientations)) if orientations else ""}_{elevation_start or ""}_{elevation_end or ""}.shp'
+                contour_path = os.path.join(self.path, 'managed', contour_filename)
                 gdf.to_file(contour_path, driver='ESRI Shapefile')
 
                 self.logger.info(f"Steepness contour shapefile created at {contour_path}")
@@ -376,7 +394,8 @@ class MapsCaching:
 
         return aspect_path
 
-    def get_steepness_contour(self, min_steepness, max_steepness, res='DTM50'):
+    def get_steepness_contour(self, min_steepness, max_steepness, res='DTM50', orientations=None, elevation_start=None,
+                              elevation_end=None):
         """
         Gets the file path to the steepness contour shapefile, creating it if necessary.
 
@@ -384,18 +403,22 @@ class MapsCaching:
             min_steepness (float): The minimum steepness value.
             max_steepness (float): The maximum steepness value.
             res (str): The resolution of the DEM to use.
+            orientations (list, optional): The list of orientations to filter the contours by.
+            elevation_start (float, optional): The minimum elevation value.
+            elevation_end (float, optional): The maximum elevation value.
 
         Returns:
             str: Path to the steepness contour file, or None if creation failed.
         """
-        contour_filename = f'{res}_steepness_contour_{min_steepness}_{max_steepness}_.shp'
+        contour_filename = f'{res}_steepness_contour_{min_steepness}_{max_steepness}_{"_".join(sorted(orientations)) if orientations else ""}_{elevation_start or ""}_{elevation_end or ""}.shp'
         contour_path = os.path.join(self.path, 'managed', contour_filename)
 
         self.logger.info(f"Checking for existing contour file at {contour_path}")
 
         if self.force or not os.path.exists(contour_path):
             self.logger.info(f"Contour file not found or force flag is set. Creating new contour file.")
-            self.contour_path = self._create_steepness_contour(min_steepness, max_steepness, res)
+            self.contour_path = self._create_steepness_contour(min_steepness, max_steepness, res, orientations,
+                                                               elevation_start, elevation_end)
         else:
             self.logger.info(f"Steepness contour already exists at {contour_path}")
             self.contour_path = contour_path
