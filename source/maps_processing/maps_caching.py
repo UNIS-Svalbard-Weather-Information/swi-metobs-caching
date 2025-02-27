@@ -268,9 +268,9 @@ class MapsCaching:
                 feature_type = [poly.geom_type for poly in polygons]
                 self.logger.info(f"Types are: {np.unique(feature_type)}")
 
-                self.logger.info("Simplifying polygons...")
-                polygons = [poly.simplify(tolerance) for poly in
-                            tqdm(polygons, desc="Simplifying polygons", unit="polygon")]
+                #self.logger.info("Simplifying polygons...")
+                #polygons = [poly.simplify(tolerance) for poly in
+                #            tqdm(polygons, desc="Simplifying polygons", unit="polygon")]
 
                 gdf = gpd.GeoDataFrame({'geometry': polygons}, crs=src_steepness.crs)
 
