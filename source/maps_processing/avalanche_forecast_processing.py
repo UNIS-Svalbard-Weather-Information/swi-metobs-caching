@@ -4,10 +4,12 @@ import requests
 from datetime import datetime, timedelta
 import geopandas as gpd
 from shapely.geometry import mapping, Polygon, MultiPolygon
+from shapely.ops import transform
 import geojson
 import matplotlib.pyplot as plt
 import json
 import traceback
+from pyproj import CRS, Transformer
 
 
 from source.logger.logger import Logger
@@ -51,6 +53,9 @@ class AvalancheForecastProcessing:
             # Use the specified colormap from matplotlib
             cmap = plt.cm.get_cmap(colormap, len(gdf_dicts))
 
+            # Define the target CRS (WGS 84)
+            target_crs = CRS.from_epsg(4326)
+
             features = []
             for i, entry in enumerate(gdf_dicts):
                 gdf = entry['gdf']
@@ -71,16 +76,20 @@ class AvalancheForecastProcessing:
 
                 # Ensure that polygons is a list of valid polygons
                 if polygons:
-                    multipolygon = MultiPolygon(polygons)
+                    # Transform each polygon to the target CRS
+                    transformer = Transformer.from_crs(gdf.crs, target_crs, always_xy=True)
+                    transformed_polygons = [transform(transformer.transform, polygon) for polygon in polygons]
+
+                    multipolygon = MultiPolygon(transformed_polygons)
 
                     feature = geojson.Feature(
                         geometry=mapping(multipolygon),
                         properties={
-                            'label': label,
+                            'name': label,
                             'description': description,
                             'color': f'#{int(color[0] * 255):02X}{int(color[1] * 255):02X}{int(color[2] * 255):02X}',
-                            'fillOpacity': 0.5,
-                            'weight': 2,
+                            'fillOpacity' : 0.5
+
                         }
                     )
                     features.append(feature)

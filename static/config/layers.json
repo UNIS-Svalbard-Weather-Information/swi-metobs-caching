@@ -84,6 +84,30 @@
             "category" : "Avalanche"
         },
         {
+            "name": "Runout area V2",
+            "type": "arcgis",
+            "url": "https://gis3.nve.no/arcgis/rest/services/wmts/Bratthet_med_utlop_2024/MapServer",
+            "layers": [7, 8, 9],
+            "cite": "utlopsomradekart",
+            "category" : "Avalanche"
+        },
+        {
+            "name": "Today Avalanche Forecast",
+            "type": "geojson",
+            "url": "/maps/avalanche_forecast/0",
+            "layers": [0],
+            "cite" : "ice_charts_cryo_met_no",
+            "category" : "Avalanche"
+        },
+        {
+            "name": "Tomorrow Avalanche Forecast",
+            "type": "geojson",
+            "url": "/maps/avalanche_forecast/1",
+            "layers": [0],
+            "cite" : "ice_charts_cryo_met_no",
+            "category" : "Avalanche"
+        },
+        {
             "name": "Sea Ice",
             "type": "geojson",
             "url": "/maps/ice_chart",
