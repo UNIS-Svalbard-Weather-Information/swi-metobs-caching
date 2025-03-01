@@ -84,7 +84,21 @@ def create_app():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
+    @app.route('/maps/avalanche_forecast/<filename>', methods=['GET'])
+    def serve_geojson_avalanche(filename):
+        # Append the default extension
+        file_path = os.path.join(MAPS_FOLDER, f"avalanche_forecast/{filename}.geojson")
+        try:
+            if os.path.exists(file_path):
+                return send_file(file_path, mimetype='application/json')
+            else:
+                return jsonify({"error": "File not found"}), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     return app
+
+
 
 if __name__ == '__main__':
     app = create_app()
