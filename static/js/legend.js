@@ -106,6 +106,7 @@ function updateLegend(legendControl) {
                             const properties = feature.properties || {};
                             const color = properties.color || '#3388ff'; // Default color
                             const label = properties.name || 'Feature';
+                            const fillOpacity = properties.fillOpacity || 0.9; // Default fill opacity
 
                             // Avoid duplicate entries in the legend
                             const uniqueKey = `${color}-${label}`;
@@ -113,7 +114,7 @@ function updateLegend(legendControl) {
                                 uniqueStyles.add(uniqueKey);
                                 legendHtml += `
                                     <li class="legend-item">
-                                        <span class="geojson-legend-icon" style="background-color: ${color};"></span>
+                                        <span class="geojson-legend-icon" style="background-color: ${color}; opacity: ${fillOpacity};"></span>
                                         <span>${label}</span>
                                     </li>`;
                             }
