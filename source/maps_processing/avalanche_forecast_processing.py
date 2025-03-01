@@ -3,18 +3,16 @@ import os
 import requests
 from datetime import datetime, timedelta
 import geopandas as gpd
-import pandas as pd
-import rasterio
-from rasterio.features import geometry_mask
-import numpy as np
-from shapely.geometry import mapping, shape
+from shapely.geometry import mapping, Polygon
 import geojson
 import matplotlib.pyplot as plt
 import json
+import traceback
 
 
 from source.logger.logger import Logger
 from source.maps_processing.maps_caching import MapsCaching
+
 
 class AvalancheForecastProcessing:
     def __init__(self, n_days_forecast=2, regions_list=None):
@@ -47,67 +45,6 @@ class AvalancheForecastProcessing:
         except Exception as e:
             self.logger.error(f"Error processing binary string: {e}")
             return []
-
-    def _merge_shapefiles(self, shapefile_paths):
-        try:
-            # Initialize an empty list to store GeoDataFrames
-            gdf_list = []
-
-            # Loop through each shapefile path and read it into a GeoDataFrame
-            for path in shapefile_paths:
-                gdf = gpd.read_file(path)
-                gdf_list.append(gdf)
-
-            # Merge all GeoDataFrames into a single GeoDataFrame
-            merged_gdf = gpd.GeoDataFrame(pd.concat(gdf_list, ignore_index=True))
-
-            return merged_gdf
-        except Exception as e:
-            self.logger.error(f"Error merging shapefiles: {e}")
-            return None
-
-    def _clip_polygons_by_elevation(self, gdf, dem_path, start_height=None, stop_height=None):
-        try:
-            with rasterio.open(dem_path) as src:
-                # Initialize a list to store the clipped geometries
-                clipped_geometries = []
-
-                # Loop through each polygon in the GeoDataFrame
-                for _, row in gdf.iterrows():
-                    geom = row['geometry']
-
-                    # Create a mask for the polygon
-                    out_image, out_transform = geometry_mask([geom], transform=src.transform, invert=True, out_shape=src.shape)
-                    elevation_data = src.read(1, masked=True)
-
-                    # Mask the elevation data with the polygon
-                    masked_elevation = elevation_data * out_image
-
-                    # Create a binary mask for the elevation range
-                    if start_height is not None and stop_height is not None:
-                        elevation_mask = (masked_elevation >= start_height) & (masked_elevation <= stop_height)
-                    elif start_height is not None:
-                        elevation_mask = masked_elevation >= start_height
-                    elif stop_height is not None:
-                        elevation_mask = masked_elevation <= stop_height
-                    else:
-                        elevation_mask = np.ones(masked_elevation.shape, dtype=bool)
-
-                    # Convert the binary mask to shapes
-                    shapes = rasterio.features.shapes(elevation_mask.astype(np.int16), mask=elevation_mask)
-
-                    # Collect the shapes as geometries
-                    for shaped, _ in shapes:
-                        if shaped:
-                            clipped_geom = shape(shaped)
-                            clipped_geometries.append(clipped_geom)
-
-                # Create a new GeoDataFrame with the clipped geometries
-                clipped_gdf = gpd.GeoDataFrame({'geometry': clipped_geometries}, crs=gdf.crs)
-                return clipped_gdf
-        except Exception as e:
-            self.logger.error(f"Error clipping polygons by elevation: {e}")
-            return None
 
     def _create_geojson_from_dicts(self, gdf_dicts, colormap='viridis'):
         try:
@@ -157,6 +94,73 @@ class AvalancheForecastProcessing:
             self.logger.info(f"GeoJSON saved successfully to {file_path}")
         except Exception as e:
             self.logger.error(f"Error saving GeoJSON to file: {e}")
+
+    def clip_shapefile_with_gps_contour(self, gps_coordinates, shapefile_path):
+        """
+        Clips a shapefile using a contour defined by a list of GPS coordinates.
+
+        Parameters:
+        - gps_coordinates: List of tuples, where each tuple is (latitude, longitude).
+        - shapefile_path: Path to the shapefile.
+
+        Returns:
+        - GeoDataFrame containing the clipped features.
+        """
+        # Ensure the coordinates are in (latitude, longitude) format
+        gps_coordinates = [(lat, lon) for lon, lat in gps_coordinates]
+
+        # Create a polygon from the GPS coordinates
+        polygon = Polygon(gps_coordinates)
+
+        # Create a GeoDataFrame from the polygon with CRS WGS 84
+        gdf_polygon = gpd.GeoDataFrame(index=[0], crs='EPSG:4326', geometry=[polygon])
+
+        # Read the shapefile
+        gdf = gpd.read_file(shapefile_path)
+
+        # Log CRS information
+        self.logger.info(f"Initial Shapefile CRS: {gdf.crs}")
+        self.logger.info(f"Initial Polygon CRS: {gdf_polygon.crs}")
+
+        # Reproject the polygon to match the CRS of the shapefile
+        gdf_polygon = gdf_polygon.to_crs(gdf.crs)
+
+        # Verify the CRS after reprojection
+        self.logger.info(f"Polygon CRS after reprojection: {gdf_polygon.crs}")
+
+        # Apply a small buffer to the polygon to account for precision issues
+        gdf_polygon['geometry'] = gdf_polygon.buffer(10)  # Adjust the buffer size as needed
+
+        # Check if the polygon is valid
+        if not polygon.is_valid:
+            self.logger.error("The polygon is not valid.")
+            return gpd.GeoDataFrame()
+
+        # Log bounds information
+        self.logger.info(f"Shapefile bounds: {gdf.total_bounds}")
+        self.logger.info(f"Polygon bounds: {gdf_polygon.total_bounds}")
+
+        # Plot the shapefile and polygon for visual inspection
+        #fig, ax = plt.subplots()
+        #gdf.plot(ax=ax, color='blue', edgecolor='black')
+        #gdf_polygon.plot(ax=ax, color='red', alpha=0.5)
+        #plt.show()
+
+        # Check if the polygon intersects with any feature in the shapefile
+        intersects = gdf.intersects(gdf_polygon.union_all())
+        if not intersects.any():
+            self.logger.error("The polygon does not intersect with any features in the shapefile.")
+            return gpd.GeoDataFrame()
+
+        # Clip the shapefile using the polygon
+        clipped_gdf = gdf.clip(gdf_polygon)
+
+        # Check if the result is empty
+        if clipped_gdf.empty:
+            self.logger.warning("The clipped result is empty. Check if the polygon intersects with the shapefile.")
+
+        return clipped_gdf
+
 
     def fetch_region_data(self, api_url='https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api/Region/A'):
         """
@@ -274,11 +278,8 @@ class AvalancheForecastProcessing:
                     label = problem['AvalancheProblemTypeName']
                     description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']})"
                     orientation_list = self._binary_to_directions(problem['ValidExpositions'])
-                    shape_path_list = [self.maps_cache.get_steepness_contour_direction(elem) for elem in
-                                       orientation_list]
 
-                    gdf_problem = self._merge_shapefiles(shape_path_list)
-
+                    self.logger.info(f"Orientation list for date = {date} - {orientation_list}")
                     e1, e2 = problem['ExposedHeight1'], problem['ExposedHeight2']
                     h_fill = problem['ExposedHeightFill']
 
@@ -289,19 +290,19 @@ class AvalancheForecastProcessing:
                     elif h_fill == 2:
                         e1 = None
 
-                    gdf_problem = self._clip_polygons_by_elevation(gdf_problem, self.maps_cache.get_DEM(), e1, e2)
+                    shape_path = self.maps_cache.get_steepness_contour(25, 65, orientations=orientation_list, elevation_start=e1, elevation_end=e2)
 
                     gdf_dict_list.append({
-                        'gdf': gdf_problem,
+                        'gdf': self.clip_shapefile_with_gps_contour(polygon, shape_path),
                         'label': label,
                         'description': description,
                     })
 
+                self.logger.info(f"Len gdf_dict_list = {len(gdf_dict_list)}")
                 geojson = self._create_geojson_from_dicts(gdf_dict_list)
                 geojson["date"] = forecast.get('PublishTime')
                 geojson["lastDownload"] = datetime.now().isoformat()
-                geojson[
-                    "description"] = f"<strong>Danger Level{forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
+                geojson["description"] = f"<strong>Danger Level{forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
 
                 self._save_geojson_to_file(geojson, date)
 
