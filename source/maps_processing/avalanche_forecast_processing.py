@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import datetime, timedelta
 import geopandas as gpd
-from shapely.geometry import mapping, Polygon
+from shapely.geometry import mapping, Polygon, MultiPolygon
 import geojson
 import matplotlib.pyplot as plt
 import json
@@ -60,14 +60,25 @@ class AvalancheForecastProcessing:
                 # Get a color from the colormap
                 color = cmap(i)
 
+                # Aggregate all geometries into a list of Polygons
+                polygons = []
                 for _, row in gdf.iterrows():
                     geometry = row['geometry']
+                    if isinstance(geometry, Polygon):
+                        polygons.append(geometry)
+                    elif isinstance(geometry, MultiPolygon):
+                        polygons.extend(geometry.geoms)
+
+                # Ensure that polygons is a list of valid polygons
+                if polygons:
+                    multipolygon = MultiPolygon(polygons)
+
                     feature = geojson.Feature(
-                        geometry=mapping(geometry),
+                        geometry=mapping(multipolygon),
                         properties={
                             'label': label,
                             'description': description,
-                            'color': f'#{int(color[0]*255):02X}{int(color[1]*255):02X}{int(color[2]*255):02X}',
+                            'color': f'#{int(color[0] * 255):02X}{int(color[1] * 255):02X}{int(color[2] * 255):02X}',
                             'fillOpacity': 0.5,
                             'weight': 2,
                         }
@@ -77,7 +88,8 @@ class AvalancheForecastProcessing:
             feature_collection = geojson.FeatureCollection(features)
             return feature_collection
         except Exception as e:
-            self.logger.error(f"Error creating GeoJSON: {e}")
+            # Log the full traceback
+            self.logger.error(f"Error creating GeoJSON: {e}\n{traceback.format_exc()}")
             return None
 
     def _save_geojson_to_file(self, geojson_obj, file_name):
