@@ -237,8 +237,8 @@ class AvalancheForecastProcessing:
                 self.regions[region_id]['forecast'] = {}
 
                 for forecast in forecast_data:
-                    if forecast['IsTendency']:
-                        continue  # Skip tendency forecasts
+                    #if forecast['IsTendency']:
+                    #    continue  # Skip tendency forecasts
 
                     forecast_date = datetime.fromisoformat(forecast['ValidFrom']).date()
                     day_key = (forecast_date - today.date()).days
@@ -278,8 +278,6 @@ class AvalancheForecastProcessing:
             self.logger.warning(f"Region {region_id} not found.")
         return region_info
 
-    from datetime import datetime, timedelta
-
     def _create_forecast_layer_region(self, region_info):
         try:
             region_name = region_info['name']
@@ -299,42 +297,38 @@ class AvalancheForecastProcessing:
                     geojson = {
                         "type": "FeatureCollection",
                         "features": [],
-                        "date": forecast.get('PublishTime', None),
-                        "lastDownload": datetime.now().isoformat(),
-                        "description": f"<strong>Danger Level : {forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
                     }
-                    self._save_geojson_to_file(geojson, date)
-                    continue
+                else:
 
-                for problem in forecast['AvalancheProblems']:
-                    if problem is None:
-                        continue
-                    label = problem['AvalancheProblemTypeName']
-                    orientation_list = self._binary_to_directions(problem['ValidExpositions'])
-                    description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']}) <br><i> {' '.join(orientation_list)}</i>"
+                    for problem in forecast['AvalancheProblems']:
+                        if problem is None:
+                            continue
+                        label = problem['AvalancheProblemTypeName']
+                        orientation_list = self._binary_to_directions(problem['ValidExpositions'])
+                        description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']}) <br><i> {' '.join(orientation_list)}</i>"
 
-                    self.logger.info(f"Orientation list for date = {date} - {orientation_list}")
-                    e1, e2 = problem['ExposedHeight1'], problem['ExposedHeight2']
-                    h_fill = problem['ExposedHeightFill']
+                        self.logger.info(f"Orientation list for date = {date} - {orientation_list}")
+                        e1, e2 = problem['ExposedHeight1'], problem['ExposedHeight2']
+                        h_fill = problem['ExposedHeightFill']
 
-                    if h_fill == 0:
-                        e1, e2 = None, None
-                    elif h_fill == 1:
-                        e2 = None
-                    elif h_fill == 2:
-                        e1 = None
+                        if h_fill == 0:
+                            e1, e2 = None, None
+                        elif h_fill == 1:
+                            e2 = None
+                        elif h_fill == 2:
+                            e1 = None
 
-                    shape_path = self.maps_cache.get_steepness_contour(25, 65, orientations=orientation_list,
-                                                                       elevation_start=e1, elevation_end=e2)
+                        shape_path = self.maps_cache.get_steepness_contour(25, 65, orientations=orientation_list,
+                                                                           elevation_start=e1, elevation_end=e2)
 
-                    gdf_dict_list.append({
-                        'gdf': self.clip_shapefile_with_gps_contour(polygon, shape_path),
-                        'label': label,
-                        'description': description,
-                    })
+                        gdf_dict_list.append({
+                            'gdf': self.clip_shapefile_with_gps_contour(polygon, shape_path),
+                            'label': label,
+                            'description': description,
+                        })
 
-                self.logger.info(f"Len gdf_dict_list = {len(gdf_dict_list)}")
-                geojson = self._create_geojson_from_dicts(gdf_dict_list)
+                    self.logger.info(f"Len gdf_dict_list = {len(gdf_dict_list)}")
+                    geojson = self._create_geojson_from_dicts(gdf_dict_list)
                 geojson["date"] = forecast.get('PublishTime', None)
                 geojson["lastDownload"] = datetime.now().isoformat()
 
