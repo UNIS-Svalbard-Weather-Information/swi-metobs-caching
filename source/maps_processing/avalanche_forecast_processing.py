@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import json
 import traceback
 from pyproj import CRS, Transformer
+import urllib.parse
 
 
 from source.logger.logger import Logger
@@ -277,6 +278,8 @@ class AvalancheForecastProcessing:
             self.logger.warning(f"Region {region_id} not found.")
         return region_info
 
+    from datetime import datetime, timedelta
+
     def _create_forecast_layer_region(self, region_info):
         try:
             region_name = region_info['name']
@@ -287,18 +290,28 @@ class AvalancheForecastProcessing:
 
             for date, forecast in forecasts.items():
                 gdf_dict_list = []
-                self.logger.info(f"Processing forecast for date: {forecast['ValidFrom']}")
+                self.logger.info(f"Processing forecast for date: {forecast['ValidFrom']} & {date}")
 
                 # Correct the condition to check 'MainText' in the current forecast
                 if forecast.get('AvalancheProblems') is None or forecast.get('MainText') == "No Rating":
+                    # Create an empty GeoJSON with available information
+                    self.logger.info(f"No detailled AvalancheProblems for region {region_name} and date {date}")
+                    geojson = {
+                        "type": "FeatureCollection",
+                        "features": [],
+                        "date": forecast.get('PublishTime', None),
+                        "lastDownload": datetime.now().isoformat(),
+                        "description": f"<strong>Danger Level : {forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
+                    }
+                    self._save_geojson_to_file(geojson, date)
                     continue
 
                 for problem in forecast['AvalancheProblems']:
                     if problem is None:
                         continue
                     label = problem['AvalancheProblemTypeName']
-                    description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']})"
                     orientation_list = self._binary_to_directions(problem['ValidExpositions'])
+                    description = f"{problem['TriggerSenitivityPropagationDestuctiveSizeText']} - ({problem['AvalCauseName']}) <br><i> {' '.join(orientation_list)}</i>"
 
                     self.logger.info(f"Orientation list for date = {date} - {orientation_list}")
                     e1, e2 = problem['ExposedHeight1'], problem['ExposedHeight2']
@@ -311,7 +324,8 @@ class AvalancheForecastProcessing:
                     elif h_fill == 2:
                         e1 = None
 
-                    shape_path = self.maps_cache.get_steepness_contour(25, 65, orientations=orientation_list, elevation_start=e1, elevation_end=e2)
+                    shape_path = self.maps_cache.get_steepness_contour(25, 65, orientations=orientation_list,
+                                                                       elevation_start=e1, elevation_end=e2)
 
                     gdf_dict_list.append({
                         'gdf': self.clip_shapefile_with_gps_contour(polygon, shape_path),
@@ -321,12 +335,27 @@ class AvalancheForecastProcessing:
 
                 self.logger.info(f"Len gdf_dict_list = {len(gdf_dict_list)}")
                 geojson = self._create_geojson_from_dicts(gdf_dict_list)
-                geojson["date"] = forecast.get('PublishTime')
+                geojson["date"] = forecast.get('PublishTime', None)
                 geojson["lastDownload"] = datetime.now().isoformat()
-                geojson["description"] = f"<strong>Danger Level : {forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
+
+                # Calculate the new date
+                current_date = datetime.now()
+                new_date = current_date + timedelta(
+                    days=int(date))  # Assuming `date` is a string that can be converted to an integer
+                formatted_date = new_date.strftime('%Y-%m-%d')
+
+                # Encode the URL correctly
+                base_url = "https://www.varsom.no/en/snow/forecast/warning/"
+                region_encoded = urllib.parse.quote("Nordenskiöld Land")
+                full_url = f"{base_url}{region_encoded}/{formatted_date}"
+
+                geojson["description"] = (
+                    f"<strong>Danger Level : {forecast.get('DangerLevelName', 'Unknown')}</strong> : "
+                    f"{forecast.get('MainText', 'Unknown')} <br> "
+                    f"<a target='_blank' rel='noopener noreferrer' href='{full_url}'>Full forecast on Varsom.no</a>"
+                )
 
                 self._save_geojson_to_file(geojson, date)
 
         except Exception as e:
             self.logger.error(f"Error processing forecast: {e}")
-
