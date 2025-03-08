@@ -10,6 +10,7 @@ from source.app.pages import pages
 
 from source.cacheHandler.cacheHandler import CacheHandler
 from source.maps_processing.sea_ice_map_processing import SeaIceCache
+from source.maps_processing.avalanche_forecast_processing import AvalancheForecastProcessing
 
 import threading
 import time
@@ -30,6 +31,7 @@ def create_app():
     # Initialize StationHandler once
     station_handler = CacheHandler()
     sea_ice_handler = SeaIceCache()
+    avalanche_forecast_handler = AvalancheForecastProcessing()
     app.config['STATION_HANDLER'] = station_handler
 
     def gather_data():
@@ -37,6 +39,7 @@ def create_app():
             station_handler.cache_stations_status()
             station_handler.cache_realtime_data()
             sea_ice_handler.create_ice_chart_geojson()
+            avalanche_forecast_handler.process_3003()
 
             # Explicitly clean up the old instance
             old_handler = app.config['STATION_HANDLER']
