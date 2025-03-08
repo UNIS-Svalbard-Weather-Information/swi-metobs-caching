@@ -17,6 +17,32 @@ from source.logger.logger import Logger
 
 
 class SeaIceCache:
+    """
+    A class to manage and generate sea ice chart GeoJSON data from the Cryo.met.no data.
+
+    This class provides functionality to download sea ice chart data, process it to clip and mask land areas,
+    and generate GeoJSON files representing sea ice conditions. It uses a local shapefile to mask land areas
+    and focuses on the Svalbard region by default. The class ensures that the output GeoJSON file is up-to-date
+    and logs the operations performed.
+
+    Attributes:
+        output_dir (str): The directory where the output GeoJSON file will be saved.
+        shapefile_path (str): The local file path to the shapefile used for masking land areas.
+        logger (Logger): Logger instance for logging messages.
+
+    Methods:
+        __init__(output_dir="./maps/", shapefile_path="static/maps/S1000_Land_f"):
+            Initializes the SeaIceCache instance with the specified output directory and shapefile path.
+
+        clip_and_mask_water_area(gdf, svalbard_bbox=(7.5, 74.0, 36.0, 81.0)):
+            Clips the input GeoDataFrame to a specified bounding box and masks out land areas using a local shapefile.
+
+        is_recent_file(filepath, max_age_minutes=30):
+            Checks if the specified file exists and is recent based on its last modification time.
+
+        create_ice_chart_geojson(output_geojson="ice_chart.geojson", url="https://cryo.met.no/sites/cryo/files/latest/NIS_arctic_latest_pl_a.zip", force=False):
+            Downloads and processes sea ice chart data to generate a GeoJSON file, clipping and masking as necessary.
+    """
     def __init__(self, output_dir="./maps/", shapefile_path="static/maps/S1000_Land_f"):
         """
         Initialize a SeaIceCache instance to manage and generate sea ice chart GeoJSON data.

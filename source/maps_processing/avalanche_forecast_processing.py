@@ -18,7 +18,75 @@ from source.maps_processing.maps_caching import MapsCaching
 
 
 class AvalancheForecastProcessing:
+
+    """
+    A class to process and visualize avalanche forecast data for specified regions.
+
+    This class fetches avalanche forecast data from an API, processes it to create GeoJSON layers,
+    and saves these layers as files. It handles region-specific data, including forecast details
+    and geographic information, and uses this data to generate visual representations of avalanche risks.
+
+    Attributes:
+        logger (Logger): Logger instance for logging messages.
+        regions_list (list): List of region IDs to process.
+        regions (dict): Dictionary storing region data, including names and polygons.
+        n_days_forecast (int): Number of days to forecast.
+        maps_cache (MapsCaching): Instance of MapsCaching for managing map data.
+        export_directory (str): Directory where processed GeoJSON files are saved.
+
+    Methods:
+        __init__(n_days_forecast=1, regions_list=None):
+            Initializes the AvalancheForecastProcessing instance with the specified number of forecast days
+            and a list of region IDs.
+
+        _binary_to_directions(binary_string):
+            Converts a binary string to a list of cardinal and intercardinal directions.
+
+        _create_geojson_from_dicts(gdf_dicts, colormap='viridis'):
+            Creates a GeoJSON FeatureCollection from a list of GeoDataFrame dictionaries, applying a colormap.
+
+        _save_geojson_to_file(geojson_obj, file_name):
+            Saves a GeoJSON object to a file in the export directory.
+
+        clip_shapefile_with_gps_contour(gps_coordinates, shapefile_path):
+            Clips a shapefile using a contour defined by a list of GPS coordinates.
+
+        fetch_region_data(api_url='https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api/Region/A'):
+            Fetches region data from the API and stores it in a dictionary.
+
+        fetch_forecast_data():
+            Fetches avalanche forecast data for each region for the next n_days_forecast days.
+
+        get_region(region_id):
+            Retrieves region information by ID.
+
+        _create_forecast_layer_region(region_info):
+            Creates a GeoJSON layer for a region's forecast data and saves it as a file.
+
+        process_3003():
+            Processes avalanche forecast data specifically for region '3003'.
+    """
+
     def __init__(self, n_days_forecast=1, regions_list=None):
+        """
+        Initializes the AvalancheForecastProcessing instance with the specified configuration.
+
+        This method sets up the instance with the number of forecast days and a list of region IDs to process.
+        It initializes a logger, prepares a dictionary to store region data, and sets up the export directory
+        for saving processed GeoJSON files.
+
+        Args:
+            n_days_forecast (int): The number of days to forecast. Defaults to 1.
+            regions_list (list, optional): A list of region IDs to process. If None, defaults to ['3003'].
+
+        Attributes:
+            logger (Logger): Logger instance for logging messages.
+            regions_list (list): List of region IDs to process.
+            regions (dict): Dictionary to store region data, including names and polygons.
+            n_days_forecast (int): Number of days to forecast.
+            maps_cache (MapsCaching): Instance of MapsCaching for managing map data.
+            export_directory (str): Directory where processed GeoJSON files are saved.
+        """
         self.logger = Logger.setup_logger('AvalancheForecastProcessing')
         if regions_list is None:
             #self.regions_list = ['3001', '3002', '3003', '3004']
@@ -32,6 +100,21 @@ class AvalancheForecastProcessing:
         self.logger.info("AvalancheForecastProcessing initialized.")
 
     def _binary_to_directions(self, binary_string):
+        """
+        Converts a binary string to a list of cardinal and intercardinal directions.
+
+        This method takes a binary string of length 8, where each bit represents a direction (N, NE, E, SE, S, SW, W, NW).
+        It returns a list of directions corresponding to the positions where the binary string has a '1'.
+
+        Args:
+            binary_string (str): A binary string of length 8 representing directions.
+
+        Returns:
+            list: A list of directions (e.g., ['N', 'E', 'S']) based on the binary string.
+
+        Raises:
+            ValueError: If the binary string is not exactly 8 characters long.
+        """
         try:
             # Define the list of directions in order
             directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -50,6 +133,26 @@ class AvalancheForecastProcessing:
             return []
 
     def _create_geojson_from_dicts(self, gdf_dicts, colormap='viridis'):
+        """
+        Creates a GeoJSON FeatureCollection from a list of GeoDataFrame dictionaries, applying a colormap.
+
+        This method takes a list of dictionaries, each containing a GeoDataFrame and associated metadata (label and description).
+        It generates a GeoJSON FeatureCollection where each feature is styled with a color from the specified colormap.
+        The geometries are transformed to the WGS 84 coordinate reference system (CRS) and aggregated into a MultiPolygon.
+
+        Args:
+            gdf_dicts (list): A list of dictionaries, each containing:
+                - 'gdf' (GeoDataFrame): The GeoDataFrame containing geometries.
+                - 'label' (str): The label for the feature.
+                - 'description' (str): The description for the feature.
+            colormap (str, optional): The name of the matplotlib colormap to use for coloring features. Defaults to 'viridis'.
+
+        Returns:
+            FeatureCollection or None: A GeoJSON FeatureCollection containing the styled features, or None if an error occurs.
+
+        Raises:
+            Exception: Logs any exceptions that occur during the creation of the GeoJSON, including a full traceback.
+        """
         try:
             # Use the specified colormap from matplotlib
             cmap = plt.cm.get_cmap(colormap, len(gdf_dicts))
@@ -103,6 +206,19 @@ class AvalancheForecastProcessing:
             return None
 
     def _save_geojson_to_file(self, geojson_obj, file_name):
+        """
+        Saves a GeoJSON object to a file in the export directory.
+
+        This method ensures that the export directory exists and constructs the full file path for the GeoJSON file.
+        It then saves the GeoJSON object to the specified file, logging success or any errors that occur during the process.
+
+        Args:
+            geojson_obj (dict): The GeoJSON object to save.
+            file_name (str): The name of the file to save the GeoJSON object to, without the file extension.
+
+        Raises:
+            Exception: Logs any exceptions that occur during the saving process.
+        """
         try:
             # Ensure the export directory exists
             os.makedirs(self.export_directory, exist_ok=True)
@@ -118,6 +234,21 @@ class AvalancheForecastProcessing:
             self.logger.error(f"Error saving GeoJSON to file: {e}")
 
     def clip_shapefile_with_gps_contour(self, gps_coordinates, shapefile_path):
+        """
+        Clips a shapefile using a contour defined by a list of GPS coordinates.
+
+        This method creates a polygon from the provided GPS coordinates and uses it to clip features from a shapefile.
+        It ensures that the polygon and shapefile are in the same coordinate reference system (CRS) before performing the clip operation.
+        The method also checks for intersections and validity of the polygon, logging relevant information throughout the process.
+
+        Parameters:
+            gps_coordinates (list of tuples): List of tuples, where each tuple is (latitude, longitude) defining the contour.
+            shapefile_path (str): Path to the shapefile to be clipped.
+
+        Returns:
+            GeoDataFrame: A GeoDataFrame containing the clipped features from the shapefile. If the polygon is invalid or
+                          does not intersect with any features, an empty GeoDataFrame is returned.
+        """
         """
         Clips a shapefile using a contour defined by a list of GPS coordinates.
 
@@ -188,7 +319,14 @@ class AvalancheForecastProcessing:
         """
         Fetch region data from the API and store it in a dictionary.
 
-        :param api_url: URL of the API to fetch region data
+        This method retrieves region data from a specified API URL and processes it to extract relevant information,
+        such as the region ID, name, and polygon coordinates. The data is stored in a dictionary for further use.
+
+        Args:
+            api_url (str): The URL of the API to fetch region data. Defaults to the avalanche forecast API.
+
+        Raises:
+            requests.RequestException: If there is an error with the HTTP request, such as a network issue or invalid response.
         """
         try:
             self.logger.info(f"Fetching data from API: {api_url}")
@@ -220,6 +358,14 @@ class AvalancheForecastProcessing:
     def fetch_forecast_data(self):
         """
         Fetch avalanche forecast data for each region for the next n_days_forecast days.
+
+        This method retrieves avalanche forecast data from an API for each region specified in the regions_list.
+        It fetches data for a specified number of days starting from the current date. The forecast data includes
+        avalanche problems, advice, validity periods, and danger levels. The method stores the most recent forecast
+        for each day in a dictionary for further processing.
+
+        Raises:
+            requests.RequestException: If there is an error with the HTTP request, such as a network issue or invalid response.
         """
         today = datetime.now()
         for region_id in self.regions_list:
@@ -266,10 +412,17 @@ class AvalancheForecastProcessing:
 
     def get_region(self, region_id):
         """
-        Get region information by ID.
+        Retrieve region information by ID.
 
-        :param region_id: ID of the region
-        :return: Dictionary with region name, polygon, and forecast data
+        This method fetches and returns information for a specified region, including its name, polygon coordinates,
+        and forecast data. It logs a message indicating whether the region information was successfully retrieved or not found.
+
+        Args:
+            region_id (str): The ID of the region to retrieve information for.
+
+        Returns:
+            dict or None: A dictionary containing the region's name, polygon, and forecast data if the region ID is found.
+                           Returns None if the region ID is not found.
         """
         region_info = self.regions.get(region_id, None)
         if region_info:
@@ -279,6 +432,19 @@ class AvalancheForecastProcessing:
         return region_info
 
     def _create_forecast_layer_region(self, region_info):
+        """
+        Creates a GeoJSON layer for a region's forecast data and saves it as a file.
+
+        This method processes the forecast data for a specified region to generate a GeoJSON layer. It handles
+        avalanche problems, orientations, and elevation ranges to create detailed GeoJSON features. The method
+        saves the resulting GeoJSON to a file, including metadata such as the publish time and a link to the full forecast.
+
+        Args:
+            region_info (dict): A dictionary containing the region's name, polygon coordinates, and forecast data.
+
+        Raises:
+            Exception: Logs any exceptions that occur during the processing of the forecast data.
+        """
         try:
             region_name = region_info['name']
             polygon = region_info['polygon']
@@ -355,6 +521,21 @@ class AvalancheForecastProcessing:
             self.logger.error(f"Error processing forecast: {e}")
 
     def process_3003(self):
+        """
+        Processes avalanche forecast data specifically for region '3003' (Nordenskiöld Land).
+
+        This method orchestrates the fetching of region data and forecast data for region '3003',
+        and then creates a GeoJSON layer for the region's forecast. It combines the functionalities
+        of fetching data, processing it, and generating visual representations of avalanche risks.
+
+        The method performs the following steps:
+        1. Fetches region data for region '3003'.
+        2. Fetches avalanche forecast data for the specified number of days.
+        3. Creates a GeoJSON layer for the region's forecast data and saves it as a file.
+
+        Raises:
+            Exception: Logs any exceptions that occur during the processing of the forecast data.
+        """
         self.fetch_region_data()
         self.fetch_forecast_data()
         self._create_forecast_layer_region(self.get_region('3003'))
