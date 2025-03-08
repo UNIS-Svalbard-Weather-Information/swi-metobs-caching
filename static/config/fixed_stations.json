@@ -16,28 +16,25 @@
         "import_function" : "metNorway_FrostAPI.metNorway_FrostAPI"
     },
     {
-        "id": "daudmannsodden",
+        "id": "SN99887",
         "name": "Daudmannsodden",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Daudmannsodden/10min/%Y/%m/lighthouse_AWS_Daudmannsodden_Table_10min_%Y%m%d.nc",
         "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
+            "airTemperature": "air_temperature",
+            "airPressure" : "air_pressure",
             "windSpeed": "wind_speed",
-            "windDirection": "wind_direction",
+            "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
         "icon": "/static/images/lighthouse.png",
         "lat": 78.21056,
         "lon": 12.98685,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
-        "datasource" : "IWINFixedSource"
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
     },
     {
-        "id": "SN99881",
+        "id": "SN99888",
         "name": "Narveneset",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Narveneset/10min/%Y/%m/lighthouse_AWS_Narveneset_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "air_temperature",
             "airPressure" : "air_pressure",
@@ -51,10 +48,9 @@
         "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
     },
     {
-        "id": "kappthordsen",
+        "id": "SN99886",
         "name": "Kapp Thordsen",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_KappThordsen/10min/%Y/%m/lighthouse_AWS_KappThordsen_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "air_temperature",
             "airPressure" : "air_pressure",
@@ -65,15 +61,12 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.45632,
         "lon": 15.46768,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
-        "datasource" : "IWINFixedSource"
-
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
     },
     {
-        "id": "gasoyane",
+        "id": "SN99883",
         "name": "Gasoyane",
         "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Gasoyane/10min/%Y/%m/lighthouse_AWS_Gasoyane_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "air_temperature",
             "airPressure" : "air_pressure",
@@ -84,9 +77,7 @@
         "icon": "/static/images/lighthouse.png",
         "lat": 78.45792,
         "lon": 16.20082,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse",
-        "datasource" : "IWINFixedSource"
-
+        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
     },
     {
         "id": "SN99895",
