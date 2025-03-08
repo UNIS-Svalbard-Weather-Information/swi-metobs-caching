@@ -323,7 +323,7 @@ class AvalancheForecastProcessing:
                 geojson = self._create_geojson_from_dicts(gdf_dict_list)
                 geojson["date"] = forecast.get('PublishTime')
                 geojson["lastDownload"] = datetime.now().isoformat()
-                geojson["description"] = f"<strong>Danger Level{forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
+                geojson["description"] = f"<strong>Danger Level : {forecast.get('DangerLevelName', 'Unknown')}</strong> : {forecast.get('MainText', 'Unknown')}"
 
                 self._save_geojson_to_file(geojson, date)
 
