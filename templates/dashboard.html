@@ -23,10 +23,12 @@
   <button id="menu-toggle">☰</button>
 
   <!-- Menu -->
-  <div id="menu">
+  <div id="menu" >
     <!--<img src="/static/logo.webp" alt="Logo" width="50%" class="center">-->
     <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center" />
     <h1>Svalbard Weather Information</h1>
+
+      <div id="mobile_station_menu" style="display: none;>
     <h2>Mobile stations track</h2>
     <label for="track-duration-select">Duration:</label>
     <select id="track-duration-select">
@@ -47,10 +49,11 @@
       <option value="windDirection">Wind Direction</option>
       <option value="relativeHumidity">Relative Humidity</option>
     </select>
-    <div id="opacity-controls">
+  </div>
+    <div id="opacity-controls" style="display: none;">
       <h2>Opacity Controls</h2>
     </div>
-    <div id="download_option">
+    <div id="download_option" style="display: none;">
       <h2>Import/Export</h2>
       <h3>Export GPX</h3>
       <button id="download-gpx">Download GPX</button>
@@ -60,13 +63,11 @@
     <ul id="layerList"></ul>
     <h2>Stations</h2>
     <div id="project-controls"></div>
-    <a id="credits">
-        <p>The Svalbard Weather Information (SWI) project aggregates data from various sources for informational purposes only. While we strive for accuracy, we do not guarantee the reliability of the data. Users are solely responsible for their use of this information. For full terms, please visit our <a href="/credits">credit page</a></p>
+    <div id="credits">
       <br />
       <p>Louis Pauchet - UNIS/INSA Rouen Normandie 2024</p>
         <p><i>Version: {{ git_commit_hash }}</i></p>
       <a href="/credits">View Full Credits</a>
-        <br />
     </div>
   </div>
 
@@ -94,7 +95,7 @@
     });
 
     // Existing initialization code
-    const layerConfigUrl = '{{ url_for("static", filename="config/layers.json") }}';
+    const layerConfigUrl = '{{ url_for("static", filename="config/layers_dashboard.json") }}';
     const mobileStationConfigUrl = '{{ url_for("static", filename="config/mobile_stations.json") }}';
     const fixedStationConfigUrl = '{{ url_for("static", filename="config/fixed_stations.json") }}';
     const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';

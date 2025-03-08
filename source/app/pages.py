@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
@@ -11,9 +12,26 @@ from utils.citation_utils import load_references
 
 pages = Blueprint('pages', __name__)
 
+def get_git_commit_hash():
+    """Retrieve the current git commit hash."""
+    try:
+        # Run the git command to get the current commit hash
+        commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.STDOUT)
+        # Decode the output and strip any whitespace
+        return commit_hash.decode('utf-8').strip()
+    except Exception as e:
+        # Return a default value if the command fails
+        return "unknown"
+
 @pages.route('/')
 def index():
-    return render_template('index.html')
+    git_commit_hash = get_git_commit_hash()
+    return render_template('index.html', git_commit_hash=git_commit_hash)
+
+@pages.route('/dashboard')
+def dashboard():
+    git_commit_hash = get_git_commit_hash()
+    return render_template('dashboard.html', git_commit_hash=git_commit_hash)
 
 @pages.route('/credits')
 def credits():
@@ -21,6 +39,7 @@ def credits():
     Renders the credits page dynamically based on configuration files and .bib.
     Includes a landscape image and provider logos in place of the map, with links.
     """
+    git_commit_hash = get_git_commit_hash()
     # Load references
     references = load_references()
 
@@ -46,4 +65,4 @@ def credits():
     ]
 
     # Render the template
-    return render_template('credits.html', references=references, logos=logos)
+    return render_template('credits.html', references=references, logos=logos, git_commit_hash=git_commit_hash)
