@@ -166,7 +166,7 @@ body {
 /* Legend Items */
 .legend-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Align items to the top */
     margin-bottom: 5px;
 }
 
@@ -189,6 +189,19 @@ body {
     display: inline-block;
     margin-right: 5px;
     border-radius: 4px; /* Rounded edges for consistency */
+    flex-shrink: 0; /* Prevent the icon from shrinking */
+}
+
+.legend-label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.feature-description {
+    font-size: 0.9em; /* Adjust the size as needed */
+    color: #555; /* Adjust the color as needed */
+    margin-top: 2px; /* Add some space between label and description */
 }
 
 .legend-dates {
@@ -205,6 +218,7 @@ body {
     font-weight: bold;
     color: #333;
 }
+
 
 /* Tooltip Styling */
 .tooltip {
