@@ -18,7 +18,7 @@ from source.maps_processing.maps_caching import MapsCaching
 
 
 class AvalancheForecastProcessing:
-    def __init__(self, n_days_forecast=2, regions_list=None):
+    def __init__(self, n_days_forecast=1, regions_list=None):
         self.logger = Logger.setup_logger('AvalancheForecastProcessing')
         if regions_list is None:
             #self.regions_list = ['3001', '3002', '3003', '3004']
@@ -354,7 +354,7 @@ class AvalancheForecastProcessing:
         except Exception as e:
             self.logger.error(f"Error processing forecast: {e}")
 
-    def cache_3003(self):
+    def process_3003(self):
         self.fetch_region_data()
         self.fetch_forecast_data()
         self._create_forecast_layer_region(self.get_region('3003'))
