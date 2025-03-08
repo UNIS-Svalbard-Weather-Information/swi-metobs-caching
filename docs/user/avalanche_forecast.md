@@ -10,6 +10,8 @@ To generate the layer that represents the shape of the given area, we utilize th
 
 Understanding the avalanche danger scale is crucial for safety in avalanche-prone areas. The scale ranges from Low to Extreme and provides essential information about the likelihood and potential size of avalanches. For more detailed information on the avalanche danger scale and safety measures, please refer to [Avalanche Danger Scale](https://www.avalanches.org/education/avalanche-danger-scale-2/).
 
+Additionally, it is important to be aware that avalanches can be remotely triggered, and the runout area can extend far beyond the initial avalanche zone. For comprehensive information on avalanche prevention and safety, visit [Varsom's Avalanche Information](https://www.varsom.no/en/avalanches/about-avalanches/).
+
 **References:**
 
 - McCammon, I., & Schweizer, J. (2009). [Snow and avalanche research](https://gblanc.fr/IMG/pdf/mccammon2009.pdf).
