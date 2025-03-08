@@ -96,7 +96,7 @@
             "type": "geojson",
             "url": "/maps/avalanche_forecast/0",
             "layers": [0],
-            "cite" : "ice_charts_cryo_met_no",
+            "cite" : "varsom_avalanche_warnings",
             "category" : "Avalanche"
         },
         {
@@ -104,7 +104,7 @@
             "type": "geojson",
             "url": "/maps/avalanche_forecast/1",
             "layers": [0],
-            "cite" : "ice_charts_cryo_met_no",
+            "cite" : "engeset_regobs_2018",
             "category" : "Avalanche"
         },
         {
