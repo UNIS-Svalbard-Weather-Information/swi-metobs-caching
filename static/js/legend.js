@@ -51,85 +51,81 @@ function updateLegend(legendControl) {
     for (let layerName in activeLayers) {
         const layer = activeLayers[layerName];
 
-        if (layer.type === 'geojson') {
-            // Fetch the GeoJSON data for the layer
-            legendPromises.push(
-                fetch(layer.url)
-                    .then(response => {
-                        if (!response.ok) throw new Error(`Failed to fetch GeoJSON for ${layerName}`);
-                        return response.json();
-                    })
-                    .then(geojsonData => {
-                        legendHtml += `<h3>${layerName}</h3><ul>`;
+    if (layer.type === 'geojson') {
+        // Fetch the GeoJSON data for the layer
+        legendPromises.push(
+            fetch(layer.url)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Failed to fetch GeoJSON for ${layerName}`);
+                    return response.json();
+                })
+                .then(geojsonData => {
+                    legendHtml += `<h3>${layerName}</h3>`;
 
+                    // Add layer description if available
+                    if (geojsonData.description) {
+                        legendHtml += `<p>${geojsonData.description}</p>`;
+                    }
 
+                    legendHtml += `<div class="legend-dates">`;
 
-                        legendHtml += `
-                            <div class="legend-dates">
-                                ${
-                                    geojsonData.date
-                                        ? `<p>
-                                            <strong>Published:</strong> 
-                                            <span 
-                                                class="legend-date">
-                                                ${formatDate(geojsonData.date)}
-                                                <span 
-                                                    class="info-icon" 
-                                                    onclick="showPopup(event, 'The date when this data was first made available or published')">
-                                                    ℹ️
-                                                </span>
-                                            </span>
-                                        </p>`
-                                        : ''
-                                }
-                                ${
-                                    geojsonData.lastDownload
-                                        ? `<p>
-                                            <strong>Updated:</strong> 
-                                            <span 
-                                                class="legend-date">
-                                                ${formatDate(geojsonData.lastDownload, true)}
-                                                <span 
-                                                    class="info-icon" 
-                                                    onclick="showPopup(event, 'The last date and time when the data source was checked for updates')">
-                                                    ℹ️
-                                                </span>
-                                            </span>
-                                        </p>`
-                                        : ''
-                                }
-                            </div>
-                        `;
-                        const uniqueStyles = new Set();
+                    if (geojsonData.date) {
+                        legendHtml += `<p>
+                            <strong>Published:</strong>
+                            <span class="legend-date">
+                                ${formatDate(geojsonData.date)}
+                                <span class="info-icon" onclick="showPopup(event, 'The date when this data was first made available or published')">ℹ️</span>
+                            </span>
+                        </p>`;
+                    }
 
-                        geojsonData.features.forEach(feature => {
-                            const properties = feature.properties || {};
-                            const color = properties.color || '#3388ff'; // Default color
-                            const label = properties.name || 'Feature';
-                            const fillOpacity = properties.fillOpacity || 0.9; // Default fill opacity
+                    if (geojsonData.lastDownload) {
+                        legendHtml += `<p>
+                            <strong>Updated:</strong>
+                            <span class="legend-date">
+                                ${formatDate(geojsonData.lastDownload, true)}
+                                <span class="info-icon" onclick="showPopup(event, 'The last date and time when the data source was checked for updates')">ℹ️</span>
+                            </span>
+                        </p>`;
+                    }
 
-                            // Avoid duplicate entries in the legend
-                            const uniqueKey = `${color}-${label}`;
-                            if (!uniqueStyles.has(uniqueKey)) {
-                                uniqueStyles.add(uniqueKey);
-                                legendHtml += `
-                                    <li class="legend-item">
-                                        <span class="geojson-legend-icon" style="background-color: ${color}; opacity: ${fillOpacity};"></span>
-                                        <span>${label}</span>
-                                    </li>`;
+                    legendHtml += `</div><ul>`;
+
+                    const uniqueStyles = new Set();
+
+                    geojsonData.features.forEach(feature => {
+                        const properties = feature.properties || {};
+                        const color = properties.color || '#3388ff'; // Default color
+                        const label = properties.name || 'Feature';
+                        const fillOpacity = properties.fillOpacity || 0.9; // Default fill opacity
+                        const description = properties.description; // Feature description
+
+                        // Avoid duplicate entries in the legend
+                        const uniqueKey = `${color}-${label}`;
+                        if (!uniqueStyles.has(uniqueKey)) {
+                            uniqueStyles.add(uniqueKey);
+                            legendHtml += `
+                                <li class="legend-item">
+                                    <span class="geojson-legend-icon" style="background-color: ${color};"></span>
+                                    <span class="legend-label">
+                                        <strong>${label}</strong>`;
+                            if (description) {
+                                legendHtml += `<br><span class="feature-description">${description}</span>`;
                             }
-                        });
+                            legendHtml += `</span></li>`;
+                        }
+                    });
 
-                        legendHtml += '</ul>';
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        legendHtml += `<div class="legend-error">Error loading legend for ${layerName}</div>`;
-                    })
-            );
-        } else if (layer.type === 'wms') {
-            const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
-            legendHtml += `<div class="legend-item"><img src="${legendUrl}" alt="Legend"> <span>${layerName}</span></div>`;
+                    legendHtml += '</ul>';
+                })
+                .catch(error => {
+                    console.error(error);
+                    legendHtml += `<div class="legend-error">Error loading legend for ${layerName}</div>`;
+                })
+        );
+    } else if (layer.type === 'wms') {
+    const legendUrl = `${layer.url}?SERVICE=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${layer.layers}`;
+    legendHtml += `<div class="legend-item"><img src="${legendUrl}" alt="Legend"> <span>${layerName}</span></div>`;
         } else if (layer.type === 'arcgis') {
             legendPromises.push(
                 fetch(`${layer.url}/legend?f=pjson`)
