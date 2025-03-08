@@ -10,3 +10,4 @@ cache/*
 static/config/api.json
 static/maps/managed
 static/maps/managed/*
+private

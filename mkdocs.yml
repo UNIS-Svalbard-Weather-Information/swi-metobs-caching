@@ -1,0 +1,32 @@
+site_name: Svalbard Weather Information
+docs_dir: docs
+theme:
+  name: readthedocs
+
+#theme:
+#  name: material
+#  features:
+#    - navigation.instant
+#    - navigation.tracking
+#    - search.suggest
+#    - content.code.annotate
+#    - content.tabs.link
+
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+
+nav:
+  - Home: index.md
+  - User : user/user_guide.md
+  - API :
+    - AW Stations Enpoints : api.md
+  - Backend Codebase:
+      #- App: api/app_api.md
+      - Cache Handler: backend/cacheHandler.md
+      - Config Handler: backend/confighandler.md
+      - Datasource: backend/datasource.md
+      - Logger: backend/logger.md
+      - Maps Processing: backend/maps_processing.md
