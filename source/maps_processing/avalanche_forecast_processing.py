@@ -353,3 +353,8 @@ class AvalancheForecastProcessing:
 
         except Exception as e:
             self.logger.error(f"Error processing forecast: {e}")
+
+    def cache_3003(self):
+        self.fetch_region_data()
+        self.fetch_forecast_data()
+        self._create_forecast_layer_region(self.get_region('3003'))
