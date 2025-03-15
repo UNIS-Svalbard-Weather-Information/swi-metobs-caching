@@ -478,6 +478,7 @@ function getColorScale(variable, minValue, maxValue) {
 
     return colorScale[variable];
 }
+
 // Function to update the timeline and cursor position
 function updateTimeline() {
   const now = new Date();
@@ -497,18 +498,22 @@ function updateTimeline() {
   const dayPlusFlex = currentHour / 48;
 
   // Apply the flex values to the day elements
-  document.getElementById('day-minus').style.flex = dayMinusFlex;
-  document.getElementById('day-center').style.flex = dayCenterFlex;
-  document.getElementById('day-plus').style.flex = dayPlusFlex;
+  const dayMinus = document.getElementById('day-minus');
+  const dayCenter = document.getElementById('day-center');
+  const dayPlus = document.getElementById('day-plus');
+
+  dayMinus.style.flex = dayMinusFlex;
+  dayCenter.style.flex = dayCenterFlex;
+  dayPlus.style.flex = dayPlusFlex;
 
   // Update the day labels
-  const dayMinus = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const dayPlus = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const dayCenter = new Date(now.getTime());
+  const dayMinusDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const dayPlusDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const dayCenterDate = new Date(now.getTime());
 
-  document.getElementById('day-minus').textContent = dayMinus.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  document.getElementById('day-plus').textContent = dayPlus.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  document.getElementById('day-center').textContent = dayCenter.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  dayMinus.textContent = dayMinusDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  dayPlus.textContent = dayPlusDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  dayCenter.textContent = dayCenterDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 
   // Update the duration display and tooltip
   const tooltip = document.getElementById('tooltip');
@@ -518,6 +523,33 @@ function updateTimeline() {
     const shiftedTime = new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000);
     tooltip.textContent = `${shiftedTime.getHours().toString().padStart(2, '0')}:00`;
   }
+
+  // Remove existing hour ticks and day bars
+  const existingTicks = document.querySelectorAll('.hour-tick, .day-bar');
+  existingTicks.forEach(tick => tick.remove());
+
+  // Create hour ticks
+  const timeline = document.querySelector('.timeline');
+  for (let i = 0; i < 49; i++) {
+    const tick = document.createElement('div');
+    tick.classList.add('hour-tick');
+    tick.style.left = `${(i / 48) * 100}%`;
+    timeline.appendChild(tick);
+  }
+
+  // Calculate and create day bars
+  const dayBars = [
+    { element: dayMinus, position: dayMinusFlex },
+    { element: dayCenter, position: dayMinusFlex + dayCenterFlex },
+    { element: dayPlus, position: dayMinusFlex + dayCenterFlex + dayPlusFlex }
+  ];
+
+  dayBars.forEach(({ element, position }) => {
+    const dayBar = document.createElement('div');
+    dayBar.classList.add('day-bar');
+    dayBar.style.left = `${position * 100}%`;
+    timeline.appendChild(dayBar);
+  });
 }
 
 // Initialize the timeline
@@ -567,4 +599,3 @@ function onMouseUp() {
   const variable = document.getElementById('variable-select-dropdown').value;
   updateStationsData(duration, windImagesUrl, variable);
 }
-
