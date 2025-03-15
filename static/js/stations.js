@@ -1,3 +1,5 @@
+let forecast = false; // Set to true to enable forecast, false to disable
+
 /**
  * Object to store track layers for each station.
  * @type {Object.<string, L.Layer[]>}
@@ -478,7 +480,6 @@ function getColorScale(variable, minValue, maxValue) {
 
     return colorScale[variable];
 }
-
 // Function to update the timeline and cursor position
 function updateTimeline() {
   const now = new Date();
@@ -555,23 +556,25 @@ function updateTimeline() {
 // Initialize the timeline
 updateTimeline();
 
-// Add event listener to update the timeline when the cursor is dragged
+// Add event listeners to update the timeline when the cursor is dragged
 const cursor = document.getElementById('track-duration-select');
 let isDragging = false;
 let startX;
 let startLeft;
 
-cursor.addEventListener('mousedown', (e) => {
+const handleMouseDown = (e) => {
   isDragging = true;
-  startX = e.clientX;
+  startX = e.clientX || e.touches[0].clientX;
   startLeft = parseInt(window.getComputedStyle(cursor).left, 10);
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
-});
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('touchmove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('touchend', handleMouseUp);
+};
 
-function onMouseMove(e) {
+const handleMouseMove = (e) => {
   if (!isDragging) return;
-  const x = e.clientX;
+  const x = e.clientX || e.touches[0].clientX;
   const walk = (x - startX);
   const newLeft = startLeft + walk;
   const timelineWidth = document.querySelector('.timeline').offsetWidth;
@@ -587,15 +590,20 @@ function onMouseMove(e) {
     // Update the duration display and tooltip
     updateTimeline();
   }
-}
+};
 
-function onMouseUp() {
+const handleMouseUp = () => {
   isDragging = false;
-  document.removeEventListener('mousemove', onMouseMove);
-  document.removeEventListener('mouseup', onMouseUp);
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('touchmove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
+  document.removeEventListener('touchend', handleMouseUp);
 
   // Trigger station data update
   const duration = parseInt(cursor.getAttribute('value'), 10);
   const variable = document.getElementById('variable-select-dropdown').value;
   updateStationsData(duration, windImagesUrl, variable);
-}
+};
+
+cursor.addEventListener('mousedown', handleMouseDown);
+cursor.addEventListener('touchstart', handleMouseDown);
