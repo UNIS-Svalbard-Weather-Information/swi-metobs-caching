@@ -4,7 +4,8 @@
             "name": "Topo Svalbard",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer",
-            "cite": "norwegian_polar_institute_np_2024"
+            "cite": "norwegian_polar_institute_np_2024",
+            "category" : "Base Layers"
         }
     ],
 
@@ -14,56 +15,64 @@
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/ilandstigningslokaliteter_svalbard/MapServer",
             "layers": [0,1,2,3],
-            "cite": "None"
+            "cite": "landing_areas_svalbard",
+            "category" : "Boat Regulation"
         },
         {
             "name": "Speed restriction in from of birds cliffs",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [0],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Boat Regulation"
         },
         {
             "name": "Traffic lane for residents and necessary commercial traffic",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [1],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic lane for travelers / tourism",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [2],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic regulation for residents",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [3],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Traffic regulation for travelers / tourism",
             "type": "arcgis",
             "url": "https://kart2.miljodirektoratet.no/arcgis/rest/services/svalbard/motorferdsel_svalbard/MapServer",
             "layers": [4],
-            "cite": "None"
+            "cite": "motorferdsel_svalbard",
+            "category" : "Snow Scooter Regulation"
         },
         {
             "name": "Slope steepness (avalanche)",
             "type": "arcgis",
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
             "layers": [1],
-            "cite" : "bratthet_snoskred"
+            "cite" : "bratthet_snoskred",
+            "category" : "Avalanche"
         },
         {
             "name": "Slope steepness (general)",
             "type": "arcgis",
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
             "layers": [3],
-            "cite" : "bratthet_snoskred"
+            "cite" : "bratthet_snoskred",
+            "category" : "Terrain"
         },
 
         {
@@ -71,14 +80,40 @@
             "type": "arcgis",
             "url": "https://gis3.nve.no/arcgis/rest/services/wmts/KastWMTS/MapServer/",
             "layers": [7, 8],
-            "cite": "utlopsomradekart"
+            "cite": "utlopsomradekart",
+            "category" : "Avalanche"
+        },
+        {
+            "name": "Runout area V2",
+            "type": "arcgis",
+            "url": "https://gis3.nve.no/arcgis/rest/services/wmts/Bratthet_med_utlop_2024/MapServer",
+            "layers": [7, 8, 9],
+            "cite": "utlopsomradekart",
+            "category" : "Avalanche"
+        },
+        {
+            "name": "Today Avalanche Forecast",
+            "type": "geojson",
+            "url": "/maps/avalanche_forecast/0",
+            "layers": [0],
+            "cite" : "varsom_avalanche_warnings",
+            "category" : "Avalanche"
+        },
+        {
+            "name": "Tomorrow Avalanche Forecast",
+            "type": "geojson",
+            "url": "/maps/avalanche_forecast/1",
+            "layers": [0],
+            "cite" : "engeset_regobs_2018",
+            "category" : "Avalanche"
         },
         {
             "name": "Sea Ice",
             "type": "geojson",
             "url": "/maps/ice_chart",
             "layers": [0],
-            "cite" : "ice_charts_cryo_met_no"
+            "cite" : "ice_charts_cryo_met_no",
+            "category" : "Sea Ice"
         }
     ]
 }   
