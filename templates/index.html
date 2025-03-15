@@ -28,15 +28,10 @@
     <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center" />
     <h1>Svalbard Weather Information</h1>
     <h2>Mobile stations track</h2>
-    <label for="track-duration-select">Duration:</label>
-    <select id="track-duration-select">
-      <option value="0">None</option>
-      <option value="1">1 hour</option>
-      <option value="3">3 hours</option>
-      <option value="6">6 hours</option>
-      <option value="12">12 hours</option>
-      <option value="24">24 hours</option>
-    </select>
+    <label for="track-duration-select">Select Time:</label>
+    <input type="range" id="track-duration-select" min="-24" max="24" step="1" value="0">
+    <div id="duration-display">Now</div>
+
     <br />
     <label for="variable-select-dropdown">Variable:</label>
     <select id="variable-select-dropdown">
