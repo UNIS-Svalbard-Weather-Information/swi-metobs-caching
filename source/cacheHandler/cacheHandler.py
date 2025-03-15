@@ -10,7 +10,7 @@ from source.datasource.datasourceFactory import get_datasource
 from source.logger.logger import Logger
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import shutil
 
 class CacheHandler:
@@ -27,6 +27,7 @@ class CacheHandler:
                             'station_status': 'cache_stations_status.json',
                             'station_metadata_single': './000_stations_metadata/',
                             'realtime_data': './111_data_realtime/',
+                            'hourly_data' : './111_hourly_data/',
                             'online': './000_status_online_stations/',
                             'offline': './000_status_offline_stations/',
                         }
@@ -47,6 +48,7 @@ class CacheHandler:
                 'station_status' : 'cache_stations_status.json',
                 'station_metadata_single' : './000_stations_metadata/',
                 'realtime_data' : './111_data_realtime/',
+                'hourly_data': './111_hourly_data/',
                 'online' : './000_status_online_stations/',
                 'offline': './000_status_offline_stations/',
             }
@@ -174,6 +176,76 @@ class CacheHandler:
 
         self.logger.info("Finished caching real-time data.")
 
+    def cache_past_hourly_data(self, hours_ago=24):
+        """
+        Retrieve and cache hourly data for online stations.
+
+        This method fetches hourly data from each online station using the appropriate data source. If the list of online
+        stations is not already populated, it calls cache_stations_status to update it. For each online station, the hourly
+        data is written to a JSON file located in a subdirectory specified by the 'hourly_data' key in path_config.
+
+        Args:
+            hours_ago (int): Number of hours ago to fetch data for. Default is 1.
+
+        Returns:
+            None
+        """
+        self.logger.info("Starting to cache hourly data...")
+
+        hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
+
+        if self.online_stations is None or len(self.online_stations) == 0:
+            self.logger.info("Unknown station status. Starting collection and caching of the station status...")
+            self.cache_stations_status()
+
+        if self.online_stations is None or len(self.online_stations) == 0:
+            self.logger.warning("No online stations found. Skipping data caching.")
+            return
+
+        # Calculate the start and end times for the hourly data
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(hours=hours_ago)
+
+        for station in self.online_stations:
+            try:
+                self.logger.debug(f"Fetching hourly data for station: {station}")
+                datasource = get_datasource(station, config=self.config)
+
+                data = datasource.fetch_timeseries_data(
+                    station,
+                    start_time.isoformat(),
+                    end_time.isoformat()
+                )
+
+                if not data or 'timeseries' not in data:
+                    self.logger.warning(f"No data fetched for {station}, skipping cache write.")
+                    continue
+
+                # Create a subdirectory for each hourly shift
+                for shift in range(1, hours_ago + 1):
+                    shift_time = end_time - timedelta(hours=shift)
+                    shift_path = os.path.join(hourly_data_path, f"-{shift}")
+                    os.makedirs(shift_path, exist_ok=True)
+
+                    # Find the corresponding data entry for the shift
+                    entry = next((e for e in data['timeseries'] if e['timestamp'].startswith(shift_time.isoformat()[:13])), None)
+                    if entry:
+                        # Prepare the data structure with a single record in timeseries
+                        data_to_cache = {
+                            "id": station,
+                            "timeseries": [entry]
+                        }
+                        filename = os.path.join(shift_path, f"{station}.json")
+                        self._write_cache(data_to_cache, filename)
+                        self.logger.info(f"Saved hourly data for {station} at {filename}.")
+                    else:
+                        self.logger.warning(f"No data entry found for {station} at shift {shift}.")
+
+            except Exception as e:
+                self.logger.error(f"Error processing hourly data for {station}: {e}", exc_info=True)
+
+        self.logger.info("Finished caching hourly data.")
+
     def get_cached_online_stations(self, type="all", status='online'):
         """
         Retrieve cached station information filtered by type and status.
@@ -247,6 +319,50 @@ class CacheHandler:
         except Exception as e:
             self.logger.critical(f"Unexpected error while fetching real-time data for station ID {station_id}: {e}",
                                  exc_info=True)
+
+        return None
+
+    def get_cached_hourly_data(self, station_id, shift):
+        """
+        Retrieve cached hourly data for a specific station and shift.
+
+        This method reads and returns the cached hourly data for the station with the provided station_id and shift from
+        the file specified by the 'hourly_data' path in path_config. If the shift is 0, it calls get_cached_realtime_data.
+        If the file is missing or contains invalid data, appropriate warnings or error messages are logged.
+
+        Args:
+            station_id (str): The unique identifier of the station whose hourly data is to be retrieved.
+            shift (int or str): The shift value indicating how many hours ago the data was cached.
+
+        Returns:
+            dict: A dictionary containing the station's hourly data if available.
+            None: If no data is found or an error occurs.
+        """
+        self.logger.info(f"Fetching hourly data for station ID: {station_id} with shift: {shift}")
+
+        try:
+            # Convert shift to an integer if it's a string
+            shift = int(shift)
+
+            if shift == 0:
+                return self.get_cached_realtime_data(station_id)
+
+            hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
+            shift_path = os.path.join(hourly_data_path, f"{shift}")
+            filename = os.path.join(shift_path, f"{station_id}.json")
+
+            cached_data = self._read_cache(filename)
+            if cached_data is None:
+                self.logger.warning(f"Cache file contains no valid data for station ID {station_id} with shift {shift}")
+            else:
+                self.logger.info(f"Successfully retrieved cached data for station ID {station_id} with shift {shift}")
+
+            return cached_data
+
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Invalid JSON format in cache file for station ID {station_id} with shift {shift}: {e}", exc_info=True)
+        except Exception as e:
+            self.logger.critical(f"Unexpected error while fetching hourly data for station ID {station_id} with shift {shift}: {e}", exc_info=True)
 
         return None
 
