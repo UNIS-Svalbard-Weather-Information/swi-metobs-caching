@@ -38,6 +38,8 @@ def create_app():
         while True:
             station_handler.cache_stations_status()
             station_handler.cache_realtime_data()
+            station_handler.cache_past_hourly_data()
+
             sea_ice_handler.create_ice_chart_geojson()
             avalanche_forecast_handler.process_3003()
 

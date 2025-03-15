@@ -34,9 +34,24 @@ def station_metadata(station_id):
 @api.route('/station-data/<station_id>', methods=['GET'])
 def realtime_data(station_id):
     station_handler = current_app.config['STATION_HANDLER']
-    if request.args.get('data') == 'now':
+
+    # Get the 'data' query parameter
+    data_param = request.args.get('data')
+    if data_param == 'now':
+        # Fetch real-time data
         data = station_handler.get_cached_realtime_data(station_id)
         if not data:
             return jsonify({"error": "No real-time data available"}), 404
         return jsonify(data), 200
+
+    # Check if data_param is a valid integer (including positive and negative values)
+    if data_param.lstrip('+-').isdigit():
+        shift = int(data_param)
+        # Fetch hourly data based on the shift value
+        data = station_handler.get_cached_hourly_data(station_id, shift)
+        if not data:
+            return jsonify({"error": f"No data available for shift {shift}"}), 404
+        return jsonify(data), 200
+
+    # Handle cases where 'data' is not 'now' and not a valid integer
     return jsonify({"error": "Invalid request"}), 400
