@@ -37,6 +37,7 @@ def realtime_data(station_id):
 
     # Get the 'data' query parameter
     data_param = request.args.get('data')
+
     if data_param == 'now':
         # Fetch real-time data
         data = station_handler.get_cached_realtime_data(station_id)
@@ -45,7 +46,7 @@ def realtime_data(station_id):
         return jsonify(data), 200
 
     # Check if data_param is a valid integer (including positive and negative values)
-    if data_param.lstrip('+-').isdigit():
+    if data_param and data_param.lstrip('+-').isdigit():
         shift = int(data_param)
         # Fetch hourly data based on the shift value
         data = station_handler.get_cached_hourly_data(station_id, shift)

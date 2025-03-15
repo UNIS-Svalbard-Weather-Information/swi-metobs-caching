@@ -73,6 +73,13 @@ def app():
         "pressure": 1015
     } if station_id == "12345" else None
 
+    # Mock hourly data
+    mock_cache_handler.get_cached_hourly_data.side_effect = lambda station_id, shift: {
+        "temperature": -6.0,
+        "wind_speed": 11.0,
+        "pressure": 1010
+    } if station_id == "12345" else None
+
     # Inject the mock into the app
     app.config['STATION_HANDLER'] = mock_cache_handler
 
