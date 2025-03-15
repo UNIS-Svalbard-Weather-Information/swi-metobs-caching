@@ -480,6 +480,8 @@ function getColorScale(variable, minValue, maxValue) {
 
     return colorScale[variable];
 }
+
+
 // Function to update the timeline and cursor position
 function updateTimeline() {
   const now = new Date();
@@ -488,6 +490,16 @@ function updateTimeline() {
 
   // Calculate the position of the cursor relative to the center
   const cursorPosition = ((hoursFromNow / 48) * timelineWidth) + (timelineWidth / 2);
+
+  // Check if forecast is disabled and hoursFromNow is in the future
+  if (!forecast && hoursFromNow > 0) {
+    alert("Forecast is not available.");
+    // Reset cursor to the current time
+    document.getElementById('track-duration-select').style.left = `${timelineWidth / 2}px`;
+    document.getElementById('track-duration-select').setAttribute('value', '0');
+    return;
+  }
+
   document.getElementById('track-duration-select').style.left = `${cursorPosition}px`;
 
   // Calculate the current hour of the day (0-23)
