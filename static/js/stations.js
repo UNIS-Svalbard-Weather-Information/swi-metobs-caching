@@ -63,12 +63,12 @@ function loadStations(windImagesUrl) {
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
-        const initialDuration = parseInt(document.getElementById('track-duration-select').value, 10);
+        const initialDuration = 0; // Initial duration is set to 0
         const initialVariable = document.getElementById('variable-select-dropdown').value;
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
 
         setInterval(() => {
-            const duration = parseInt(document.getElementById('track-duration-select').value, 10);
+            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
             const variable = document.getElementById('variable-select-dropdown').value;
             updateStationsData(duration, windImagesUrl, variable);
         }, 60000); // Auto update stations every minute
@@ -178,17 +178,10 @@ function initializeProjectControls(windImagesUrl) {
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function initializeEventListeners(windImagesUrl) {
-    const durationSelect = document.getElementById('track-duration-select');
     const variableSelect = document.getElementById('variable-select-dropdown');
 
-    durationSelect.addEventListener('change', () => {
-        const duration = parseInt(durationSelect.value, 10);
-        const variable = variableSelect.value;
-        updateStationsData(duration, windImagesUrl, variable);
-    });
-
     variableSelect.addEventListener('change', () => {
-        const duration = parseInt(durationSelect.value, 10);
+        const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
         const variable = variableSelect.value;
         updateStationsData(duration, windImagesUrl, variable);
     });
@@ -256,8 +249,7 @@ function toggleStation(stationId, isVisible, windImagesUrl) {
     } else {
         const fixedStation = fixedStations.find(s => s.id === stationId);
         if (fixedStation) {
-            const durationSelect = document.getElementById('track-duration-select');
-            const duration = parseInt(durationSelect.value, 10);
+            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
             updateFixedStationData(fixedStation, windImagesUrl, duration);
         } else {
             console.error(`Station with id ${stationId} not found in fixed stations`);
@@ -486,3 +478,93 @@ function getColorScale(variable, minValue, maxValue) {
 
     return colorScale[variable];
 }
+// Function to update the timeline and cursor position
+function updateTimeline() {
+  const now = new Date();
+  const hoursFromNow = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
+  const timelineWidth = document.querySelector('.timeline').offsetWidth;
+
+  // Calculate the position of the cursor relative to the center
+  const cursorPosition = ((hoursFromNow / 48) * timelineWidth) + (timelineWidth / 2);
+  document.getElementById('track-duration-select').style.left = `${cursorPosition}px`;
+
+  // Calculate the current hour of the day (0-23)
+  const currentHour = now.getHours();
+
+  // Calculate the flex values for each day
+  const dayMinusFlex = (24 - currentHour) / 48;
+  const dayCenterFlex = 24 / 48;
+  const dayPlusFlex = currentHour / 48;
+
+  // Apply the flex values to the day elements
+  document.getElementById('day-minus').style.flex = dayMinusFlex;
+  document.getElementById('day-center').style.flex = dayCenterFlex;
+  document.getElementById('day-plus').style.flex = dayPlusFlex;
+
+  // Update the day labels
+  const dayMinus = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const dayPlus = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const dayCenter = new Date(now.getTime());
+
+  document.getElementById('day-minus').textContent = dayMinus.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  document.getElementById('day-plus').textContent = dayPlus.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  document.getElementById('day-center').textContent = dayCenter.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+
+  // Update the duration display and tooltip
+  const tooltip = document.getElementById('tooltip');
+  if (hoursFromNow === 0) {
+    tooltip.textContent = "Now";
+  } else {
+    const shiftedTime = new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000);
+    tooltip.textContent = `${shiftedTime.getHours().toString().padStart(2, '0')}:00`;
+  }
+}
+
+// Initialize the timeline
+updateTimeline();
+
+// Add event listener to update the timeline when the cursor is dragged
+const cursor = document.getElementById('track-duration-select');
+let isDragging = false;
+let startX;
+let startLeft;
+
+cursor.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  startX = e.clientX;
+  startLeft = parseInt(window.getComputedStyle(cursor).left, 10);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+function onMouseMove(e) {
+  if (!isDragging) return;
+  const x = e.clientX;
+  const walk = (x - startX);
+  const newLeft = startLeft + walk;
+  const timelineWidth = document.querySelector('.timeline').offsetWidth;
+
+  // Ensure the cursor stays within bounds
+  if (newLeft >= 0 && newLeft <= timelineWidth) {
+    cursor.style.left = `${newLeft}px`;
+
+    // Update the value based on cursor position relative to the center
+    const hoursFromNow = ((newLeft - (timelineWidth / 2)) / timelineWidth) * 48;
+    cursor.setAttribute('value', hoursFromNow.toFixed(0));
+
+    // Update the duration display and tooltip
+    updateTimeline();
+  }
+}
+
+function onMouseUp() {
+  isDragging = false;
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+
+  // Trigger station data update
+  const duration = parseInt(cursor.getAttribute('value'), 10);
+  const variable = document.getElementById('variable-select-dropdown').value;
+  updateStationsData(duration, windImagesUrl, variable);
+}
+

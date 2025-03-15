@@ -28,9 +28,22 @@
     <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center" />
     <h1>Svalbard Weather Information</h1>
     <h2>Mobile stations track</h2>
-    <label for="track-duration-select">Select Time:</label>
-    <input type="range" id="track-duration-select" min="-24" max="24" step="1" value="0">
-    <div id="duration-display">Now</div>
+    <!-- Remove or comment out the existing track-duration-select input -->
+    <!-- <input type="range" id="track-duration-select" min="-24" max="24" step="1" value="0"> -->
+
+    <!-- Add the new timeline structure -->
+    <div class="timeline-container">
+      <div class="timeline">
+        <div class="day" id="day-minus"></div>
+        <div class="day" id="day-center"></div>
+        <div class="day" id="day-plus"></div>
+      </div>
+      <div class="cursor" id="track-duration-select">
+        <div class="tooltip" id="tooltip">Now</div>
+      </div>
+    </div>
+    <!--<div id="duration-display">Now</div>-->
+
 
     <br />
     <label for="variable-select-dropdown">Variable:</label>
