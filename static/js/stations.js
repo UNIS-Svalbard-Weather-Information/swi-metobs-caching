@@ -5,12 +5,6 @@
 let trackLayers = {};
 
 /**
- * Object to store boat markers for each station.
- * @type {Object.<string, L.Marker>}
- */
-let boatMarkers = {};
-
-/**
  * Object to store fixed station markers.
  * @type {Object.<string, L.Marker>}
  */
@@ -21,12 +15,6 @@ let fixedStationMarkers = {};
  * @type {Object.<string, L.Marker>}
  */
 let windMarkers = {};
-
-/**
- * Array to store mobile station data.
- * @type {Array.<Object>}
- */
-let mobileStations = [];
 
 /**
  * Array to store fixed station data.
@@ -64,10 +52,8 @@ function loadStations(windImagesUrl) {
         const onlineStations = onlineData.online_stations || [];
         offlineStations = offlineData.offline_stations || [];
 
-        // Separate online stations into fixed and mobile categories
-        mobileStations = onlineStations.filter(station => station.type === "mobile");
+        // Separate online stations into fixed categories
         fixedStations = onlineStations.filter(station => station.type === "fixed");
-
 
         // Initialize visibility state (only online stations are visible by default)
         onlineStations.forEach(station => stationVisibility[station.id] = true);
@@ -85,7 +71,7 @@ function loadStations(windImagesUrl) {
             const duration = parseInt(document.getElementById('track-duration-select').value, 10);
             const variable = document.getElementById('variable-select-dropdown').value;
             updateStationsData(duration, windImagesUrl, variable);
-        }, 60000); //Auto update stations every minutes
+        }, 60000); // Auto update stations every minute
     })
     .catch(error => {
         console.error("Error loading stations:", error);
@@ -104,7 +90,7 @@ function initializeProjectControls(windImagesUrl) {
     const projects = {};
 
     // Collect all stations (online and offline)
-    const allStations = [...mobileStations, ...fixedStations, ...offlineStations];
+    const allStations = [...fixedStations, ...offlineStations];
 
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
@@ -186,16 +172,15 @@ function initializeProjectControls(windImagesUrl) {
     }
 }
 
-
 /**
  * Initializes event listeners for track duration and variable selection changes.
- * 
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function initializeEventListeners(windImagesUrl) {
     const durationSelect = document.getElementById('track-duration-select');
     const variableSelect = document.getElementById('variable-select-dropdown');
-    
+
     durationSelect.addEventListener('change', () => {
         const duration = parseInt(durationSelect.value, 10);
         const variable = variableSelect.value;
@@ -211,20 +196,15 @@ function initializeEventListeners(windImagesUrl) {
 
 /**
  * Fetches and updates data for all stations based on selected duration and variable.
- * 
+ *
  * @param {number} duration - The duration for which to fetch the data.
  * @param {string} windImagesUrl - Base URL for wind images.
  * @param {string} variable - The variable to display.
  */
 function updateStationsData(duration, windImagesUrl, variable) {
-    mobileStations.forEach(station => {
-        if (stationVisibility[station.id]) {
-            updateMobileStationData(station, duration, windImagesUrl, variable);
-        }
-    });
     fixedStations.forEach(station => {
         if (stationVisibility[station.id]) {
-            updateFixedStationData(station, windImagesUrl);
+            updateFixedStationData(station, windImagesUrl, duration);
         }
     });
 }
@@ -233,11 +213,11 @@ function updateStationsData(duration, windImagesUrl, variable) {
  * Fetches data for a specific station.
  *
  * @param {Object} station - The station object containing its ID.
- * @param {string} dataType - The type of data to fetch (e.g., "now" or other time-based queries).
+ * @param {number} duration - The duration for which to fetch the data.
  * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of an error.
  */
-function fetchStationData(station, dataType = "now") {
-    return fetch(`/api/station-data/${station.id}?data=${dataType}`)
+function fetchStationData(station, duration) {
+    return fetch(`/api/station-data/${station.id}?data=${duration}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`API error: ${response.statusText}`);
@@ -250,81 +230,43 @@ function fetchStationData(station, dataType = "now") {
         });
 }
 
-
-/**
- * Fetches data for a specific mobile station.
- * 
- * @param {Object} station - The mobile station data.
- * @param {number} duration - The duration for which to fetch the data.
- * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
- */
-async function fetchMobileStationData(station, duration) {
-    try {
-        const response = await fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`);
-        if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
-        }
-        const data = await response.json();
-        console.log('Fetch successful:', data);  // Log the successful data
-        return data;
-    } catch (error) {
-        //console.error('Error fetching mobile station data:', error);
-        //updateStationUIOnError(station.id);
-        return null;
-    }
-}
-
-
 /**
  * Toggles the visibility of a station's data on the map.
- * 
+ *
  * @param {string} stationId - The ID of the station.
  * @param {boolean} isVisible - Whether the station data should be visible.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function toggleStation(stationId, isVisible, windImagesUrl) {
     stationVisibility[stationId] = isVisible;
-    
+
     if (!isVisible) {
         if (trackLayers[stationId]) {
             trackLayers[stationId].forEach(layer => map.removeLayer(layer));
             delete trackLayers[stationId];
         }
-        if (boatMarkers[stationId]) {
-            map.removeLayer(boatMarkers[stationId]);
-            delete boatMarkers[stationId];
+        if (fixedStationMarkers[stationId]) {
+            map.removeLayer(fixedStationMarkers[stationId]);
+            delete fixedStationMarkers[stationId];
         }
         if (windMarkers[stationId]) {
             map.removeLayer(windMarkers[stationId]);
             delete windMarkers[stationId];
         }
-        if (fixedStationMarkers[stationId]) {
-            map.removeLayer(fixedStationMarkers[stationId]);
-            delete fixedStationMarkers[stationId];
-        }
     } else {
-        const durationSelect = document.getElementById('track-duration-select');
-        const variableSelect = document.getElementById('variable-select-dropdown');
-        const duration = parseInt(durationSelect.value, 10);
-        const variable = variableSelect.value;
-        
-        const station = mobileStations.find(s => s.id === stationId);
-
-        if (station) {
-            updateMobileStationData(station, duration, windImagesUrl, variable);
+        const fixedStation = fixedStations.find(s => s.id === stationId);
+        if (fixedStation) {
+            const durationSelect = document.getElementById('track-duration-select');
+            const duration = parseInt(durationSelect.value, 10);
+            updateFixedStationData(fixedStation, windImagesUrl, duration);
         } else {
-            const fixedStation = fixedStations.find(s => s.id === stationId);
-            if (fixedStation) {
-                updateFixedStationData(fixedStation, windImagesUrl);
-            } else {
-                console.error(`Station with id ${stationId} not found in both mobile and fixed stations`);
-            }
+            console.error(`Station with id ${stationId} not found in fixed stations`);
         }
     }
 }
 
 function toggleProjectStations(project, isVisible, windImagesUrl) {
-    const allStations = [...mobileStations, ...fixedStations];
+    const allStations = [...fixedStations];
     allStations.forEach(station => {
         if (station.project === project) {
             const stationCheckbox = document.getElementById(`station-${station.id}`);
@@ -335,92 +277,19 @@ function toggleProjectStations(project, isVisible, windImagesUrl) {
 }
 
 /**
- * Updates the data for a specific mobile station and displays it on the map.
- * 
- * @param {Object} station - The mobile station data.
- * @param {number} duration - The duration for which to fetch the data.
- * @param {string} windImagesUrl - Base URL for wind images.
- * @param {string} variable - The variable to display.
- */
-function updateMobileStationData(station, duration, windImagesUrl, variable) {
-    if (trackLayers[station.id]) {
-        trackLayers[station.id].forEach(layer => map.removeLayer(layer));
-        delete trackLayers[station.id];
-    }
-
-    if (duration === 0) {
-        // No track to display, but show the boat icon
-        fetchMobileStationData(station, duration)
-            .then(data => {
-                if (data) {
-                    updateBoatMarker(station, data, variable);
-                    updateWindMarker(station, data, windImagesUrl);
-                }
-            });
-        return;
-    }
-
-    fetchMobileStationData(station, duration)
-        .then(data => {
-            if (data) {
-                updateBoatMarker(station, data, variable);
-                updateWindMarker(station, data, windImagesUrl);
-
-                const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
-                const values = data.track.map(dp => dp.variable[variable]);
-                const filteredValues = values.filter(v => v !== null && v !== undefined);
-                if (filteredValues.length === 0) return;
-
-                const minValue = Math.min(...filteredValues);
-                const maxValue = Math.max(...filteredValues);
-                const extendedMinValue = minValue - (0.1 * minValue);
-                const extendedMaxValue = maxValue + (0.1 * maxValue);
-
-                const colorScale = getColorScale(variable, extendedMinValue, extendedMaxValue);
-
-                console.log(colorScale)
-
-                let segments = [];
-                for (let i = 0; i < latlngs.length - 1; i++) {
-                    const segment = L.polyline([latlngs[i], latlngs[i + 1]], {
-                        color: colorScale(values[i]),
-                        weight: 5,
-                        opacity: 0.7
-                    }).addTo(map);
-                    segments.push(segment);
-
-                    // Add popups to each point
-                    const dot = L.circleMarker(latlngs[i], {
-                        radius: 5,
-                        color: colorScale(values[i]),
-                        fillColor: colorScale(values[i]),
-                        fillOpacity: 0.9
-                    })
-                    .bindPopup(createPopupContent(station, data.track[i].variable))
-                    .addTo(map);
-
-                    segments.push(dot);
-                }
-
-                trackLayers[station.id] = segments;
-                updateColorBar(variable, extendedMinValue, extendedMaxValue, colorScale);
-            }
-        }, null);
-}
-
-/**
  * Updates the marker for a fixed station.
- * 
+ *
  * @param {Object} station - The fixed station data.
  * @param {string} windImagesUrl - Base URL for wind images.
+ * @param {number} duration - The duration for which to fetch the data.
  */
-function updateFixedStationData(station, windImagesUrl) {
+function updateFixedStationData(station, windImagesUrl, duration) {
     if (trackLayers[station.id]) {
         trackLayers[station.id].forEach(layer => map.removeLayer(layer));
         delete trackLayers[station.id];
     }
 
-    fetchStationData(station, 'now')
+    fetchStationData(station, duration)
         .then(data => {
             if (data) {
                 updateFixedStationMarker(station, data);
@@ -476,10 +345,9 @@ function createPopupContent(station, dataPoint) {
     return content;
 }
 
-
 /**
  * Converts wind direction in degrees to a compass direction letter.
- * 
+ *
  * @param {number} degrees - The wind direction in degrees.
  * @returns {string} - The corresponding compass direction letter.
  */
@@ -487,31 +355,6 @@ function getWindDirectionLetter(degrees) {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(degrees / 45) % 8;
     return directions[index];
-}
-
-/**
- * Updates the boat marker for a mobile station.
- * 
- * @param {Object} station - The mobile station data.
- * @param {Object} data - The data to display.
- * @param {string} variable - The variable to display.
- */
-function updateBoatMarker(station, data, variable) {
-    const boatIcon = L.divIcon({
-        className: 'boat-marker',
-        html: `<img src="${station.icon}" width="32" height="32"/>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-    });
-
-    if (boatMarkers[station.id]) {
-        map.removeLayer(boatMarkers[station.id]);
-    }
-
-    const variableInfo = createPopupContent(station, data.latest);
-    const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
-    boatMarker.bindPopup(variableInfo);
-    boatMarkers[station.id] = boatMarker;
 }
 
 /**
@@ -546,7 +389,6 @@ function updateFixedStationMarker(station, data) {
     fixedStationMarkers[station.id] = Marker;
 }
 
-
 /**
  * Updates the wind marker for a station using the new API format.
  *
@@ -575,7 +417,7 @@ function updateWindMarker(station, data, windImagesUrl) {
     // Create a rotated wind icon
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"
                style="transform: rotate(${windDirection + 90}deg);" />`,
         iconSize: [80, 80],
         iconAnchor: [40, 40]
@@ -596,10 +438,9 @@ function updateWindMarker(station, data, windImagesUrl) {
     windMarkers[station.id] = windMarker;
 }
 
-
 /**
  * Gets the appropriate wind speed icon based on wind speed.
- * 
+ *
  * @param {string} basePath - The base path for wind images.
  * @param {number} windSpeed - The wind speed in meters per second.
  * @param {number} windDirection - The wind direction value.
@@ -626,10 +467,9 @@ function getWindSpeedIcon(basePath, windSpeed, windDirection) {
     return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
 }
 
-
 /**
  * Gets the color scale based on the variable and its min/max values.
- * 
+ *
  * @param {string} variable - The variable to display.
  * @param {number} minValue - The minimum value for the color scale.
  * @param {number} maxValue - The maximum value for the color scale.
