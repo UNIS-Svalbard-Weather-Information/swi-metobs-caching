@@ -401,11 +401,7 @@ function getWindDirectionLetter(degrees) {
  * @param {Object} station - The fixed station data.
  * @param {Object|null} data - The station data, containing timeseries measurements.
  */
-async function updateFixedStationMarker(station, data, windImagesUrl) {
-    // Fetch the configuration file
-    const response = await fetch(variablesConfigUrl);
-    const config = await response.json();
-    const variablesConfig = config.variables;
+function updateFixedStationMarker(station, data, windImagesUrl) {
 
     // Get the selected variable name from the dropdown
     const selectedVariableName = document.getElementById('variable-select-dropdown').value;
@@ -413,7 +409,7 @@ async function updateFixedStationMarker(station, data, windImagesUrl) {
     let unit = '';
 
     // Find the selected variable configuration
-    const selectedVariableConfig = variablesConfig[selectedVariableName];
+    const selectedVariableConfig = configVariablesData[selectedVariableName];
 
     // Extract the latest available data from timeseries
     const latestData = (data && data.timeseries && data.timeseries.length > 0)

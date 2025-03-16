@@ -4,6 +4,9 @@ let drawnItems;
 let colorBar;
 let activeLayers = {};
 
+let configVariablesLoaded = false;
+let configVariablesData = null;
+
 // Define default extent (latitude, longitude, zoom level)
 const defaultExtent = {
     lat: 78.3, 
@@ -621,4 +624,23 @@ function downloadGPX(layerGroup) {
 
     // Remove the temporary anchor from the document
     document.body.removeChild(a);
+}
+
+async function loadVariablesConfig(variablesConfigUrl) {
+    if (!configVariablesLoaded) {
+        try {
+            const response = await fetch(variablesConfigUrl);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            let configResponse = await response.json();
+            configVariablesData = configResponse['variables']
+            configVariablesLoaded = true;
+            console.log("Configuration loaded");
+        } catch (error) {
+            console.error("Failed to load configuration:", error);
+        }
+    } else {
+        console.log("Configuration already loaded.");
+    }
 }
