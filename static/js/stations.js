@@ -392,10 +392,17 @@ function getWindDirectionLetter(degrees) {
  * @param {Object|null} data - The station data, containing timeseries measurements.
  */
 function updateFixedStationMarker(station, data) {
-    const Icon = L.icon({
-        iconUrl: station.icon,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+    // Create a custom icon with the marker image and text
+    const customIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `
+        <div style="text-align: center;">
+            <img src="${station.icon}" style="width: 32px; height: 32px; display: block; margin: 0 auto;" />
+            <div style="margin-top: 2px;">Test OK</div>
+        </div>
+        `,
+        iconSize: [60, 32], // Adjust size as needed
+        iconAnchor: [30, 16] // Adjust anchor as needed
     });
 
     // Remove existing marker if it exists
@@ -411,10 +418,10 @@ function updateFixedStationMarker(station, data) {
     // Create popup content using latest data
     const variableInfo = createPopupContent(station, latestData);
 
-    // Add the marker to the map
-    const Marker = L.marker([station.location.lat, station.location.lon], { icon: Icon }).addTo(map);
-    Marker.bindPopup(variableInfo);
-    fixedStationMarkers[station.id] = Marker;
+    // Add the marker to the map with the custom icon
+    const marker = L.marker([station.location.lat, station.location.lon], { icon: customIcon }).addTo(map);
+    marker.bindPopup(variableInfo);
+    fixedStationMarkers[station.id] = marker;
 }
 
 /**
