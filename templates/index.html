@@ -103,6 +103,7 @@
     const variablesConfigUrl = '{{ url_for("static", filename="config/variables.json") }}';
     const windImagesUrl = '{{ url_for("static", filename="images/wind") }}';
     document.addEventListener('DOMContentLoaded', () => {
+      loadVariablesConfig(variablesConfigUrl);
       initializeProjectControls(windImagesUrl);
       populateVariablesMenu(variablesConfigUrl);
       loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
