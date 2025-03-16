@@ -77,13 +77,8 @@ function loadStations(windImagesUrl) {
     });
 }
 
-function populateVariablesMenu(variablesConfigUrl){
-    // Fetch the configuration file and populate the dropdown
-    fetch(variablesConfigUrl)
-        .then(response => response.json())
-        .then(data => {
+function populateVariablesMenu(variables){
             const selectDropdown = document.getElementById('variable-select-dropdown');
-            const variables = data.variables;
 
             // Add a "None" option
             const noneOption = document.createElement('option');
@@ -107,8 +102,6 @@ function populateVariablesMenu(variablesConfigUrl){
                 selectDropdown.value = defaultVariable;
             }
 
-        })
-        .catch(error => console.error('Error fetching the configuration file:', error));
 }
 
 /**
