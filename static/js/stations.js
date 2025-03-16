@@ -50,27 +50,24 @@ function loadStations(windImagesUrl) {
         fetch(offlineStationsUrl).then(response => response.json())
     ])
     .then(([onlineData, offlineData]) => {
-        // Ensure responses contain valid station lists
         const onlineStations = onlineData.online_stations || [];
         offlineStations = offlineData.offline_stations || [];
 
-        // Separate online stations into fixed categories
         fixedStations = onlineStations.filter(station => station.type === "fixed");
 
-        // Initialize visibility state (only online stations are visible by default)
         onlineStations.forEach(station => stationVisibility[station.id] = true);
         offlineStations.forEach(station => stationVisibility[station.id] = false);
 
-        // Initialize UI with both online and offline stations
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
-        const initialDuration = 0; // Initial duration is set to 0
+        const initialDuration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
         const initialVariable = document.getElementById('variable-select-dropdown').value;
+        //console.log(`Initial load - Duration: ${initialDuration}, Variable: ${initialVariable}`); // Debugging line
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
 
         setInterval(() => {
-            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
+            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
             const variable = document.getElementById('variable-select-dropdown').value;
             updateStationsData(duration, windImagesUrl, variable);
         }, 60000); // Auto update stations every minute
@@ -215,10 +212,24 @@ function initializeProjectControls(windImagesUrl) {
  */
 function initializeEventListeners(windImagesUrl) {
     const variableSelect = document.getElementById('variable-select-dropdown');
+    const trackDurationSelect = document.getElementById('track-duration-select');
+
+    // Ensure track-duration-select has a default value
+    if (!trackDurationSelect.getAttribute('value')) {
+        trackDurationSelect.setAttribute('value', '0');
+    }
 
     variableSelect.addEventListener('change', () => {
-        const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
+        const duration = parseInt(trackDurationSelect.getAttribute('value'), 10) || 0;
         const variable = variableSelect.value;
+        //console.log(`Variable changed - Duration: ${duration}, Variable: ${variable}`); // Debugging line
+        updateStationsData(duration, windImagesUrl, variable);
+    });
+
+    trackDurationSelect.addEventListener('change', () => {
+        const duration = parseInt(trackDurationSelect.getAttribute('value'), 10) || 0;
+        const variable = variableSelect.value;
+        //console.log(`Duration changed - Duration: ${duration}, Variable: ${variable}`); // Debugging line
         updateStationsData(duration, windImagesUrl, variable);
     });
 }
@@ -409,7 +420,7 @@ async function updateFixedStationMarker(station, data, windImagesUrl) {
         ? data.timeseries[0] // Get the most recent measurement
         : null;
 
-    if (selectedVariableConfig) {
+    if (selectedVariableConfig && latestData) {
         unit = selectedVariableConfig.unit;
         variableValue = latestData[selectedVariableName];
     }
@@ -420,11 +431,12 @@ async function updateFixedStationMarker(station, data, windImagesUrl) {
         html: `
         <div style="text-align: center;">
             <img src="${station.icon}" style="width: 32px; height: 32px; display: block; margin: 0 auto;" />
+            ${selectedVariableName && variableValue !== undefined && unit ? `
             <div style="margin-top: 2px;">
                 <span style="background-color: rgba(255, 255, 255, 0.6); padding: 2px 5px; border-radius: 3px;">
                     ${variableValue} ${unit}
                 </span>
-            </div>
+            </div>` : ''}
         </div>
         `,
         iconSize: [60, 32], // Adjust size as needed
@@ -444,8 +456,10 @@ async function updateFixedStationMarker(station, data, windImagesUrl) {
     marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = marker;
 
-    updateWindMarker(station, data, windImagesUrl)
+    updateWindMarker(station, data, windImagesUrl);
 }
+
+
 
 /**
  * Updates the wind marker for a station using the new API format.
