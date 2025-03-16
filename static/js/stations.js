@@ -320,8 +320,7 @@ function updateFixedStationData(station, windImagesUrl, duration) {
     fetchStationData(station, duration)
         .then(data => {
             if (data) {
-                updateFixedStationMarker(station, data);
-                updateWindMarker(station, data, windImagesUrl);
+                updateFixedStationMarker(station, data, windImagesUrl);
             }
         });
 }
@@ -391,14 +390,41 @@ function getWindDirectionLetter(degrees) {
  * @param {Object} station - The fixed station data.
  * @param {Object|null} data - The station data, containing timeseries measurements.
  */
-function updateFixedStationMarker(station, data) {
+async function updateFixedStationMarker(station, data, windImagesUrl) {
+    // Fetch the configuration file
+    const response = await fetch(variablesConfigUrl);
+    const config = await response.json();
+    const variablesConfig = config.variables;
+
+    // Get the selected variable name from the dropdown
+    const selectedVariableName = document.getElementById('variable-select-dropdown').value;
+    let variableValue = 'N/A';
+    let unit = '';
+
+    // Find the selected variable configuration
+    const selectedVariableConfig = variablesConfig[selectedVariableName];
+
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
+
+    if (selectedVariableConfig) {
+        unit = selectedVariableConfig.unit;
+        variableValue = latestData[selectedVariableName];
+    }
+
     // Create a custom icon with the marker image and text
     const customIcon = L.divIcon({
         className: 'custom-icon',
         html: `
         <div style="text-align: center;">
             <img src="${station.icon}" style="width: 32px; height: 32px; display: block; margin: 0 auto;" />
-            <div style="margin-top: 2px;">Test OK</div>
+            <div style="margin-top: 2px;">
+                <span style="background-color: rgba(255, 255, 255, 0.6); padding: 2px 5px; border-radius: 3px;">
+                    ${variableValue} ${unit}
+                </span>
+            </div>
         </div>
         `,
         iconSize: [60, 32], // Adjust size as needed
@@ -410,11 +436,6 @@ function updateFixedStationMarker(station, data) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
-    // Extract the latest available data from timeseries
-    const latestData = (data && data.timeseries && data.timeseries.length > 0)
-        ? data.timeseries[0] // Get the most recent measurement
-        : null;
-
     // Create popup content using latest data
     const variableInfo = createPopupContent(station, latestData);
 
@@ -422,6 +443,8 @@ function updateFixedStationMarker(station, data) {
     const marker = L.marker([station.location.lat, station.location.lon], { icon: customIcon }).addTo(map);
     marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = marker;
+
+    updateWindMarker(station, data, windImagesUrl)
 }
 
 /**
