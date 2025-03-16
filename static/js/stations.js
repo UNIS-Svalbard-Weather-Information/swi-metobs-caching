@@ -80,6 +80,40 @@ function loadStations(windImagesUrl) {
     });
 }
 
+function populateVariablesMenu(variablesConfigUrl){
+    // Fetch the configuration file and populate the dropdown
+    fetch(variablesConfigUrl)
+        .then(response => response.json())
+        .then(data => {
+            const selectDropdown = document.getElementById('variable-select-dropdown');
+            const variables = data.variables;
+
+            // Add a "None" option
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'None';
+            selectDropdown.appendChild(noneOption);
+
+            // Populate the dropdown with variable names
+            for (const variable in variables) {
+                if (variables.hasOwnProperty(variable)) {
+                    const option = document.createElement('option');
+                    option.value = variable;
+                    option.textContent = variables[variable].name;
+                    selectDropdown.appendChild(option);
+                }
+            }
+
+            // Set the default selected variable
+            const defaultVariable = Object.keys(variables).find(key => variables[key].default);
+            if (defaultVariable) {
+                selectDropdown.value = defaultVariable;
+            }
+
+        })
+        .catch(error => console.error('Error fetching the configuration file:', error));
+}
+
 /**
  * Initializes the project controls UI with checkboxes for each station.
  *
