@@ -28,8 +28,8 @@
     <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center" />
     <h1>Svalbard Weather Information</h1>
 
-      <div id="mobile_station_menu" style="display: none;>
-        <h2>Time & Variable Control</h2>
+
+        <h2>Time</h2>
         <!-- Remove or comment out the existing track-duration-select input -->
         <!-- <input type="range" id="track-duration-select" min="-24" max="24" step="1" value="0"> -->
 
@@ -46,7 +46,7 @@
         </div>
         <!--<div id="duration-display">Now</div>-->
 
-
+        <div id="mobile_station_menu" style="display: none;>
         <br />
         <label for="variable-select-dropdown">Select a Variable:</label>
         <select id="variable-select-dropdown">
@@ -87,7 +87,7 @@
   <script src="libs/Leaflet.Control.Layers.Tree/L.Control.Layers.Tree.js"></script>
   <script src="libs/togpx-master/togpx.js"></script>
   <script src="{{ url_for('static', filename='js/map.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/stations.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/stations_dashboard.js') }}"></script>
   <script src="{{ url_for('static', filename='js/controls.js') }}"></script>
   <script src="{{ url_for('static', filename='js/legend.js') }}"></script>
   <script>
