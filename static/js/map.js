@@ -637,6 +637,7 @@ async function loadVariablesConfig(variablesConfigUrl) {
             configVariablesData = configResponse['variables']
             configVariablesLoaded = true;
             console.log("Configuration loaded");
+            populateVariablesMenu(configVariablesData);
         } catch (error) {
             console.error("Failed to load configuration:", error);
         }
