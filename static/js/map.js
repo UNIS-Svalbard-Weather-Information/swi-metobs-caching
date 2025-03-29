@@ -56,6 +56,9 @@ const defaultExtent = {
  * ```
  */
 function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
+    // Call loadStations without waiting for it to complete
+    loadStations(windImagesUrl);
+
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
@@ -194,12 +197,11 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                     collapsed: true
                 }).addTo(map);
 
-                loadStations(windImagesUrl);
                 initializeLeafletDraw();
                 initializeLeafletMeasure();
                 document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
 
-                // Set up interval to refetch GeoJSON data every minute
+                // Set up interval to refetch GeoJSON data every 15 minutes
                 setInterval(() => {
                     geoJsonLayers.forEach(({ layer, geojsonLayer }) => {
                         fetch(layer.url)
@@ -209,10 +211,11 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                                 legendControl.update(); // Update legend after refetching data
                             });
                     });
-                }, 900000); // 900000 milliseconds = 15 minute
+                }, 900000); // 900000 milliseconds = 15 minutes
             });
         });
 }
+
 
 // Helper function to add layers to the tree structure
 function addLayerToTree(tree, category, name, layer) {
