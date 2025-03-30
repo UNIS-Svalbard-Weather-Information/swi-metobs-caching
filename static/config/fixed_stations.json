@@ -19,7 +19,7 @@
     {
         "id": "SN99886",
         "name": "Kapp Thordsen",
-        "project": "iwin_lighthouse",
+        "project": "IWIN Lighthouse",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
@@ -152,7 +152,7 @@
     {
         "id": "SN99888",
         "name": "Narveneset",
-        "project": "iwin_lighthouse",
+        "project": "IWIN Lighthouse",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
@@ -245,20 +245,20 @@
     {
         "id": "SN99864",
         "name": "NYBYEN",
-        "project": "Met Norway",
+        "project": "PermaMeteoCommunity",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/metAWS.png",
+        "icon": "/static/images/metAWS_pmc.png",
         "lat": 78.201609,
         "lon": 15.59266
     },
     {
         "id": "SN99885",
         "name": "Bohemanneset",
-        "project": "iwin_lighthouse",
+        "project": "IWIN Lighthouse",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
@@ -273,13 +273,13 @@
     {
         "id": "SN99858",
         "name": "VANNLEDNINGSDALEN",
-        "project": "Met Norway",
+        "project": "PermaMeteoCommunity",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/metAWS.png",
+        "icon": "/static/images/metAWS_pmc.png",
         "lat": 78.2128,
         "lon": 15.633
     },
@@ -319,7 +319,7 @@
             "airTemperature": "air_temperature",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/metAWS.png",
+        "icon": "/static/images/metAWS_pmc.png",
         "lat": 78.2148,
         "lon": 15.6065
     },
@@ -440,7 +440,7 @@
     {
         "id": "SN99887",
         "name": "Daudmannsodden",
-        "project": "iwin_lighthouse",
+        "project": "IWIN Lighthouse",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
@@ -617,7 +617,7 @@
     {
         "id": "SN99883",
         "name": "ISFJORDEN - G\u00c5S\u00d8YANE",
-        "project": "iwin_lighthouse",
+        "project": "IWIN Lighthouse",
         "url": "https://frost.met.no/sources/v0.jsonld",
         "variables": {
             "airTemperature": "air_temperature",
