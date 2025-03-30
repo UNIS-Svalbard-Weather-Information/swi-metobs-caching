@@ -353,28 +353,24 @@ function createPopupContent(station, dataPoint) {
 
     let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
 
-    if (variables.includes("airTemperature")) {
-        content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
-    }
+    // Iterate over the config variables
+    for (const [key, variableConfig] of Object.entries(configVariablesData)) {
+        if (variables.includes(key)) {
+            const value = dataPoint[key] !== null && dataPoint[key] !== undefined ? dataPoint[key].toFixed(2) : 'N/A';
+            let displayValue = value;
 
-    if (variables.includes("seaSurfaceTemperature")) {
-        content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
-    }
+            // Append wind direction letter if applicable
+            if (key === 'windDirection' && windDirectionLetter !== 'N/A') {
+                displayValue += `° (${windDirectionLetter})`;
+            }
 
-    if (variables.includes("windSpeed")) {
-        content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
-    }
-
-    if (variables.includes("windDirection")) {
-        content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
-    }
-
-    if (variables.includes("relativeHumidity")) {
-        content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
+            content += `${variableConfig.name}: ${displayValue} ${variableConfig.unit}<br>`;
+        }
     }
 
     return content;
 }
+
 
 /**
  * Converts wind direction in degrees to a compass direction letter.

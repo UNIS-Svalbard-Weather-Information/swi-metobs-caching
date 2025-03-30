@@ -17,8 +17,15 @@
         "windSpeed": {
             "unit": "m/s",
             "minValue": 0,
-            "maxValue": 100,
+            "maxValue": 200,
             "name" : "Wind Speed",
+            "default" : false
+        },
+        "windSpeedGust": {
+            "unit": "m/s",
+            "minValue": 0,
+            "maxValue": 300,
+            "name" : "Wind Gust",
             "default" : false
         },
         "windDirection": {
@@ -33,6 +40,13 @@
             "minValue": 0,
             "maxValue": 100,
             "name" : "Relative Humidity",
+            "default" : false
+        },
+        "surfaceSnowThickness": {
+            "unit": "cm",
+            "minValue": 0,
+            "maxValue": 300,
+            "name" : "Snow Thickness",
             "default" : false
         }
     }
