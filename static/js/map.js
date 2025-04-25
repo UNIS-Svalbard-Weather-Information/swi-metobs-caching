@@ -4,6 +4,9 @@ let drawnItems;
 let colorBar;
 let activeLayers = {};
 
+let configVariablesLoaded = false;
+let configVariablesData = null;
+
 // Define default extent (latitude, longitude, zoom level)
 const defaultExtent = {
     lat: 78.3, 
@@ -53,6 +56,9 @@ const defaultExtent = {
  * ```
  */
 function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
+    // Call loadStations without waiting for it to complete
+    loadStations(windImagesUrl);
+
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
@@ -191,12 +197,11 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                     collapsed: true
                 }).addTo(map);
 
-                loadStations(windImagesUrl);
                 initializeLeafletDraw();
                 initializeLeafletMeasure();
                 document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
 
-                // Set up interval to refetch GeoJSON data every minute
+                // Set up interval to refetch GeoJSON data every 15 minutes
                 setInterval(() => {
                     geoJsonLayers.forEach(({ layer, geojsonLayer }) => {
                         fetch(layer.url)
@@ -206,10 +211,11 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                                 legendControl.update(); // Update legend after refetching data
                             });
                     });
-                }, 900000); // 900000 milliseconds = 15 minute
+                }, 900000); // 900000 milliseconds = 15 minutes
             });
         });
 }
+
 
 // Helper function to add layers to the tree structure
 function addLayerToTree(tree, category, name, layer) {
@@ -621,4 +627,24 @@ function downloadGPX(layerGroup) {
 
     // Remove the temporary anchor from the document
     document.body.removeChild(a);
+}
+
+async function loadVariablesConfig(variablesConfigUrl) {
+    if (!configVariablesLoaded) {
+        try {
+            const response = await fetch(variablesConfigUrl);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            let configResponse = await response.json();
+            configVariablesData = configResponse['variables']
+            configVariablesLoaded = true;
+            console.log("Configuration loaded");
+            populateVariablesMenu(configVariablesData);
+        } catch (error) {
+            console.error("Failed to load configuration:", error);
+        }
+    } else {
+        console.log("Configuration already loaded.");
+    }
 }

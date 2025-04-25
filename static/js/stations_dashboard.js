@@ -1,4 +1,6 @@
 let forecast = false; // Set to true to enable forecast, false to disable
+let h_past = 24
+let h_forecast = 24
 
 /**
  * Object to store track layers for each station.
@@ -37,6 +39,12 @@ let offlineStations = [];
 let stationVisibility = {};
 
 /**
+ * Cache object to store fetched data and timestamps.
+ * @type {Object.<string, {data: any, timestamp: number}>}
+ */
+let dataCache = {};
+
+/**
  * Loads both online and offline stations from the API and initializes the map controls.
  *
  * @param {string} windImagesUrl - Base URL for wind images.
@@ -45,11 +53,12 @@ function loadStations(windImagesUrl) {
     const onlineStationsUrl = "/api/station/online?type=all";
     const offlineStationsUrl = "/api/station/offline?type=all";
 
-    Promise.all([
-        fetch(onlineStationsUrl).then(response => response.json()),
-        fetch(offlineStationsUrl).then(response => response.json())
-    ])
-    .then(([onlineData, offlineData]) => {
+    const currentTime = new Date();
+    const cacheKey = "stationsData";
+
+    // Check if data is in cache and if it's still valid
+    if (dataCache[cacheKey] && (currentTime - dataCache[cacheKey].timestamp) < 10 * 60 * 1000) {
+        const { onlineData, offlineData } = dataCache[cacheKey].data;
         const onlineStations = onlineData.online_stations || [];
         offlineStations = offlineData.offline_stations || [];
 
@@ -63,18 +72,38 @@ function loadStations(windImagesUrl) {
 
         const initialDuration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
         const initialVariable = document.getElementById('variable-select-dropdown').value;
-        //console.log(`Initial load - Duration: ${initialDuration}, Variable: ${initialVariable}`); // Debugging line
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
+    } else {
+        Promise.all([
+            fetch(onlineStationsUrl).then(response => response.json()),
+            fetch(offlineStationsUrl).then(response => response.json())
+        ])
+        .then(([onlineData, offlineData]) => {
+            const onlineStations = onlineData.online_stations || [];
+            offlineStations = offlineData.offline_stations || [];
 
-        setInterval(() => {
-            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
-            const variable = document.getElementById('variable-select-dropdown').value;
-            updateStationsData(duration, windImagesUrl, variable);
-        }, 60000); // Auto update stations every minute
-    })
-    .catch(error => {
-        console.error("Error loading stations:", error);
-    });
+            fixedStations = onlineStations.filter(station => station.type === "fixed");
+
+            onlineStations.forEach(station => stationVisibility[station.id] = true);
+            offlineStations.forEach(station => stationVisibility[station.id] = false);
+
+            initializeProjectControls(windImagesUrl);
+            initializeEventListeners(windImagesUrl);
+
+            const initialDuration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
+            const initialVariable = document.getElementById('variable-select-dropdown').value;
+            updateStationsData(initialDuration, windImagesUrl, initialVariable);
+
+            // Update cache with new data and timestamp
+            dataCache[cacheKey] = {
+                data: { onlineData, offlineData },
+                timestamp: currentTime
+            };
+        })
+        .catch(error => {
+            console.error("Error loading stations:", error);
+        });
+    }
 }
 
 function populateVariablesMenu(variables){
@@ -243,25 +272,42 @@ function updateStationsData(duration, windImagesUrl, variable) {
 }
 
 /**
- * Fetches data for a specific station.
+ * Fetches data for a specific station with caching.
  *
  * @param {Object} station - The station object containing its ID.
  * @param {number} duration - The duration for which to fetch the data.
  * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of an error.
  */
 function fetchStationData(station, duration) {
-    return fetch(`/api/station-data/${station.id}?data=${duration}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error(`Error fetching data for station ${station.id}:`, error);
-            return null;
-        });
+    const currentTime = new Date();
+    const cacheKey = `station_${station.id}_${duration}`;
+
+    // Check if data is in cache and if it's still valid
+    if (dataCache[cacheKey] && (currentTime - dataCache[cacheKey].timestamp) < 10 * 60 * 1000) {
+        return Promise.resolve(dataCache[cacheKey].data);
+    } else {
+        return fetch(`/api/station-data/${station.id}?data=${duration}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Update cache with new data and timestamp
+                dataCache[cacheKey] = {
+                    data: data,
+                    timestamp: currentTime
+                };
+                return data;
+            })
+            .catch(error => {
+                console.error(`Error fetching data for station ${station.id}:`, error);
+                return null;
+            });
+    }
 }
+
 
 /**
  * Toggles the visibility of a station's data on the map.
@@ -353,24 +399,28 @@ function createPopupContent(station, dataPoint) {
 
     let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
 
-    // Iterate over the config variables
-    for (const [key, variableConfig] of Object.entries(configVariablesData)) {
-        if (variables.includes(key)) {
-            const value = dataPoint[key] !== null && dataPoint[key] !== undefined ? dataPoint[key].toFixed(2) : 'N/A';
-            let displayValue = value;
+    if (variables.includes("airTemperature")) {
+        content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
+    }
 
-            // Append wind direction letter if applicable
-            if (key === 'windDirection' && windDirectionLetter !== 'N/A') {
-                displayValue += `° (${windDirectionLetter})`;
-            }
+    if (variables.includes("seaSurfaceTemperature")) {
+        content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
+    }
 
-            content += `${variableConfig.name}: ${displayValue} ${variableConfig.unit}<br>`;
-        }
+    if (variables.includes("windSpeed")) {
+        content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
+    }
+
+    if (variables.includes("windDirection")) {
+        content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
+    }
+
+    if (variables.includes("relativeHumidity")) {
+        content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
     }
 
     return content;
 }
-
 
 /**
  * Converts wind direction in degrees to a compass direction letter.
@@ -554,6 +604,7 @@ function updateTimeline() {
   // Calculate the position of the cursor relative to the center
   const cursorPosition = ((hoursFromNow / 48) * timelineWidth) + (timelineWidth / 2);
 
+
   // Check if forecast is disabled and hoursFromNow is in the future
   if (!forecast && hoursFromNow > 0) {
     alert("Forecast is not available.");
@@ -631,54 +682,24 @@ function updateTimeline() {
 // Initialize the timeline
 updateTimeline();
 
-// Add event listeners to update the timeline when the cursor is dragged
-const cursor = document.getElementById('track-duration-select');
-let isDragging = false;
-let startX;
-let startLeft;
-
-const handleMouseDown = (e) => {
-  isDragging = true;
-  startX = e.clientX || e.touches[0].clientX;
-  startLeft = parseInt(window.getComputedStyle(cursor).left, 10);
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('touchmove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
-  document.addEventListener('touchend', handleMouseUp);
-};
-
-const handleMouseMove = (e) => {
-  if (!isDragging) return;
-  const x = e.clientX || e.touches[0].clientX;
-  const walk = (x - startX);
-  const newLeft = startLeft + walk;
-  const timelineWidth = document.querySelector('.timeline').offsetWidth;
-
-  // Ensure the cursor stays within bounds
-  if (newLeft >= 0 && newLeft <= timelineWidth) {
-    cursor.style.left = `${newLeft}px`;
-
-    // Update the value based on cursor position relative to the center
-    const hoursFromNow = ((newLeft - (timelineWidth / 2)) / timelineWidth) * 48;
-    cursor.setAttribute('value', hoursFromNow.toFixed(0));
-
-    // Update the duration display and tooltip
-    updateTimeline();
+// Automatically update the timeline every 5 seconds
+let hoursFromNow = -h_past;
+setInterval(() => {
+  if (forecast) {
+    hoursFromNow = (hoursFromNow + 1);
+    if (hoursFromNow > h_forecast) {
+      hoursFromNow = -h_past; // Reset to 0 after reaching -24 hours
+    }
+  } else {
+    hoursFromNow = (hoursFromNow + 1);
+    if (hoursFromNow > 0) {
+      hoursFromNow = -h_past; // Reset to 0 after reaching -24 hours
+    }
   }
-};
+  document.getElementById('track-duration-select').setAttribute('value', hoursFromNow.toString());
+  updateTimeline();
 
-const handleMouseUp = () => {
-  isDragging = false;
-  document.removeEventListener('mousemove', handleMouseMove);
-  document.removeEventListener('touchmove', handleMouseMove);
-  document.removeEventListener('mouseup', handleMouseUp);
-  document.removeEventListener('touchend', handleMouseUp);
-
-  // Trigger station data update
-  const duration = parseInt(cursor.getAttribute('value'), 10);
   const variable = document.getElementById('variable-select-dropdown').value;
-  updateStationsData(duration, windImagesUrl, variable);
-};
+  updateStationsData(hoursFromNow, windImagesUrl, variable);
+}, 1000); // Adjust the interval as needed
 
-cursor.addEventListener('mousedown', handleMouseDown);
-cursor.addEventListener('touchstart', handleMouseDown);
