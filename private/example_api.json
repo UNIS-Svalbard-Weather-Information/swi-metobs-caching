@@ -1,0 +1,10 @@
+[
+  {
+    "datasource" : "FrostSource",
+    "api_key" : "[YOUR API KEY]"
+  },
+  {
+    "datasource" : "IWINFixedSource",
+    "api_key" : ""
+  }
+]

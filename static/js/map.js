@@ -4,6 +4,9 @@ let drawnItems;
 let colorBar;
 let activeLayers = {};
 
+let configVariablesLoaded = false;
+let configVariablesData = null;
+
 // Define default extent (latitude, longitude, zoom level)
 const defaultExtent = {
     lat: 78.3, 
@@ -53,40 +56,41 @@ const defaultExtent = {
  * ```
  */
 function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
-    // Fetch the layer configuration JSON
+    // Call loadStations without waiting for it to complete
+    loadStations(windImagesUrl);
+
     fetch(layerConfigUrl)
         .then(response => response.json())
         .then(layerConfig => {
-            // Create a Leaflet map instance with the default extent (latitude, longitude, zoom level)
             map = L.map('map').setView([defaultExtent.lat, defaultExtent.lon], defaultExtent.zoom);
 
-            // Define containers for base layers and additional layers
-            const baseLayers = {};
-            const layerControl = L.control.layers(baseLayers, additionalLayers).addTo(map);
+            const baseLayersTree = {
+                label: 'Base Layers',
+                children: []
+            };
+            additionalLayers = {};
 
-            // Create a legend control and add it to the map
             const legendControl = L.control({ position: 'bottomright' });
             legendControl.onAdd = function () {
-                this._div = L.DomUtil.create('div', 'info legend'); // Create a div for the legend
-                this.update(); // Initialize legend content
+                this._div = L.DomUtil.create('div', 'info legend');
+                this.update();
                 return this._div;
             };
             legendControl.update = function () {
-                updateLegend(this); // Function to update the legend dynamically
+                updateLegend(this);
             };
             legendControl.addTo(map);
 
-            // Process and add base maps to the map
             layerConfig.baseMaps.forEach(layer => {
                 let layerObj;
                 switch (layer.type) {
-                    case 'tile': // Tile layer
+                    case 'tile':
                         layerObj = L.tileLayer(layer.url);
                         break;
-                    case 'arcgis': // ArcGIS tiled layer
+                    case 'arcgis':
                         layerObj = L.esri.tiledMapLayer({ url: layer.url });
                         break;
-                    case 'wms': // WMS layer
+                    case 'wms':
                         layerObj = L.tileLayer.wms(layer.url, {
                             layers: layer.layers,
                             format: 'image/png',
@@ -94,103 +98,134 @@ function loadMap(layerConfigUrl, mobileStationConfigUrl, fixedStationConfigUrl, 
                         });
                         break;
                 }
-                baseLayers[layer.name] = layerObj;
 
-                // Add the first base map to the map by default
-                if (Object.keys(baseLayers).length === 1) {
+                addLayerToTree(baseLayersTree, layer.category, layer.name, layerObj);
+
+                if (layer.default || Object.keys(baseLayersTree.children).length === 1) {
                     layerObj.addTo(map);
                 }
-
-                // Add base layer to the control panel
-                layerControl.addBaseLayer(layerObj, layer.name);
             });
 
-            // Process and add additional layers to the map
-            layerConfig.additionalLayers.forEach(layer => {
-                let layerObj;
-                switch (layer.type) {
-                    case 'tile': // Tile layer
-                        layerObj = L.tileLayer(layer.url);
-                        break;
-                    case 'arcgis': // ArcGIS dynamic layer
-                        layerObj = L.esri.dynamicMapLayer({
-                            url: layer.url,
-                            layers: layer.layers
+            const overlayLayersTree = {
+                label: 'Overlay Layers',
+                children: []
+            };
+
+            const geoJsonLayers = [];
+
+            const geoJsonPromises = layerConfig.additionalLayers.map(layer => {
+                if (layer.type === 'geojson') {
+                    return fetch(layer.url)
+                        .then(response => response.json())
+                        .then(geojsonData => {
+                            const style = feature => ({
+                                color: feature.properties.color || 'black',
+                                weight: feature.properties.weight || 2,
+                                opacity: feature.properties.opacity || 1,
+                                fillColor: feature.properties.color || 'blue',
+                                fillOpacity: feature.properties.fillOpacity || 0.9
+                            });
+
+                            const geojsonLayer = L.geoJSON(geojsonData, { style });
+                            additionalLayers[layer.name] = geojsonLayer;
+                            addLayerToTree(overlayLayersTree, layer.category, layer.name, geojsonLayer);
+
+                            if (layer.default) {
+                                geojsonLayer.addTo(map);
+                                activeLayers[layer.name] = layer;
+                                legendControl.update();
+                            }
+
+                            geojsonLayer.on('add', function () {
+                                activeLayers[layer.name] = layer;
+                                legendControl.update();
+                                addOpacityControl(layer.name, geojsonLayer);
+                            });
+                            geojsonLayer.on('remove', function () {
+                                delete activeLayers[layer.name];
+                                legendControl.update();
+                                removeOpacityControl(layer.name);
+                            });
+
+                            geoJsonLayers.push({ layer, geojsonLayer });
                         });
-                        break;
-                    case 'wms': // WMS layer
-                        layerObj = L.tileLayer.wms(layer.url, {
-                            layers: layer.layers,
-                            format: 'image/png',
-                            transparent: true
-                        });
-                        break;
-                    case 'geojson': // GeoJSON layer
+                } else {
+                    let layerObj;
+                    switch (layer.type) {
+                        case 'tile':
+                            layerObj = L.tileLayer(layer.url);
+                            break;
+                        case 'arcgis':
+                            layerObj = L.esri.dynamicMapLayer({
+                                url: layer.url,
+                                layers: layer.layers
+                            });
+                            break;
+                        case 'wms':
+                            layerObj = L.tileLayer.wms(layer.url, {
+                                layers: layer.layers,
+                                format: 'image/png',
+                                transparent: true
+                            });
+                            break;
+                    }
+
+                    additionalLayers[layer.name] = layerObj;
+                    addLayerToTree(overlayLayersTree, layer.category, layer.name, layerObj);
+
+                    if (layer.default) {
+                        layerObj.addTo(map);
+                        activeLayers[layer.name] = layer;
+                        legendControl.update();
+                    }
+
+                    layerObj.on('add', function () {
+                        activeLayers[layer.name] = layer;
+                        legendControl.update();
+                        addOpacityControl(layer.name, layerObj);
+                    });
+                    layerObj.on('remove', function () {
+                        delete activeLayers[layer.name];
+                        legendControl.update();
+                        removeOpacityControl(layer.name);
+                    });
+                }
+            });
+
+            Promise.all(geoJsonPromises).then(() => {
+                L.control.layers.tree(baseLayersTree, overlayLayersTree, {
+                    collapsed: true
+                }).addTo(map);
+
+                initializeLeafletDraw();
+                initializeLeafletMeasure();
+                document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
+
+                // Set up interval to refetch GeoJSON data every 15 minutes
+                setInterval(() => {
+                    geoJsonLayers.forEach(({ layer, geojsonLayer }) => {
                         fetch(layer.url)
                             .then(response => response.json())
                             .then(geojsonData => {
-                                // Define styles for GeoJSON features
-                                const style = feature => ({
-                                    color: feature.properties.color || 'black',
-                                    weight: feature.properties.weight || 2,
-                                    opacity: feature.properties.opacity || 1,
-                                    fillColor: feature.properties.color || 'blue',
-                                    fillOpacity: feature.properties.fillOpacity || 0.9
-                                });
-
-                                // Create the GeoJSON layer
-                                const geojsonLayer = L.geoJSON(geojsonData, { style });
-
-                                // Add the GeoJSON layer to additional layers
-                                additionalLayers[layer.name] = geojsonLayer;
-                                layerControl.addOverlay(geojsonLayer, layer.name);
-
-                                // Update legend and controls when the layer is toggled
-                                geojsonLayer.on('add', function () {
-                                    activeLayers[layer.name] = layer;
-                                    legendControl.update();
-                                    addOpacityControl(layer.name, geojsonLayer);
-                                });
-                                geojsonLayer.on('remove', function () {
-                                    delete activeLayers[layer.name];
-                                    legendControl.update();
-                                    removeOpacityControl(layer.name);
-                                });
+                                geojsonLayer.clearLayers().addData(geojsonData);
+                                legendControl.update(); // Update legend after refetching data
                             });
-                        return; // Exit early for GeoJSON to avoid duplicate processing
-                }
-
-                // Add the non-GeoJSON layer to additional layers
-                additionalLayers[layer.name] = layerObj;
-                layerControl.addOverlay(layerObj, layer.name);
-
-                // Update legend and controls when the layer is toggled
-                layerObj.on('add', function () {
-                    activeLayers[layer.name] = layer;
-                    legendControl.update();
-                    addOpacityControl(layer.name, layerObj);
-                });
-                layerObj.on('remove', function () {
-                    delete activeLayers[layer.name];
-                    legendControl.update();
-                    removeOpacityControl(layer.name);
-                });
+                    });
+                }, 900000); // 900000 milliseconds = 15 minutes
             });
-
-            // Load stations (mobile and fixed) and wind overlays
-            loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl);
-
-            // Initialize Leaflet Draw for custom geometry drawing
-            initializeLeafletDraw();
-
-            // Initialize Leaflet Measure for distance/area measurement
-            initializeLeafletMeasure();
-
-            // Set up GPX file upload event listener
-            document.getElementById('upload-gpx').addEventListener('change', handleGPXUpload);
         });
 }
 
+
+// Helper function to add layers to the tree structure
+function addLayerToTree(tree, category, name, layer) {
+    let categoryNode = tree.children.find(child => child.label === category);
+    if (!categoryNode) {
+        categoryNode = { label: category, children: [] };
+        tree.children.push(categoryNode);
+    }
+    categoryNode.children.push({ label: name, layer });
+}
 
 /**
  * Initializes the Leaflet Measure tool on the map.
@@ -592,4 +627,24 @@ function downloadGPX(layerGroup) {
 
     // Remove the temporary anchor from the document
     document.body.removeChild(a);
+}
+
+async function loadVariablesConfig(variablesConfigUrl) {
+    if (!configVariablesLoaded) {
+        try {
+            const response = await fetch(variablesConfigUrl);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            let configResponse = await response.json();
+            configVariablesData = configResponse['variables']
+            configVariablesLoaded = true;
+            console.log("Configuration loaded");
+            populateVariablesMenu(configVariablesData);
+        } catch (error) {
+            console.error("Failed to load configuration:", error);
+        }
+    } else {
+        console.log("Configuration already loaded.");
+    }
 }
