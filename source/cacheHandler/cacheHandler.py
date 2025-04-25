@@ -176,7 +176,7 @@ class CacheHandler:
 
         self.logger.info("Finished caching real-time data.")
 
-    def cache_past_hourly_data(self, hours_ago=24):
+    def cache_past_hourly_data(self, hours_ago=25):
         """
         Retrieve and cache hourly data for online stations.
 
