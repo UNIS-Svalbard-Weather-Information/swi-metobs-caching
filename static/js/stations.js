@@ -1,14 +1,10 @@
+let forecast = false; // Set to true to enable forecast, false to disable
+
 /**
  * Object to store track layers for each station.
  * @type {Object.<string, L.Layer[]>}
  */
 let trackLayers = {};
-
-/**
- * Object to store boat markers for each station.
- * @type {Object.<string, L.Marker>}
- */
-let boatMarkers = {};
 
 /**
  * Object to store fixed station markers.
@@ -23,16 +19,16 @@ let fixedStationMarkers = {};
 let windMarkers = {};
 
 /**
- * Array to store mobile station data.
- * @type {Array.<Object>}
- */
-let mobileStations = [];
-
-/**
  * Array to store fixed station data.
  * @type {Array.<Object>}
  */
 let fixedStations = [];
+
+/**
+ * Array to store offline station data.
+ * @type {Array.<Object>}
+ */
+let offlineStations = [];
 
 /**
  * Object to store the visibility state for each station.
@@ -41,48 +37,87 @@ let fixedStations = [];
 let stationVisibility = {};
 
 /**
- * Loads station data from provided URLs and initializes the map controls.
- * 
- * @param {string} mobileStationConfigUrl - URL to fetch mobile station configuration.
- * @param {string} fixedStationConfigUrl - URL to fetch fixed station configuration.
+ * Loads both online and offline stations from the API and initializes the map controls.
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
-function loadStations(mobileStationConfigUrl, fixedStationConfigUrl, windImagesUrl) {
-    Promise.all([
-        fetch(mobileStationConfigUrl).then(response => response.json()),
-        fetch(fixedStationConfigUrl).then(response => response.json())
-    ])
-    .then(([mobileStationsData, fixedStationsData]) => {
-        mobileStations = mobileStationsData;
-        fixedStations = fixedStationsData;
+function loadStations(windImagesUrl) {
+    const onlineStationsUrl = "/api/station/online?type=all";
+    const offlineStationsUrl = "/api/station/offline?type=all";
 
-        // Initialize visibility state
-        mobileStations.forEach(station => stationVisibility[station.id] = true);
-        fixedStations.forEach(station => stationVisibility[station.id] = true);
+    Promise.all([
+        fetch(onlineStationsUrl).then(response => response.json()),
+        fetch(offlineStationsUrl).then(response => response.json())
+    ])
+    .then(([onlineData, offlineData]) => {
+        const onlineStations = onlineData.online_stations || [];
+        offlineStations = offlineData.offline_stations || [];
+
+        fixedStations = onlineStations.filter(station => station.type === "fixed");
+
+        onlineStations.forEach(station => stationVisibility[station.id] = true);
+        offlineStations.forEach(station => stationVisibility[station.id] = false);
 
         initializeProjectControls(windImagesUrl);
         initializeEventListeners(windImagesUrl);
 
-        const initialDuration = parseInt(document.getElementById('track-duration-select').value, 10);
+        const initialDuration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
         const initialVariable = document.getElementById('variable-select-dropdown').value;
+        //console.log(`Initial load - Duration: ${initialDuration}, Variable: ${initialVariable}`); // Debugging line
         updateStationsData(initialDuration, windImagesUrl, initialVariable);
+
+        setInterval(() => {
+            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
+            const variable = document.getElementById('variable-select-dropdown').value;
+            updateStationsData(duration, windImagesUrl, variable);
+        }, 60000); // Auto update stations every minute
     })
     .catch(error => {
-        console.error('Error loading stations:', error);
+        console.error("Error loading stations:", error);
     });
+}
+
+function populateVariablesMenu(variables){
+            const selectDropdown = document.getElementById('variable-select-dropdown');
+
+            // Add a "None" option
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'None';
+            selectDropdown.appendChild(noneOption);
+
+            // Populate the dropdown with variable names
+            for (const variable in variables) {
+                if (variables.hasOwnProperty(variable)) {
+                    const option = document.createElement('option');
+                    option.value = variable;
+                    option.textContent = variables[variable].name;
+                    selectDropdown.appendChild(option);
+                }
+            }
+
+            // Set the default selected variable
+            const defaultVariable = Object.keys(variables).find(key => variables[key].default);
+            if (defaultVariable) {
+                selectDropdown.value = defaultVariable;
+            }
+
 }
 
 /**
  * Initializes the project controls UI with checkboxes for each station.
- * 
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function initializeProjectControls(windImagesUrl) {
     const projectControls = document.getElementById('project-controls');
+    projectControls.innerHTML = ""; // Clear existing UI before adding new elements
+
     const projects = {};
 
-    // Collect all stations into their respective projects
-    const allStations = [...mobileStations, ...fixedStations];
+    // Collect all stations (online and offline)
+    const allStations = [...fixedStations, ...offlineStations];
+
     allStations.forEach(station => {
         const project = station.project || 'Uncategorized';
         if (!projects[project]) {
@@ -117,7 +152,7 @@ function initializeProjectControls(windImagesUrl) {
         };
 
         // Styling the button
-        projectLabel.style.marginLeft = '10px';  // Adjust as needed
+        projectLabel.style.marginLeft = '10px';
 
         // Adding master checkbox and button to project header
         projectHeader.appendChild(projectCheckbox);
@@ -125,7 +160,7 @@ function initializeProjectControls(windImagesUrl) {
 
         const stationListDiv = document.createElement('div');
         stationListDiv.classList.add('station-list');
-        stationListDiv.style.display = 'none';  // Initially hidden
+        stationListDiv.style.display = 'none'; // Initially hidden
 
         // Create UI for each station within the project
         projects[project].forEach(station => {
@@ -135,7 +170,8 @@ function initializeProjectControls(windImagesUrl) {
 
             const stationCheckbox = document.createElement('input');
             stationCheckbox.type = 'checkbox';
-            stationCheckbox.checked = true;
+            stationCheckbox.checked = station.status === "online"; // Checked only if online
+            stationCheckbox.disabled = station.status === "offline"; // Disable checkbox for offline stations
             stationCheckbox.addEventListener('change', () => {
                 toggleStation(station.id, stationCheckbox.checked, windImagesUrl);
             });
@@ -143,6 +179,12 @@ function initializeProjectControls(windImagesUrl) {
             const stationLabel = document.createElement('label');
             stationLabel.setAttribute('for', `station-${station.id}`);
             stationLabel.textContent = station.name;
+
+            if (station.status === "offline") {
+                // Apply strikethrough and grey color for offline stations
+                stationLabel.style.textDecoration = "line-through";
+                stationLabel.style.color = "grey";
+            }
 
             stationDiv.appendChild(stationCheckbox);
             stationDiv.appendChild(stationLabel);
@@ -158,78 +200,57 @@ function initializeProjectControls(windImagesUrl) {
 
 /**
  * Initializes event listeners for track duration and variable selection changes.
- * 
+ *
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function initializeEventListeners(windImagesUrl) {
-    const durationSelect = document.getElementById('track-duration-select');
     const variableSelect = document.getElementById('variable-select-dropdown');
-    
-    durationSelect.addEventListener('change', () => {
-        const duration = parseInt(durationSelect.value, 10);
+    const trackDurationSelect = document.getElementById('track-duration-select');
+
+    // Ensure track-duration-select has a default value
+    if (!trackDurationSelect.getAttribute('value')) {
+        trackDurationSelect.setAttribute('value', '0');
+    }
+
+    variableSelect.addEventListener('change', () => {
+        const duration = parseInt(trackDurationSelect.getAttribute('value'), 10) || 0;
         const variable = variableSelect.value;
+        //console.log(`Variable changed - Duration: ${duration}, Variable: ${variable}`); // Debugging line
         updateStationsData(duration, windImagesUrl, variable);
     });
 
-    variableSelect.addEventListener('change', () => {
-        const duration = parseInt(durationSelect.value, 10);
+    trackDurationSelect.addEventListener('change', () => {
+        const duration = parseInt(trackDurationSelect.getAttribute('value'), 10) || 0;
         const variable = variableSelect.value;
+        //console.log(`Duration changed - Duration: ${duration}, Variable: ${variable}`); // Debugging line
         updateStationsData(duration, windImagesUrl, variable);
     });
 }
 
 /**
  * Fetches and updates data for all stations based on selected duration and variable.
- * 
+ *
  * @param {number} duration - The duration for which to fetch the data.
  * @param {string} windImagesUrl - Base URL for wind images.
  * @param {string} variable - The variable to display.
  */
 function updateStationsData(duration, windImagesUrl, variable) {
-    mobileStations.forEach(station => {
-        if (stationVisibility[station.id]) {
-            updateMobileStationData(station, duration, windImagesUrl, variable);
-        }
-    });
     fixedStations.forEach(station => {
         if (stationVisibility[station.id]) {
-            updateFixedStationData(station, windImagesUrl);
+            updateFixedStationData(station, windImagesUrl, duration);
         }
     });
 }
 
 /**
- * Fetches data for a specific mobile station.
- * 
- * @param {Object} station - The mobile station data.
+ * Fetches data for a specific station.
+ *
+ * @param {Object} station - The station object containing its ID.
  * @param {number} duration - The duration for which to fetch the data.
- * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
+ * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of an error.
  */
-async function fetchMobileStationData(station, duration) {
-    try {
-        const response = await fetch(`/api/mobile-station-data/${station.id}?duration=${duration}`);
-        if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
-        }
-        const data = await response.json();
-        console.log('Fetch successful:', data);  // Log the successful data
-        return data;
-    } catch (error) {
-        //console.error('Error fetching mobile station data:', error);
-        updateStationUIOnError(station.id);
-        return null;
-    }
-}
-
-/**
- * Fetches data for a specific fixed station.
- * 
- * @param {Object} station - The fixed station id.
- * @param {number} duration - The duration for which to fetch the data.
- * @returns {Promise<Object|null>} - A promise that resolves to the station data or null in case of error.
- */
-function fetchFixedStationData(station, duration) {
-    return fetch(`/api/fixed-station-data/${station.id}?duration=${duration}`)
+function fetchStationData(station, duration) {
+    return fetch(`/api/station-data/${station.id}?data=${duration}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`API error: ${response.statusText}`);
@@ -237,62 +258,47 @@ function fetchFixedStationData(station, duration) {
             return response.json();
         })
         .catch(error => {
-            //console.error('Error fetching mobile station data:', error);
-            updateStationUIOnError(station.id); 
+            console.error(`Error fetching data for station ${station.id}:`, error);
             return null;
         });
 }
 
 /**
  * Toggles the visibility of a station's data on the map.
- * 
+ *
  * @param {string} stationId - The ID of the station.
  * @param {boolean} isVisible - Whether the station data should be visible.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function toggleStation(stationId, isVisible, windImagesUrl) {
     stationVisibility[stationId] = isVisible;
-    
+
     if (!isVisible) {
         if (trackLayers[stationId]) {
             trackLayers[stationId].forEach(layer => map.removeLayer(layer));
             delete trackLayers[stationId];
         }
-        if (boatMarkers[stationId]) {
-            map.removeLayer(boatMarkers[stationId]);
-            delete boatMarkers[stationId];
+        if (fixedStationMarkers[stationId]) {
+            map.removeLayer(fixedStationMarkers[stationId]);
+            delete fixedStationMarkers[stationId];
         }
         if (windMarkers[stationId]) {
             map.removeLayer(windMarkers[stationId]);
             delete windMarkers[stationId];
         }
-        if (fixedStationMarkers[stationId]) {
-            map.removeLayer(fixedStationMarkers[stationId]);
-            delete fixedStationMarkers[stationId];
-        }
     } else {
-        const durationSelect = document.getElementById('track-duration-select');
-        const variableSelect = document.getElementById('variable-select-dropdown');
-        const duration = parseInt(durationSelect.value, 10);
-        const variable = variableSelect.value;
-        
-        const station = mobileStations.find(s => s.id === stationId);
-
-        if (station) {
-            updateMobileStationData(station, duration, windImagesUrl, variable);
+        const fixedStation = fixedStations.find(s => s.id === stationId);
+        if (fixedStation) {
+            const duration = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10);
+            updateFixedStationData(fixedStation, windImagesUrl, duration);
         } else {
-            const fixedStation = fixedStations.find(s => s.id === stationId);
-            if (fixedStation) {
-                updateFixedStationData(fixedStation, windImagesUrl);
-            } else {
-                console.error(`Station with id ${stationId} not found in both mobile and fixed stations`);
-            }
+            console.error(`Station with id ${stationId} not found in fixed stations`);
         }
     }
 }
 
 function toggleProjectStations(project, isVisible, windImagesUrl) {
-    const allStations = [...mobileStations, ...fixedStations];
+    const allStations = [...fixedStations];
     allStations.forEach(station => {
         if (station.project === project) {
             const stationCheckbox = document.getElementById(`station-${station.id}`);
@@ -303,141 +309,72 @@ function toggleProjectStations(project, isVisible, windImagesUrl) {
 }
 
 /**
- * Updates the data for a specific mobile station and displays it on the map.
- * 
- * @param {Object} station - The mobile station data.
- * @param {number} duration - The duration for which to fetch the data.
- * @param {string} windImagesUrl - Base URL for wind images.
- * @param {string} variable - The variable to display.
- */
-function updateMobileStationData(station, duration, windImagesUrl, variable) {
-    if (trackLayers[station.id]) {
-        trackLayers[station.id].forEach(layer => map.removeLayer(layer));
-        delete trackLayers[station.id];
-    }
-
-    if (duration === 0) {
-        // No track to display, but show the boat icon
-        fetchMobileStationData(station, duration)
-            .then(data => {
-                if (data) {
-                    updateBoatMarker(station, data, variable);
-                    updateWindMarker(station, data, windImagesUrl);
-                }
-            });
-        return;
-    }
-
-    fetchMobileStationData(station, duration)
-        .then(data => {
-            if (data) {
-                updateBoatMarker(station, data, variable);
-                updateWindMarker(station, data, windImagesUrl);
-
-                const latlngs = data.track.map(dp => [dp.lat, dp.lon]);
-                const values = data.track.map(dp => dp.variable[variable]);
-                const filteredValues = values.filter(v => v !== null && v !== undefined);
-                if (filteredValues.length === 0) return;
-
-                const minValue = Math.min(...filteredValues);
-                const maxValue = Math.max(...filteredValues);
-                const extendedMinValue = minValue - (0.1 * minValue);
-                const extendedMaxValue = maxValue + (0.1 * maxValue);
-
-                const colorScale = getColorScale(variable, extendedMinValue, extendedMaxValue);
-
-                console.log(colorScale)
-
-                let segments = [];
-                for (let i = 0; i < latlngs.length - 1; i++) {
-                    const segment = L.polyline([latlngs[i], latlngs[i + 1]], {
-                        color: colorScale(values[i]),
-                        weight: 5,
-                        opacity: 0.7
-                    }).addTo(map);
-                    segments.push(segment);
-
-                    // Add popups to each point
-                    const dot = L.circleMarker(latlngs[i], {
-                        radius: 5,
-                        color: colorScale(values[i]),
-                        fillColor: colorScale(values[i]),
-                        fillOpacity: 0.9
-                    })
-                    .bindPopup(createPopupContent(station, data.track[i].variable))
-                    .addTo(map);
-
-                    segments.push(dot);
-                }
-
-                trackLayers[station.id] = segments;
-                updateColorBar(variable, extendedMinValue, extendedMaxValue, colorScale);
-            }
-        }, null);
-}
-
-/**
  * Updates the marker for a fixed station.
- * 
+ *
  * @param {Object} station - The fixed station data.
  * @param {string} windImagesUrl - Base URL for wind images.
+ * @param {number} duration - The duration for which to fetch the data.
  */
-function updateFixedStationData(station, windImagesUrl) {
+function updateFixedStationData(station, windImagesUrl, duration) {
     if (trackLayers[station.id]) {
         trackLayers[station.id].forEach(layer => map.removeLayer(layer));
         delete trackLayers[station.id];
     }
 
-    fetchFixedStationData(station, 0)
+    fetchStationData(station, duration)
         .then(data => {
             if (data) {
-                updateFixedStationMarker(station, data);
-                updateWindMarker(station, data, windImagesUrl);
+                updateFixedStationMarker(station, data, windImagesUrl);
             }
         });
 }
 
 /**
  * Creates the popup content for a station.
- * 
- * @param {string} stationName - The name of the station.
- * @param {Object} dataPoint - The data point to display.
+ *
+ * @param {Object} station - The station object containing metadata.
+ * @param {Object|null} dataPoint - The latest measurement from the timeseries.
  * @returns {string} - The HTML content for the popup.
  */
 function createPopupContent(station, dataPoint) {
-    const date = new Date(dataPoint.time * 1000);
-    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-    const windDirectionLetter = getWindDirectionLetter(dataPoint.windDirection);
+    if (!dataPoint) {
+        return `<strong>${station.name}</strong><br>No recent data available.`;
+    }
 
-    const variables = station.variables;
+    // Convert timestamp to a readable format
+    const date = new Date(dataPoint.timestamp);
+    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    const windDirectionLetter = dataPoint.windDirection !== undefined
+        ? getWindDirectionLetter(dataPoint.windDirection)
+        : 'N/A';
+
+    // Available variables in the station metadata
+    const variables = station.variables || [];
+
     let content = `<strong>${station.name}</strong><br>${dateString}<br>----<br>`;
 
-    if (variables.airTemperature) {
-        content += `Air Temperature: ${dataPoint.airTemperature !== null && dataPoint.airTemperature !== undefined ? dataPoint.airTemperature.toFixed(2) : 'N/A'} °C<br>`;
-    }
+    // Iterate over the config variables
+    for (const [key, variableConfig] of Object.entries(configVariablesData)) {
+        if (variables.includes(key)) {
+            const value = dataPoint[key] !== null && dataPoint[key] !== undefined ? dataPoint[key].toFixed(2) : 'N/A';
+            let displayValue = value;
 
-    if (variables.seaSurfaceTemperature) {
-        content += `Sea Surface Temperature: ${dataPoint.seaSurfaceTemperature !== null && dataPoint.seaSurfaceTemperature !== undefined ? dataPoint.seaSurfaceTemperature.toFixed(2) : 'N/A'} °C<br>`;
-    }
+            // Append wind direction letter if applicable
+            if (key === 'windDirection' && windDirectionLetter !== 'N/A') {
+                displayValue += `° (${windDirectionLetter})`;
+            }
 
-    if (variables.windSpeed) {
-        content += `Wind Speed: ${dataPoint.windSpeed !== null && dataPoint.windSpeed !== undefined ? dataPoint.windSpeed.toFixed(2) : 'N/A'} m/s<br>`;
-    }
-
-    if (variables.windDirection) {
-        content += `Wind Direction: ${dataPoint.windDirection !== null && dataPoint.windDirection !== undefined ? `${dataPoint.windDirection.toFixed(2)}° (${windDirectionLetter})` : 'N/A'}<br>`;
-    }
-
-    if (variables.relativeHumidity) {
-        content += `Relative Humidity: ${dataPoint.relativeHumidity !== null && dataPoint.relativeHumidity !== undefined ? dataPoint.relativeHumidity.toFixed(2) : 'N/A'} %`;
+            content += `${variableConfig.name}: ${displayValue} ${variableConfig.unit}<br>`;
+        }
     }
 
     return content;
 }
 
+
 /**
  * Converts wind direction in degrees to a compass direction letter.
- * 
+ *
  * @param {number} degrees - The wind direction in degrees.
  * @returns {string} - The corresponding compass direction letter.
  */
@@ -448,86 +385,119 @@ function getWindDirectionLetter(degrees) {
 }
 
 /**
- * Updates the boat marker for a mobile station.
- * 
- * @param {Object} station - The mobile station data.
- * @param {Object} data - The data to display.
- * @param {string} variable - The variable to display.
+ * Updates the marker for a fixed station using the new API format.
+ *
+ * @param {Object} station - The fixed station data.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  */
-function updateBoatMarker(station, data, variable) {
-    const boatIcon = L.divIcon({
-        className: 'boat-marker',
-        html: `<img src="${station.icon}" width="32" height="32"/>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-    });
+function updateFixedStationMarker(station, data, windImagesUrl) {
 
-    if (boatMarkers[station.id]) {
-        map.removeLayer(boatMarkers[station.id]);
+    // Get the selected variable name from the dropdown
+    const selectedVariableName = document.getElementById('variable-select-dropdown').value;
+    let variableValue = 'N/A';
+    let unit = '';
+
+    // Find the selected variable configuration
+    const selectedVariableConfig = configVariablesData[selectedVariableName];
+
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
+
+    if (selectedVariableConfig && latestData) {
+        unit = selectedVariableConfig.unit;
+        variableValue = latestData[selectedVariableName];
     }
 
-    const variableInfo = createPopupContent(station, data.latest);
-    const boatMarker = L.marker([data.lat, data.lon], { icon: boatIcon }).addTo(map);
-    boatMarker.bindPopup(variableInfo);
-    boatMarkers[station.id] = boatMarker;
-}
-
-/**
- * Updates the marker for a fixed station.
- * 
- * @param {Object} station - The fixed station data.
- * @param {Object|null} data - The data to display.
- */
-function updateFixedStationMarker(station, data) {
-    const Icon = L.icon({
-        iconUrl: station.icon,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+    // Create a custom icon with the marker image and text
+    const customIcon = L.divIcon({
+        className: 'custom-icon',
+        html: `
+        <div style="text-align: center;">
+            <img src="${station.icon}" style="width: 32px; height: 32px; display: block; margin: 0 auto;" />
+            ${selectedVariableName && variableValue !== undefined && unit ? `
+            <div style="margin-top: 2px;">
+                <span style="background-color: rgba(255, 255, 255, 0.6); padding: 2px 5px; border-radius: 3px;">
+                    ${variableValue} ${unit}
+                </span>
+            </div>` : ''}
+        </div>
+        `,
+        iconSize: [60, 32], // Adjust size as needed
+        iconAnchor: [30, 16] // Adjust anchor as needed
     });
 
+    // Remove existing marker if it exists
     if (fixedStationMarkers[station.id]) {
         map.removeLayer(fixedStationMarkers[station.id]);
     }
 
-    const variableInfo = createPopupContent(station, data.latest);
+    // Create popup content using latest data
+    const variableInfo = createPopupContent(station, latestData);
 
-    const Marker = L.marker([station.lat, station.lon], { icon: Icon }).addTo(map);
-    Marker.bindPopup(variableInfo);
-    fixedStationMarkers[station.id] = Marker;
+    // Add the marker to the map with the custom icon
+    const marker = L.marker([station.location.lat, station.location.lon], { icon: customIcon }).addTo(map);
+    marker.bindPopup(variableInfo);
+    fixedStationMarkers[station.id] = marker;
+
+    updateWindMarker(station, data, windImagesUrl);
 }
 
+
+
 /**
- * Updates the wind marker for a station.
- * 
+ * Updates the wind marker for a station using the new API format.
+ *
  * @param {Object} station - The station data.
- * @param {Object} data - The data to display.
+ * @param {Object|null} data - The station data, containing timeseries measurements.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
 function updateWindMarker(station, data, windImagesUrl) {
-    const iconUrl = getWindSpeedIcon(windImagesUrl, data.windSpeed, data.windDirection);
-    
+    // Extract the latest available data from timeseries
+    const latestData = (data && data.timeseries && data.timeseries.length > 0)
+        ? data.timeseries[0] // Get the most recent measurement
+        : null;
+
+    if (!latestData) {
+        console.warn(`No wind data available for station ${station.id}`);
+        return; // Exit function if there's no valid data
+    }
+
+    // Get wind speed and direction from the latest data
+    const windSpeed = latestData.windSpeed;
+    const windDirection = latestData.windDirection;
+
+    // Generate wind icon URL based on speed & direction
+    const iconUrl = getWindSpeedIcon(windImagesUrl, windSpeed, windDirection);
+
+    // Create a rotated wind icon
     const windRotatedIcon = L.divIcon({
         className: 'custom-icon',
-        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"  style="transform: rotate(${data.windDirection + 90}deg);" />`,
+        html: `<img src="${iconUrl}" width="80" height="80" class="rotated-icon"
+               style="transform: rotate(${windDirection + 90}deg);" />`,
         iconSize: [80, 80],
         iconAnchor: [40, 40]
     });
 
+    // Remove existing wind marker if it exists
     if (windMarkers[station.id]) {
         map.removeLayer(windMarkers[station.id]);
     }
 
-    const windMarker = L.marker([data.lat, data.lon], { 
+    // Add new wind marker with updated position and icon
+    const windMarker = L.marker([station.location.lat, station.location.lon], {
         icon: windRotatedIcon,
     }).addTo(map);
 
-    windMarker.bindPopup(createPopupContent(station, data.latest));
+    // Attach popup with latest data
+    windMarker.bindPopup(createPopupContent(station, latestData));
     windMarkers[station.id] = windMarker;
 }
 
 /**
  * Gets the appropriate wind speed icon based on wind speed.
- * 
+ *
  * @param {string} basePath - The base path for wind images.
  * @param {number} windSpeed - The wind speed in meters per second.
  * @param {number} windDirection - The wind direction value.
@@ -554,10 +524,9 @@ function getWindSpeedIcon(basePath, windSpeed, windDirection) {
     return `${basePath}/${closest.toString().padStart(2, '0')}kts.gif`;
 }
 
-
 /**
  * Gets the color scale based on the variable and its min/max values.
- * 
+ *
  * @param {string} variable - The variable to display.
  * @param {number} minValue - The minimum value for the color scale.
  * @param {number} maxValue - The maximum value for the color scale.
@@ -575,12 +544,141 @@ function getColorScale(variable, minValue, maxValue) {
     return colorScale[variable];
 }
 
-function updateStationUIOnError(stationId) {
-    const stationElement = document.getElementById(`station-${stationId}`);
-    if (stationElement) {
-        stationElement.style.textDecoration = "line-through";
-        stationElement.style.color = "grey";
-        const parent = stationElement.parentElement;
-        parent.appendChild(stationElement); // Move to the end of the list
-    }
+
+// Function to update the timeline and cursor position
+function updateTimeline() {
+  const now = new Date();
+  const hoursFromNow = parseInt(document.getElementById('track-duration-select').getAttribute('value'), 10) || 0;
+  const timelineWidth = document.querySelector('.timeline').offsetWidth;
+
+  // Calculate the position of the cursor relative to the center
+  const cursorPosition = ((hoursFromNow / 48) * timelineWidth) + (timelineWidth / 2);
+
+  // Check if forecast is disabled and hoursFromNow is in the future
+  if (!forecast && hoursFromNow > 0) {
+    alert("Forecast is not available.");
+    // Reset cursor to the current time
+    document.getElementById('track-duration-select').style.left = `${timelineWidth / 2}px`;
+    document.getElementById('track-duration-select').setAttribute('value', '0');
+    return;
+  }
+
+  document.getElementById('track-duration-select').style.left = `${cursorPosition}px`;
+
+  // Calculate the current hour of the day (0-23)
+  const currentHour = now.getHours();
+
+  // Calculate the flex values for each day
+  const dayMinusFlex = (24 - currentHour) / 48;
+  const dayCenterFlex = 24 / 48;
+  const dayPlusFlex = currentHour / 48;
+
+  // Apply the flex values to the day elements
+  const dayMinus = document.getElementById('day-minus');
+  const dayCenter = document.getElementById('day-center');
+  const dayPlus = document.getElementById('day-plus');
+
+  dayMinus.style.flex = dayMinusFlex;
+  dayCenter.style.flex = dayCenterFlex;
+  dayPlus.style.flex = dayPlusFlex;
+
+  // Update the day labels
+  const dayMinusDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const dayPlusDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const dayCenterDate = new Date(now.getTime());
+
+  dayMinus.textContent = dayMinusDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  dayPlus.textContent = dayPlusDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  dayCenter.textContent = dayCenterDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+
+  // Update the duration display and tooltip
+  const tooltip = document.getElementById('tooltip');
+  if (hoursFromNow === 0) {
+    tooltip.textContent = "Now";
+  } else {
+    const shiftedTime = new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000);
+    tooltip.textContent = `${shiftedTime.getHours().toString().padStart(2, '0')}:00`;
+  }
+
+  // Remove existing hour ticks and day bars
+  const existingTicks = document.querySelectorAll('.hour-tick, .day-bar');
+  existingTicks.forEach(tick => tick.remove());
+
+  // Create hour ticks
+  const timeline = document.querySelector('.timeline');
+  for (let i = 0; i < 49; i++) {
+    const tick = document.createElement('div');
+    tick.classList.add('hour-tick');
+    tick.style.left = `${(i / 48) * 100}%`;
+    timeline.appendChild(tick);
+  }
+
+  // Calculate and create day bars
+  const dayBars = [
+    { element: dayMinus, position: dayMinusFlex },
+    { element: dayCenter, position: dayMinusFlex + dayCenterFlex },
+    { element: dayPlus, position: dayMinusFlex + dayCenterFlex + dayPlusFlex }
+  ];
+
+  dayBars.forEach(({ element, position }) => {
+    const dayBar = document.createElement('div');
+    dayBar.classList.add('day-bar');
+    dayBar.style.left = `${position * 100}%`;
+    timeline.appendChild(dayBar);
+  });
 }
+
+// Initialize the timeline
+updateTimeline();
+
+// Add event listeners to update the timeline when the cursor is dragged
+const cursor = document.getElementById('track-duration-select');
+let isDragging = false;
+let startX;
+let startLeft;
+
+const handleMouseDown = (e) => {
+  isDragging = true;
+  startX = e.clientX || e.touches[0].clientX;
+  startLeft = parseInt(window.getComputedStyle(cursor).left, 10);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('touchmove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('touchend', handleMouseUp);
+};
+
+const handleMouseMove = (e) => {
+  if (!isDragging) return;
+  const x = e.clientX || e.touches[0].clientX;
+  const walk = (x - startX);
+  const newLeft = startLeft + walk;
+  const timelineWidth = document.querySelector('.timeline').offsetWidth;
+
+  // Ensure the cursor stays within bounds
+  if (newLeft >= 0 && newLeft <= timelineWidth) {
+    cursor.style.left = `${newLeft}px`;
+
+    // Update the value based on cursor position relative to the center
+    const hoursFromNow = ((newLeft - (timelineWidth / 2)) / timelineWidth) * 48;
+    cursor.setAttribute('value', hoursFromNow.toFixed(0));
+
+    // Update the duration display and tooltip
+    updateTimeline();
+  }
+};
+
+const handleMouseUp = () => {
+  isDragging = false;
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('touchmove', handleMouseMove);
+  document.removeEventListener('mouseup', handleMouseUp);
+  document.removeEventListener('touchend', handleMouseUp);
+
+  // Trigger station data update
+  const duration = parseInt(cursor.getAttribute('value'), 10);
+  const variable = document.getElementById('variable-select-dropdown').value;
+  updateStationsData(duration, windImagesUrl, variable);
+};
+
+cursor.addEventListener('mousedown', handleMouseDown);
+cursor.addEventListener('touchstart', handleMouseDown);

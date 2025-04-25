@@ -11,8 +11,8 @@
         #map {
             position: relative;
             height: 100vh; /* Full viewport height */
-            width: calc(100% - 300px); /* Adjust width to avoid the menu area */
-            margin-left: 300px; /* Align with menu width */
+            width: calc(100% - 400px); /* Adjust width to avoid the menu area */
+            margin-left: 400px; /* Align with menu width */
             overflow: hidden; /* Prevent content from spilling out */
         }
 
@@ -35,6 +35,8 @@
             justify-content: space-around; /* Evenly space logos */
             align-items: flex-end; /* Align logos to the bottom */
             gap: 20px; /* Adjust spacing between logos */
+            background-color: rgba(255, 255, 255, 0.7); /* White background with 50% opacity */
+            padding: 15px; /* Add some padding for better appearance */
             z-index: 3; /* Place logos above the image */
         }
 
@@ -67,11 +69,60 @@
             width: auto; /* Maintain aspect ratio */
         }
 
+        .home-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80%; /* Adjust width for better fit */
+            max-width: 200px; /* Prevent overly large buttons */
+            margin: 20px auto; /* Center the button */
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #0073e6, #005bb5); /* Gradient effect */
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px; /* Softer round edges */
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .home-button:hover {
+            background: linear-gradient(135deg, #005bb5, #003d7a); /* Darker gradient */
+            transform: translateY(-3px); /* Slight lift on hover */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-button:active {
+            transform: translateY(1px); /* Slight press effect */
+        }
+
+        .home-button img {
+            height: 20px; /* Icon size */
+            margin-right: 10px; /* Space between icon and text */
+        }
+        .center-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 20px auto; /* Adds spacing around */
+            text-align: center; /* Ensures proper text alignment */
+        }
+        .center-logo img {
+            max-width: 90%; /* Ensures responsiveness */
+            height: auto; /* Maintains aspect ratio */
+        }
+
+
         #menu {
             position: fixed;
             left: 0;
             top: 0;
-            width: 300px;
+            width: 400px;
             height: 100vh;
             background-color: #f9f9f9;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -79,14 +130,25 @@
             padding: 20px;
             z-index: 4; /* Ensure the menu stays above all map content */
         }
+
     </style>
 </head>
 <body>
     <div id="menu">
-        <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo" width="80%" class="center">
+        <div class="center-logo">
+            <img src="https://www.unis.no/wp-content/uploads/2022/11/unis-logo-liggende.svg" alt="UNIS Logo">
+        </div>
+
         <br>
-        <br>
-        <a href="/">Home Page</a>
+        <a href="/" class="home-button">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/home.png" alt="Home Icon">
+            Home Page
+        </a>
+        <h1>About</h1>
+        <p>Svalbard Weather Information (SWI) is a project designed to provide online access to GIS data essential for planning trips in Svalbard. This application consolidates various layers, including regulations, topography, sea-ice conditions, and real-time weather data from UNIS and Met Norway weather stations. Detailed credit about those data are given bellow. It serves as a tool to aid in trip planning and should be used solely for informational purposes, not for navigation.</p>
+        <h1>Disclaimer</h1>
+        <p>The Svalbard Weather Information (SWI) project provides a platform to display GIS data and real-time weather information from various sources. This project does not own any of the data but aggregates it from the sources listed below. Maps, data, tools, and services may contain errors. No guarantees are given. All use is the user's own responsibility. Permission is granted to use the SWI service itself, and further use of data and information extracts in prints, publications, and presentations, provided that these are properly attributed to the respective data sources.</p>
+        <p>Systematic downloading of data, or integration of services into other web pages or applications, is not permitted. Neither the author nor the contributors are responsible for any incidents or accidents resulting from the use of the information provided here. This tool is intended to assist users but should not be relied upon as the sole source of information for decision-making.</p>
         <h1>Credits</h1>
         <section>
             <h2>Map Information</h2>
@@ -136,8 +198,11 @@
                 <!-- Add more contributors as needed -->
             </ul>
         </section>
+        <h1>Licence</h1>
+        <p>This project is licensed under the CC0-1.0 Universal (CC0 1.0) Public Domain Dedication. To the extent possible under law, the author has dedicated all copyright and related or neighboring rights to this project to the public domain worldwide. Users are free to use, modify, and distribute this project without restriction, provided that any use of aggregated data complies with the terms of the respective data sources listed bellow.</p>
 
-        <p>Photo : Louis Pauchet - UNIS/INSA Rouen Normandie - 2024</p>
+        <p>Photo by Louis Pauchet - 2024</p>
+        <p><i>Version: {{ git_commit_hash }}</i></p>
     <br>
     <br>
     </div>
