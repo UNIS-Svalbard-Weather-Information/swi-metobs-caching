@@ -29,17 +29,28 @@ jobs:
     - name: Increment version
       id: version
       run: |
-        VERSION=$(head -n 2 polarfox | tail -n 1)
-        IFS='.' read -r -a version_parts <<< "$VERSION"
-        NEW_VERSION="${version_parts[0]}.${version_parts[1]}.$((${version_parts[2]} + 1))"
-        sed -i "2s/.*/$NEW_VERSION/" polarfox
-        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        # Read the version components
+        VERSION_NAME=$(head -n 1 version)
+        BUILD_NUMBER=$(head -n 2 version | tail -n 1)
+        STATE=$(tail -n 1 version)
+
+        # Increment the build number
+        IFS='.' read -r -a build_parts <<< "$BUILD_NUMBER"
+        NEW_BUILD_NUMBER="${build_parts[0]}.${build_parts[1]}.$((${build_parts[2]} + 1))"
+
+        # Update the version file with the new build number
+        sed -i "2s/.*/$NEW_BUILD_NUMBER/" version
+
+        # Set the new version as an environment variable
+        echo "NEW_VERSION=$VERSION_NAME $NEW_BUILD_NUMBER $STATE" >> $GITHUB_ENV
+        echo "NEW_BUILD_NUMBER=$NEW_BUILD_NUMBER" >> $GITHUB_ENV
 
     - name: Commit version increment
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git commit -am "Increment version to $NEW_VERSION"
+        git add version
+        git commit -m "Increment version to $NEW_BUILD_NUMBER"
         git push
 
     - name: Build and push Docker image
@@ -47,17 +58,17 @@ jobs:
       with:
         context: .
         push: true
-        tags: lpauchet/swi-server:${{ env.NEW_VERSION }}
+        tags: lpauchet/swi-server:${{ env.NEW_BUILD_NUMBER }}
 
     - name: Create Pre-release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ env.NEW_VERSION }}-alpha
-        release_name: Release v${{ env.NEW_VERSION }}-alpha
+        tag_name: v${{ env.NEW_BUILD_NUMBER }}-alpha
+        release_name: Release v${{ env.NEW_BUILD_NUMBER }}-alpha
         body: |
           Changes in this release:
-          - Incremented version to ${{ env.NEW_VERSION }}
+          - Incremented version to ${{ env.NEW_BUILD_NUMBER }}
         draft: false
         prerelease: true
