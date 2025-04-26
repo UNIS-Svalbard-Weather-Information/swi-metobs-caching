@@ -62,11 +62,23 @@ class SeaIceCache:
         gdf_clipped = gpd.clip(gdf, svalbard_gdf)
         self.logger.info("GeoDataFrame clipped to Svalbard bounding box.")
 
+        # Check if gdf_clipped is empty
+        if gdf_clipped.empty:
+            self.logger.warning("Clipped GeoDataFrame is empty.")
+            return gdf_clipped
+
         land_gdf = gpd.read_file(self.shapefile_path).to_crs(gdf.crs)
+
+        # Check if land_gdf is empty
+        if land_gdf.empty:
+            self.logger.warning("Land GeoDataFrame is empty.")
+            return gdf_clipped
+
         gdf_water_only = gpd.overlay(gdf_clipped, land_gdf, how="difference")
 
         self.logger.info("Land areas successfully masked out.")
         return gdf_water_only
+
 
     def is_recent_file(self, filepath, max_age_minutes=30):
         """
