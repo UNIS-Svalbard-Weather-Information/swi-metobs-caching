@@ -28,19 +28,19 @@ def test_initialization(maps_caching):
 def test_find_existing_DEM(mock_listdir, maps_caching):
     mock_listdir.return_value = ['DTM50_DEM_example.tif']
     dem_path = maps_caching._find_existing_DEM()
-    assert dem_path == './test_maps/managed\DTM50_DEM_example.tif'
+    assert dem_path == './test_maps/managed/DTM50_DEM_example.tif'
 
 @patch('os.path.exists')
 def test_find_existing_steepness_raster(mock_exists, maps_caching):
     mock_exists.return_value = True
     raster_path = maps_caching._find_existing_steepness_raster()
-    assert raster_path == './test_maps/managed\DTM50_steepness_raster.tif'
+    assert raster_path == './test_maps/managed/DTM50_steepness_raster.tif'
 
 @patch('os.listdir')
 def test_find_existing_contour(mock_listdir, maps_caching):
     mock_listdir.return_value = ['steepness_contour_example.shp']
     contour_path = maps_caching._find_existing_contour()
-    assert contour_path == './test_maps/managed\steepness_contour_example.shp'
+    assert contour_path == './test_maps/managed/steepness_contour_example.shp'
 
 
 def test_get_DEM(maps_caching):
