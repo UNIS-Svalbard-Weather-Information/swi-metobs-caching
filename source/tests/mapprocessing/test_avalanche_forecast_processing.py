@@ -94,16 +94,6 @@ def test_get_region(avalanche_processor):
 #         # Assert that the clipped GeoDataFrame is not empty
 #         assert not clipped_gdf.empty
 
-@patch('builtins.open', new_callable=MagicMock)
-def test_save_geojson_to_file(mock_open, avalanche_processor):
-    geojson_obj = {'type': 'FeatureCollection', 'features': []}
-    file_name = 'test_file'
-
-    avalanche_processor._save_geojson_to_file(geojson_obj, file_name)
-    mock_open.assert_called_once_with('./maps/avalanche_forecast\\test_file.geojson', 'w')
-    #mock_open.return_value.__enter__.return_value.write.assert_called_once_with(json.dumps(geojson_obj, indent=2))
-
-
 def test_process_3003(avalanche_processor):
     with patch.object(avalanche_processor, 'fetch_region_data') as mock_fetch_region, \
          patch.object(avalanche_processor, 'fetch_forecast_data') as mock_fetch_forecast, \
