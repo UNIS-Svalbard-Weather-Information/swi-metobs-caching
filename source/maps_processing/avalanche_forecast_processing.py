@@ -67,7 +67,7 @@ class AvalancheForecastProcessing:
             Processes avalanche forecast data specifically for region '3003'.
     """
 
-    def __init__(self, n_days_forecast=1, regions_list=None):
+    def __init__(self, n_days_forecast=1, regions_list=None, serve_only=False):
         """
         Initializes the AvalancheForecastProcessing instance with the specified configuration.
 
@@ -98,6 +98,12 @@ class AvalancheForecastProcessing:
         self.maps_cache = MapsCaching()
         self.export_directory = './maps/avalanche_forecast'
         self.logger.info("AvalancheForecastProcessing initialized.")
+
+        if os.environ.get('SWI_INSTANCE_SERVE_ONLY') == 'true' or serve_only:
+            self.serve_only = True
+            self.logger.info("This instance is in SERVE ONLY mode.")
+        else:
+            self.serve_only = False
 
     def _binary_to_directions(self, binary_string):
         """
@@ -536,6 +542,8 @@ class AvalancheForecastProcessing:
         Raises:
             Exception: Logs any exceptions that occur during the processing of the forecast data.
         """
+        if self.serve_only:
+            return -1
         self.fetch_region_data()
         self.fetch_forecast_data()
         self._create_forecast_layer_region(self.get_region('3003'))
