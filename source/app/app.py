@@ -34,26 +34,28 @@ def create_app():
     avalanche_forecast_handler = AvalancheForecastProcessing()
     app.config['STATION_HANDLER'] = station_handler
 
-    def gather_data():
-        while True:
-            station_handler.cache_stations_status()
-            station_handler.cache_realtime_data()
-            station_handler.cache_past_hourly_data()
+    # Use os.environ.get to provide default values if environment variables are not set
+    if os.environ.get('SWI_INSTANCE_SERVE_ONLY', 'false').lower() == 'false' and os.environ.get('SWI_DOCKER_INSTANCE', 'false').lower() == 'false':
+        def gather_data():
+            while True:
+                station_handler.cache_stations_status()
+                station_handler.cache_realtime_data()
+                station_handler.cache_past_hourly_data()
 
-            sea_ice_handler.create_ice_chart_geojson()
-            avalanche_forecast_handler.process_3003()
+                sea_ice_handler.create_ice_chart_geojson()
+                avalanche_forecast_handler.process_3003()
 
-            # Explicitly clean up the old instance
-            old_handler = app.config['STATION_HANDLER']
-            del old_handler  # Help Python garbage collect the old instance
+                # Explicitly clean up the old instance
+                old_handler = app.config['STATION_HANDLER']
+                del old_handler  # Help Python garbage collect the old instance
 
-            # Replace with a fresh instance
-            app.config['STATION_HANDLER'] = CacheHandler()
+                # Replace with a fresh instance
+                app.config['STATION_HANDLER'] = CacheHandler()
 
-            time.sleep(10 * 60)  # 10 mi
+                time.sleep(10 * 60)  # 10 minutes
 
-    gathering_thread = threading.Thread(target=gather_data, daemon=True)
-    gathering_thread.start()
+        gathering_thread = threading.Thread(target=gather_data, daemon=True)
+        gathering_thread.start()
 
     # Register Blueprints
     app.register_blueprint(api, url_prefix='/api')

@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import shutil
 
 class CacheHandler:
-    def __init__(self, directory='./cache/', path_config = None, cleaning_list = None):
+    def __init__(self, directory='./cache/', path_config = None, cleaning_list = None, serve_only = False):
         """
             Initialize a CacheHandler instance to manage caching of station data.
 
@@ -55,6 +55,14 @@ class CacheHandler:
         else:
             self.path_config = path_config
 
+        if os.environ.get('SWI_INSTANCE_SERVE_ONLY') == 'true' or serve_only:
+            self.serve_only = True
+            self.logger.info("This instance is in SERVE ONLY mode.")
+        else:
+            self.serve_only = False
+        
+        
+
         if cleaning_list is None:
             self.cleaning_list = ['online', 'offline']
         else:
@@ -76,6 +84,9 @@ class CacheHandler:
                   status (online/offline), last_updated timestamp, project, and icon.
         """
         self.logger.info("Starting to cache station statuses...")
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
+            return -1
 
         stations = self.config.get_stations(type="all")
         self.logger.info(f"Retrieved {len(stations)} stations for processing.")
@@ -140,7 +151,14 @@ class CacheHandler:
             None
         """
 
+
+
+
         self.logger.info("Starting to cache realtime data...")
+
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
+            return -1
 
         realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
 
@@ -191,6 +209,10 @@ class CacheHandler:
             None
         """
         self.logger.info("Starting to cache hourly data...")
+
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
+            return -1
 
         hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
 
@@ -424,6 +446,10 @@ class CacheHandler:
 
         self.logger.info(f"Starting cache clearing for {len(entries)} entries.")
 
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
+            return -1
+
         for entry in entries:
             file_path = self.path_config.get(entry)
             if file_path is None:
@@ -454,6 +480,10 @@ class CacheHandler:
         Returns:
             None
         """
+
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Writing Data")
+            return -1
 
         # Construct the full file path
         file_path = os.path.join(self.directory, filename)
@@ -513,6 +543,11 @@ class CacheHandler:
         Returns:
             None
         """
+
+        if self.serve_only:
+            self.logger.info("This instance is in SERVE ONLY mode. Skipping Delete Path")
+            return -1
+
         try:
             if os.path.isfile(path):  # Check if it's a file
                 os.remove(path)

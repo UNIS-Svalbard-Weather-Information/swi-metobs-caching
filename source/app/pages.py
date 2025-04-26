@@ -12,26 +12,37 @@ from utils.citation_utils import load_references
 
 pages = Blueprint('pages', __name__)
 
-def get_git_commit_hash():
-    """Retrieve the current git commit hash."""
+def get_version_info():
+    """Retrieve and format the version information from the version file."""
+    version_file_path = './version'
     try:
-        # Run the git command to get the current commit hash
-        commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.STDOUT)
-        # Decode the output and strip any whitespace
-        return commit_hash.decode('utf-8').strip()
+        with open(version_file_path, 'r') as file:
+            lines = file.readlines()
+            if len(lines) >= 2:
+                codename = lines[0].strip()
+                version = lines[1].strip()
+                try:
+                    stage = lines[2].strip()
+                except:
+                    stage = ""
+                if stage:
+                    return f"{codename} (build {version}) - {stage}"
+                else:
+                    return f"{codename} (build {version})"
+            else:
+                return "Version file format is incorrect"
     except Exception as e:
-        # Return a default value if the command fails
         return "unknown"
 
 @pages.route('/')
 def index():
-    git_commit_hash = get_git_commit_hash()
-    return render_template('index.html', git_commit_hash=git_commit_hash)
+    version_info = get_version_info()
+    return render_template('index.html', version_info=version_info)
 
 @pages.route('/dashboard')
 def dashboard():
-    git_commit_hash = get_git_commit_hash()
-    return render_template('dashboard.html', git_commit_hash=git_commit_hash)
+    version_info = get_version_info()
+    return render_template('dashboard.html', version_info=version_info)
 
 @pages.route('/credits')
 def credits():
@@ -39,7 +50,7 @@ def credits():
     Renders the credits page dynamically based on configuration files and .bib.
     Includes a landscape image and provider logos in place of the map, with links.
     """
-    git_commit_hash = get_git_commit_hash()
+    version_info = get_version_info()
     # Load references
     references = load_references()
 
@@ -65,4 +76,4 @@ def credits():
     ]
 
     # Render the template
-    return render_template('credits.html', references=references, logos=logos, git_commit_hash=git_commit_hash)
+    return render_template('credits.html', references=references, logos=logos, version_info=version_info)
