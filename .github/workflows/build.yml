@@ -1,7 +1,7 @@
 name: Build Docker on prereleased
 on:
   release:
-    types: 
+    types:
       - prereleased
       - released
       - published
@@ -33,7 +33,17 @@ jobs:
             echo "TAG_SUFFIX=" >> $GITHUB_ENV
           fi
         shell: bash
-        
+
+      - name: Check if latest release
+        id: check_latest
+        run: |
+          LATEST_RELEASE=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          if [[ "${{ github.event.release.id }}" == $(echo $LATEST_RELEASE | jq -r '.id') ]]; then
+            echo "IS_LATEST=true" >> $GITHUB_ENV
+          else
+            echo "IS_LATEST=false" >> $GITHUB_ENV
+          fi
+        shell: bash
 
       - name: Update version file with release tag
         run: |
@@ -46,6 +56,7 @@ jobs:
           push: true
           tags: |
             lpauchet/swi-server:${{ github.event.release.tag_name }}${{ env.TAG_SUFFIX }}
+            ${{ env.IS_LATEST == 'true' && env.IS_PRERELEASE == 'false' && 'lpauchet/swi-server:latest' }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.title=${{ github.event.repository.name }}
