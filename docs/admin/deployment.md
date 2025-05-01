@@ -165,4 +165,219 @@ docker-compose up -d
 
 ## WSGI
 
-## Kubernetes
+## Kubernetes Deployment
+
+This section provides a step-by-step guide to deploying your application on Kubernetes with autoscaling. The following steps will help you translate your Docker Compose setup into Kubernetes manifests and configure autoscaling. **This section have been generated using a LLM and have not been tested.**
+
+### Step 1: Create a ConfigMap for Environment Variables
+
+First, create a ConfigMap to store your environment variables, including the API keys from your `.env` file.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swi-env-config
+data:
+  SWI_FROST_API_KEY: "your_frost_api_key"
+  SWI_IWIN_FIXED_API_KEY: "your_iwin_api_key"
+```
+
+### Step 2: Create Kubernetes Deployment Manifests
+
+Convert each service in your Docker Compose file into a Kubernetes Deployment. Below are the deployment manifests for the services defined in your Docker Compose file.
+
+#### Deployment for `swi_cache`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swi-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swi-cache
+  template:
+    metadata:
+      labels:
+        app: swi-cache
+    spec:
+      containers:
+      - name: swi-cache
+        image: lpauchet/swi-server:latest
+        volumeMounts:
+        - mountPath: /app/cache
+          name: cache-volume
+        - mountPath: /app/maps
+          name: maps-volume
+        envFrom:
+        - configMapRef:
+            name: swi-env-config
+        env:
+        - name: SWI_INSTANCE_SERVE_ONLY
+          value: "false"
+        - name: SWI_DOCKER_INSTANCE
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+      volumes:
+      - name: cache-volume
+        hostPath:
+          path: /path/to/cache
+      - name: maps-volume
+        hostPath:
+          path: /path/to/maps
+```
+
+#### Deployment for `swi_serve`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swi-serve
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: swi-serve
+  template:
+    metadata:
+      labels:
+        app: swi-serve
+    spec:
+      containers:
+      - name: swi-serve
+        image: lpauchet/swi-server:latest
+        volumeMounts:
+        - mountPath: /app/cache
+          name: cache-volume
+        - mountPath: /app/maps
+          name: maps-volume
+        envFrom:
+        - configMapRef:
+            name: swi-env-config
+        env:
+        - name: SWI_INSTANCE_SERVE_ONLY
+          value: "true"
+        - name: SWI_DOCKER_INSTANCE
+          value: "true"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+      volumes:
+      - name: cache-volume
+        hostPath:
+          path: /path/to/cache
+      - name: maps-volume
+        hostPath:
+          path: /path/to/maps
+```
+
+### Step 3: Set Up Services
+
+Define Kubernetes Services to expose your deployments. This allows your pods to communicate with each other and external clients.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: swi-cache
+spec:
+  selector:
+    app: swi-cache
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: swi-serve
+spec:
+  selector:
+    app: swi-serve
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+```
+
+### Step 4: Configure Horizontal Pod Autoscaler (HPA)
+
+Set up autoscaling for your deployments based on CPU usage or other metrics. This ensures that your application can handle varying loads efficiently.
+
+```yaml
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: swi-serve-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: swi-serve
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+```
+
+### Step 5: Configure Ingress
+
+Use an Ingress resource to manage external access to your services. This is similar to the previous Caddy configuration and allows you to define routing rules.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: swi-ingress
+spec:
+  rules:
+  - host: your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: swi-serve
+            port:
+              number: 5000
+```
+
+### Step 6: Apply the Manifests
+
+Use `kubectl apply` to deploy your application and autoscaling configuration to the cluster.
+
+```bash
+kubectl apply -f swi-env-configmap.yaml
+kubectl apply -f swi-cache-deployment.yaml
+kubectl apply -f swi-serve-deployment.yaml
+kubectl apply -f swi-services.yaml
+kubectl apply -f swi-hpa.yaml
+kubectl apply -f swi-ingress.yaml
+```
+
+### Notes:
+
+- **ConfigMap**: Update the `swi-env-config` ConfigMap with your actual API keys.
+- **Volumes**: Adjust the `hostPath` to match your environment. For production, consider using PersistentVolumeClaims.
+- **Ingress**: Replace `your-domain.com` with your actual domain. Ensure you have an Ingress controller installed in your cluster.
+
+This setup will deploy your services on Kubernetes, expose them through Services, and enable autoscaling based on CPU usage. Adjust the configurations as needed for your specific requirements.
