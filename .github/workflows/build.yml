@@ -1,8 +1,7 @@
-name: Build and Upload Docker Image
-
+name: Build Docker on prereleased
 on:
   release:
-    types: [created]
+    types: [prereleased, released]
 
 jobs:
   build-and-upload:
