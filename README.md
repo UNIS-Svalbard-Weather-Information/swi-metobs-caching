@@ -1,8 +1,7 @@
 # UNIS Svalbard Weather Information
 
 
-![Test Status](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/pytest.yml/badge.svg) ![Coverage](https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/V1_documentation/docs/coverage-badge.svg)
-
+![Test Status](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/pytest.yml/badge.svg) [![REUSE status](https://api.reuse.software/badge/github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)](https://api.reuse.software/info/github.com/LouisPauchet/UNIS_SvalbardWeatherInformation) 
 
 UNIS Svalbard Weather Information (SWI) is an application to gather the data coming from different weather stations across the archipelago in order to have an overview of the weather conditions.
 
