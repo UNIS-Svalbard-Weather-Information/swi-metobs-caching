@@ -51,5 +51,5 @@ jobs:
           release_name: |
             SWI ( ${{ env.VERSION_NAME }} ${{ env.NEW_TAG }} ${{ env.VERSION_STATE && format('{0}', env.VERSION_STATE) || '' }} )
           body: Automated pre-release for commit ${{ github.sha }}
-          draft: false
+          draft: true
           prerelease: true
