@@ -8,24 +8,32 @@ on:
 
 jobs:
   create-pre-release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check branch
+        if: github.ref == 'refs/heads/master'
+        run: echo "Running on master branch"
+
       - name: Checkout code
+        if: github.ref == 'refs/heads/master'
         uses: actions/checkout@v2
 
       - name: Set up Git
+        if: github.ref == 'refs/heads/master'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Get previous tag
+        if: github.ref == 'refs/heads/master'
         id: get_previous_tag
         run: |
           previous_tag=$(git describe --tags --match "1.0.*" --abbrev=0 2>/dev/null || echo "1.0.0")
           echo "PREVIOUS_TAG=$previous_tag" >> $GITHUB_ENV
 
       - name: Calculate new tag
+        if: github.ref == 'refs/heads/master'
         id: calculate_new_tag
         run: |
           IFS='.' read -r -a version_parts <<< "$PREVIOUS_TAG"
@@ -35,14 +43,21 @@ jobs:
         shell: bash
 
       - name: Read version file
+        if: github.ref == 'refs/heads/master'
         id: read_version_file
         run: |
-          version_name=$(awk 'NR==1' version)
-          version_state=$(awk 'NR==3' version || echo "")
-          echo "VERSION_NAME=$version_name" >> $GITHUB_ENV
-          echo "VERSION_STATE=$version_state" >> $GITHUB_ENV
+          if [[ -f "version" ]]; then
+            version_name=$(awk 'NR==1' version)
+            version_state=$(awk 'NR==3' version || echo "")
+            echo "VERSION_NAME=$version_name" >> $GITHUB_ENV
+            echo "VERSION_STATE=$version_state" >> $GITHUB_ENV
+          else
+            echo "Version file not found!"
+            exit 1
+          fi
 
       - name: Create pre-release
+        if: github.ref == 'refs/heads/master'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
