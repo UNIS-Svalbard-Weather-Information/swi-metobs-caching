@@ -42,17 +42,6 @@ jobs:
           echo "VERSION_NAME=$version_name" >> $GITHUB_ENV
           echo "VERSION_STATE=$version_state" >> $GITHUB_ENV
 
-      - name: Update version file
-        run: |
-          sed -i "2s/.*/${{ env.NEW_TAG }}/" version
-
-      - name: Create temporary branch
-        run: |
-          git checkout -b temp-release-branch
-          git add version
-          git commit -m "Update version file to ${{ env.NEW_TAG }}"
-          git push origin temp-release-branch
-
       - name: Create pre-release
         uses: actions/create-release@v1
         env:
@@ -60,7 +49,7 @@ jobs:
         with:
           tag_name: ${{ env.NEW_TAG }}
           release_name: |
-            Release ${{ env.VERSION_NAME }} ${{ env.NEW_TAG }} ${{ env.VERSION_STATE && format('{0}', env.VERSION_STATE) || '' }}
+            SWI ( ${{ env.VERSION_NAME }} ${{ env.NEW_TAG }} ${{ env.VERSION_STATE && format('{0}', env.VERSION_STATE) || '' }} )
           body: Automated pre-release for commit ${{ github.sha }}
           draft: false
           prerelease: true
