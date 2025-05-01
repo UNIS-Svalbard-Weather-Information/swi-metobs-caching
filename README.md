@@ -79,6 +79,8 @@ The Svalbard Weather Information (SWI) project is a web application designed to 
 ### Production Environment
 For production use, it is recommended to set up a load balancer to distribute traffic across multiple instances of the `swi_serve` service. This ensures high availability and reliability. Additionally, consider implementing monitoring and logging to track the application's performance and quickly address any issues that may arise. Note that access logs should be implemented at the load balancer level.
 
+For detailed deployment instructions, refer to the [Deployment Documentation](https://swi-svalbard-weather-information.readthedocs.io/admin/deployment/).
+
 ## Automated Workflows
 - **Auto Test**: Automated tests are set up to ensure the application runs smoothly.
 - **Release**: Automated release workflows are configured for seamless deployment.
