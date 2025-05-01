@@ -1,189 +1,100 @@
-# UNIS Svalbard Weather Information
+# Svalbard Weather Information (SWI)
 
 
-![Test Status](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/pytest.yml/badge.svg) ![Coverage](https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/V1_documentation/docs/coverage-badge.svg)
+[![Tests](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/pytest.yml/badge.svg)](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/pytest.yml) [![Pre-release](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/prerelease.yml/badge.svg)](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/prerelease.yml) [![Docker Build](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/build.yml/badge.svg)](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation/actions/workflows/build.yml) [![REUSE status](https://api.reuse.software/badge/github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)](https://api.reuse.software/info/github.com/LouisPauchet/UNIS_SvalbardWeatherInformation) [![codecov](https://codecov.io/gh/LouisPauchet/UNIS_SvalbardWeatherInformation/graph/badge.svg?token=YCSP0BAVND)](https://codecov.io/gh/LouisPauchet/UNIS_SvalbardWeatherInformation)    [![Docs](https://app.readthedocs.org/projects/swi-svalbard-weather-information/badge/?version=latest)](https://swi-svalbard-weather-information.readthedocs.io/)
 
 
-UNIS Svalbard Weather Information (SWI) is an application to gather the data coming from different weather stations across the archipelago in order to have an overview of the weather conditions.
+## Overview
+The Svalbard Weather Information (SWI) project is a web application designed to assist users in planning trips to Svalbard. It provides essential tools and near real-time weather data from various weather stations in the region. The application includes map layers, avalanche forecasts, sea ice information, regulation layers, and more.
 
-## Table of Contents
+## Features
+- **Map Layers**: Visualize different geographical and environmental data layers, including avalanche forecasts, sea ice information, and regulation layers.
+- **Real-Time Weather Data**: Access near real-time weather information from multiple weather stations.
+- **GPX Import/Export**: Easily import and export GPX files for route planning and sharing.
+- **Drawing Tools**: Annotate and draw on maps to customize your trip planning.
 
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [Mobile Stations](#mobile-stations)
-  - [Fixed Stations](#fixed-stations)
-- [Usage](#usage)
-  - [Running the Application](#running-the-application)
-  - [API Endpoints](#api-endpoints)
-- [Import Functions](#import-functions)
-- [Directory Structure](#directory-structure)
-- [Contributing](#contributing)
-- [License](#license)
+## Getting Started
 
-## Installation
+### Prerequisites
+- Docker: Ensure Docker is installed on your machine.
 
-1. **Clone the repository:**
+### Installation
+1. Download the `docker-compose.yml` file.
 
-    ```bash
-    git clone https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation.git
-    ```
+### Configuration
+1. Create a `.env` file in the project root directory.
+2. Add your API keys for the different data sources to the `.env` file. For example:
+   ```plaintext
+   SWI_FROST_API_KEY=your_frost_api_key
+   SWI_IWIN_FIXED_API_KEY=your_iwin_api_key
+   ```
+3. Update the `docker-compose.yml` file to include the environment variables:
+   ```yaml
+   version: '3.8'
+   services:
+     swi_cache:
+       image: lpauchet/swi-server:latest
+       ports:
+         - "5000:5000"
+       volumes:
+         - ./docker_volume/cache:/app/cache
+         - ./docker_volume/maps:/app/maps
+       env_file:
+         - .env
+       environment:
+         - SWI_INSTANCE_SERVE_ONLY=false
+         - SWI_DOCKER_INSTANCE=true
+       healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:5000"]
+         interval: 30s
+         timeout: 10s
+         retries: 5
 
-2. **Navigate to the project directory:**
-
-    ```bash
-    cd UNIS_SvalbardWeatherInformation
-    ```
-
-3. **Install dependencies:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## Configuration
-
-The application uses JSON configuration files to define the details of mobile and fixed stations.
-
-### Mobile Stations
-
-Example `mobile_stations.json`:
-
-```json
-[
-    {
-        "id": "bard",
-        "name": "MS Bard",
-        "project": "IWIN Boat",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBard/10min/%Y/%m/mobile_AWS_MSBard_Table_10min_%Y%m%d.nc",
-        "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed_corrected",
-            "windDirection": "wind_direction_corrected",
-            "relativeHumidity": "relative_humidity"
-        },
-        "icon": "/static/images/boat/bard.png",
-        "import_function" : "netcdf_boat.netcdf_boat"
-    },
-    ...
-]
-```
-
-### Fixed Stations
-
-Example `fixed_stations.json`:
-
-```json
-[
-    {
-        "id": "bohemanneset",
-        "name": "Bohemanneset",
-        "project": "IWIN Lighthouse",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/lighthouse_AWS_Bohemanneset/10min/%Y/%m/lighthouse_AWS_Bohemanneset_Table_10min_%Y%m%d.nc",
-        "variables": {
-            "airTemperature": "temperature",
-            "seaSurfaceTemperature": null,
-            "windSpeed": "wind_speed_corrected",
-            "windDirection": "wind_direction_corrected",
-            "relativeHumidity": "relative_humidity"
-        },
-        "icon": "/static/images/lighthouse.png",
-        "lat": 78.38166,
-        "lon": 14.753,
-        "import_function" : "netcdf_lighthouse.netcdf_lighthouse"
-    },
-    ...
-]
-```
-
-## Usage
+     swi_serve:
+       image: lpauchet/swi-server:latest
+       ports:
+         - "5001:5000"
+       volumes:
+         - ./docker_volume/cache:/app/cache
+         - ./docker_volume/maps:/app/maps
+       env_file:
+         - .env
+       environment:
+         - SWI_INSTANCE_SERVE_ONLY=true
+         - SWI_DOCKER_INSTANCE=true
+       healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:5000"]
+         interval: 30s
+         timeout: 10s
+         retries: 5
+   ```
 
 ### Running the Application
+1. Start the Docker container:
+   ```bash
+   docker-compose up
+   ```
+2. Access the application in your web browser at `http://localhost:5000`. To use the application behind a load balancer, you can multiply the serve instance.
 
-To run the application in development mode, execute the following command:
+### Production Environment
+For production use, it is recommended to set up a load balancer to distribute traffic across multiple instances of the `swi_serve` service. This ensures high availability and reliability. Additionally, consider implementing monitoring and logging to track the application's performance and quickly address any issues that may arise. Note that access logs should be implemented at the load balancer level.
 
-```bash
-python app.py
-```
+For detailed deployment instructions, refer to the [Deployment Documentation](https://swi-svalbard-weather-information.readthedocs.io/admin/deployment/).
 
-The application will be accessible at `http://127.0.0.1:5000/`.
-
-### API Endpoints
-
-#### 1. Index Page
-
-**Route:** `/`
-
-**Method:** GET
-
-**Description:** Renders the `index.html` template.
-
-#### 2. Mobile Station Data
-
-**Route:** `/api/mobile-station-data/<station_id>`
-
-**Method:** GET
-
-**Description:** Fetches data for a specified mobile station.
-
-**Query Parameters:**
-- `duration` (optional, default=1): Duration for which to fetch data.
-
-**Response:**
-- `200 OK`: JSON data of the requested station.
-- `404 Not Found`: If the station ID does not exist.
-- `500 Internal Server Error`: If there is an error processing the request.
-
-#### 3. Fixed Station Data
-
-**Route:** `/api/fixed-station-data/<station_id>`
-
-**Method:** GET
-
-**Description:** Fetches data for a specified fixed station.
-
-**Query Parameters:**
-- `duration` (optional, default=1): Duration for which to fetch data.
-
-**Response:**
-- `200 OK`: JSON data of the requested station.
-- `404 Not Found`: If the station ID does not exist.
-- `500 Internal Server Error`: If there is an error processing the request.
-
-## Import Functions
-
-The import functions used to fetch and process data are located in the `import_functions` folder. Each function is documented within its respective module and a general documentation to help to create `import_function` dedicated to certain sources of data is availble [how-to-import-function](/import_functions/how-to-import-function.md)
-
-## Directory Structure
-
-```plaintext
-<project_directory>/
-├───data
-├───import_functions
-├───static
-│   ├───config
-│   ├───css
-│   ├───images
-│   │   ├───boat
-│   │   ├───old_wind
-│   │   └───wind
-│   └───js
-└───templates
-```
-
->[!WARNING] 
->The folder ```data``` is required in order to store cached data file to reduce the calculation time on the server.
+## Automated Workflows
+- **Auto Test**: Automated tests are set up to ensure the application runs smoothly.
+- **Release**: Automated release workflows are configured for seamless deployment.
+- **Build**: Automated build processes are in place to compile the application efficiently.
 
 ## Contributing
-
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
-
+We welcome contributions from the community. To contribute:
 1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -am 'Add new feature'`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Create a new pull request.
+2. Create a new branch: `git checkout -b feature-new-feature`.
+3. Make your changes and commit them: `git commit -am 'Add new feature'`.
+4. Push to the branch: `git push origin feature-new-feature`.
+5. Submit a pull request.
+
+Feel free to open issues for any bugs, feature requests, or general feedback. Your input is valuable to us!
 
 ## License
-
-This project is licensed under the CC0 1.0 Universal. See the LICENSE file for more details.
+This project is licensed under the CC0-1.0 License. See the [LICENSE](LICENSE) file for details.

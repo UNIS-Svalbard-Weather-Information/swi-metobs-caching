@@ -32,22 +32,9 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Run tests without live tests
-        run: pytest --cov=. --cov-report=xml --cov-report=term --ignore-glob='*live*.py' --maxfail=1 --exitfirst
+        run: pytest --cov --cov-branch --cov-report=xml --ignore-glob='*live*.py' --maxfail=1 --exitfirst
 
-      - name: Debug - List all files before uploading coverage
-        run: ls -R
-
-      - name: Check if coverage report exists
-        run: |
-          if [ -f coverage.xml ]; then
-            echo "Coverage report found."
-          else
-            echo "ERROR: coverage.xml not found!"
-            exit 1
-          fi
-
-      - name: Upload coverage report as GitHub Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          name: coverage-report-${{ matrix.python-version }}
-          path: "**/coverage.xml"
+          token: ${{ secrets.CODECOV_TOKEN }}
