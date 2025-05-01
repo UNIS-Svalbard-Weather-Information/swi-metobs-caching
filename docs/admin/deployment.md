@@ -40,39 +40,37 @@ SWI_IWIN_FIXED_API_KEY=your_iwin_api_key
 
 ### Deployment Steps
 
-Here is an example of how to deploy the setup to run two serving containers behind a Caddy reverse proxy as a load balancer.
-
-1. **Create a New Directory**
+#### Step 1: Create a New Directory
 
 ```sh
 mkdir swi
 cd swi
 ```
 
-2. **Fetch the Docker Compose File**
+#### Step 2: Fetch the Docker Compose File
 
-   Download the `docker-compose.yml` file from the repository: [LouisPauchet/UNIS_SvalbardWeatherInformation](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)
+Download the `docker-compose.yml` file from the repository: [LouisPauchet/UNIS_SvalbardWeatherInformation](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)
 
 ```sh
 wget https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/master/docker-compose.yml -O docker-compose.yml
 ```
 
-3. **Create the API Key `.env` File**
+#### Step 3: Create the API Key `.env` File
 
 ```sh
 echo "SWI_FROST_API_KEY=your_frost_api_key" >> .env
 echo "SWI_IWIN_FIXED_API_KEY=your_iwin_api_key" >> .env
 ```
 
-4. **Update the Docker Compose File**
+#### Step 4: Update the Docker Compose File
 
-   Modify the `docker-compose.yml` file to include two `swi_serve` services and update the volumes to `./cache` and `./maps`.
+Modify the `docker-compose.yml` file to include two `swi_serve` services and update the volumes to `./cache` and `./maps`.
 
-5. **Add the Caddy Container to Docker Compose**
+#### Step 5: Add the Caddy Container to Docker Compose
 
-   Add the Caddy container configuration to the `docker-compose.yml` file and point it to the `Caddyfile`.
+Add the Caddy container configuration to the `docker-compose.yml` file and point it to the `Caddyfile`.
 
-6. **Create a Caddyfile**
+#### Step 6: Create a Caddyfile
 
 ```plaintext
 http://localhost {
@@ -157,7 +155,7 @@ networks:
     driver: bridge
 ```
 
-7. **Run the Containers**
+#### Step 7: Run the Containers
 
 ```sh
 docker-compose up -d
