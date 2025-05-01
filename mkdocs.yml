@@ -45,6 +45,9 @@ nav:
   - User:
       - Introduction: user/intro.md
       - Avalanche Forecasting: user/avalanche_forecast.md
+  - Administrator:
+      - Introduction: admin/intro.md
+      - Deployment: admin/deployment.md
   - API:
       - AW Stations Endpoints: api.md
   - Backend Codebase:
