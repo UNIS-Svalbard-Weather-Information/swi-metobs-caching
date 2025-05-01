@@ -1,9 +1,6 @@
 name: Create Pre-release
 
 on:
-  push:
-    branches:
-      - master
   workflow_run:
     workflows: ["Tests"]
     types:
@@ -11,7 +8,7 @@ on:
 
 jobs:
   create-pre-release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -49,11 +46,12 @@ jobs:
         run: |
           sed -i "2s/.*/${{ env.NEW_TAG }}/" version
 
-      - name: Commit version file
+      - name: Create temporary branch
         run: |
+          git checkout -b temp-release-branch
           git add version
           git commit -m "Update version file to ${{ env.NEW_TAG }}"
-          git push origin master
+          git push origin temp-release-branch
 
       - name: Create pre-release
         uses: actions/create-release@v1
@@ -64,5 +62,10 @@ jobs:
           release_name: |
             Release ${{ env.VERSION_NAME }} ${{ env.NEW_TAG }} ${{ env.VERSION_STATE && format('{0}', env.VERSION_STATE) || '' }}
           body: Automated pre-release for commit ${{ github.sha }}
-          draft: true
+          draft: false
           prerelease: true
+
+      - name: Delete temporary branch
+        if: always()
+        run: |
+          git push origin --delete temp-release-branch
