@@ -46,6 +46,7 @@ Here is an example of how to deploy the setup to run two serving containers behi
 
    ```bash
    mkdir swi
+   cd swi
    ```
 
 2. **Fetch the Docker Compose File**
@@ -59,7 +60,6 @@ Here is an example of how to deploy the setup to run two serving containers behi
 3. **Create the API Key `.env` File**
 
    ```bash
-   touch .env
    echo "SWI_FROST_API_KEY=your_frost_api_key" >> .env
    echo "SWI_IWIN_FIXED_API_KEY=your_iwin_api_key" >> .env
    ```
@@ -75,8 +75,8 @@ Here is an example of how to deploy the setup to run two serving containers behi
 6. **Create a Caddyfile**
 
    ```plaintext
-   http://localhost:80 {
-       reverse_proxy localhost:6501 localhost:6502 {
+   http://localhost {
+       reverse_proxy swi_serve1:5000 swi_serve2:5000 {
            # Load balancing options
            lb_policy round_robin
        }
@@ -86,16 +86,12 @@ Here is an example of how to deploy the setup to run two serving containers behi
 #### Example Docker Compose File
 
 ```yaml
-version: '3.8'
-
 services:
   swi_cache:
     image: lpauchet/swi-server:latest
-    ports:
-      - "5000:5000"
     volumes:
-      - ./docker_volume/cache:/app/cache
-      - ./docker_volume/maps:/app/maps
+      - ./cache:/app/cache
+      - ./maps:/app/maps
     env_file:
       - .env
     environment:
@@ -106,14 +102,16 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - swi_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   swi_serve1:
     image: lpauchet/swi-server:latest
-    ports:
-      - "6501:5000"
     volumes:
-      - ./docker_volume/cache:/app/cache
-      - ./docker_volume/maps:/app/maps
+      - ./cache:/app/cache
+      - ./maps:/app/maps
     environment:
       - SWI_INSTANCE_SERVE_ONLY=true
       - SWI_DOCKER_INSTANCE=true
@@ -122,14 +120,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - swi_network
 
   swi_serve2:
     image: lpauchet/swi-server:latest
-    ports:
-      - "6502:5000"
     volumes:
-      - ./docker_volume/cache:/app/cache
-      - ./docker_volume/maps:/app/maps
+      - ./cache:/app/cache
+      - ./maps:/app/maps
     environment:
       - SWI_INSTANCE_SERVE_ONLY=true
       - SWI_DOCKER_INSTANCE=true
@@ -138,6 +136,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - swi_network
 
   caddy:
     image: caddy:latest
@@ -149,7 +149,12 @@ services:
     depends_on:
       - swi_serve1
       - swi_serve2
-      - swi_cache
+    networks:
+      - swi_network
+
+networks:
+  swi_network:
+    driver: bridge
 ```
 
 7. **Run the Containers**
