@@ -53,8 +53,3 @@ jobs:
           body: Automated pre-release for commit ${{ github.sha }}
           draft: false
           prerelease: true
-
-      - name: Delete temporary branch
-        if: always()
-        run: |
-          git push origin --delete temp-release-branch
