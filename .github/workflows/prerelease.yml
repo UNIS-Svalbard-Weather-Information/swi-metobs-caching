@@ -3,6 +3,7 @@ name: Create Pre-release
 on:
   workflow_run:
     workflows: ["Tests"]
+    branches: master
     types:
       - completed
 

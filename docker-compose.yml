@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   swi_cache:
-    image: swi-server #:latest  # Add a specific tag if available
+    image: lpauchet/swi-server:latest
     ports:
       - "5000:5000"
     volumes:
       - ./docker_volume/cache:/app/cache
       - ./docker_volume/maps:/app/maps
+    env_file:
+      - .env
     environment:
-      - SWI_FROST_API_KEY=[Frost Api Key]      
-      - SWI_IWIN_FIXED_API_KEY=
-      - SWI_INSTANCE_SERVE_ONLY=false  # Removed quotes for boolean value
+      - SWI_INSTANCE_SERVE_ONLY=false
       - SWI_DOCKER_INSTANCE=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000"]
@@ -20,16 +20,14 @@ services:
       retries: 5
 
   swi_serve:
-    image: swi-server #:latest  # Add a specific tag if available
+    image: lpauchet/swi-server:latest
     ports:
       - "5001:5000"
     volumes:
       - ./docker_volume/cache:/app/cache
       - ./docker_volume/maps:/app/maps
     environment:
-      - SWI_FROST_API_KEY=      
-      - SWI_IWIN_FIXED_API_KEY=
-      - SWI_INSTANCE_SERVE_ONLY=true  # Removed quotes for boolean value
+      - SWI_INSTANCE_SERVE_ONLY=true
       - SWI_DOCKER_INSTANCE=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000"]
