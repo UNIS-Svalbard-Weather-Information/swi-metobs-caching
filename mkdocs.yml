@@ -39,7 +39,6 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
   - git-authors
-  - glightbox  # Add this plugin for better image and iframe handling
 
 nav:
   - Home: index.md
