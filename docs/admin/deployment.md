@@ -54,7 +54,7 @@ cd swi
    Download the `docker-compose.yml` file from the repository: [LouisPauchet/UNIS_SvalbardWeatherInformation](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)
 
 ```sh
-wget https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/main/docker-compose.yml -O docker-compose.yml
+wget https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/master/docker-compose.yml -O docker-compose.yml
 ```
 
 3. **Create the API Key `.env` File**
@@ -66,7 +66,7 @@ echo "SWI_IWIN_FIXED_API_KEY=your_iwin_api_key" >> .env
 
 4. **Update the Docker Compose File**
 
-   Modify the `docker-compose.yml` file to include two `swi_serve` services on different ports (e.g., 6501 and 6502) and update the volumes to `./cache` and `./maps`.
+   Modify the `docker-compose.yml` file to include two `swi_serve` services and update the volumes to `./cache` and `./maps`.
 
 5. **Add the Caddy Container to Docker Compose**
 
@@ -159,9 +159,9 @@ networks:
 
 7. **Run the Containers**
 
-   ```bash
-   docker-compose up -d
-   ```
+```sh
+docker-compose up -d
+```
 
 ## WSGI
 
