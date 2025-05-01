@@ -44,25 +44,25 @@ Here is an example of how to deploy the setup to run two serving containers behi
 
 1. **Create a New Directory**
 
-   ```bash
-   mkdir swi
-   cd swi
-   ```
+```sh
+mkdir swi
+cd swi
+```
 
 2. **Fetch the Docker Compose File**
 
    Download the `docker-compose.yml` file from the repository: [LouisPauchet/UNIS_SvalbardWeatherInformation](https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation)
 
-   ```bash
-   wget https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/main/docker-compose.yml -O docker-compose.yml
-   ```
+```sh
+wget https://raw.githubusercontent.com/LouisPauchet/UNIS_SvalbardWeatherInformation/main/docker-compose.yml -O docker-compose.yml
+```
 
 3. **Create the API Key `.env` File**
 
-   ```bash
-   echo "SWI_FROST_API_KEY=your_frost_api_key" >> .env
-   echo "SWI_IWIN_FIXED_API_KEY=your_iwin_api_key" >> .env
-   ```
+```sh
+echo "SWI_FROST_API_KEY=your_frost_api_key" >> .env
+echo "SWI_IWIN_FIXED_API_KEY=your_iwin_api_key" >> .env
+```
 
 4. **Update the Docker Compose File**
 
@@ -74,14 +74,14 @@ Here is an example of how to deploy the setup to run two serving containers behi
 
 6. **Create a Caddyfile**
 
-   ```plaintext
-   http://localhost {
-       reverse_proxy swi_serve1:5000 swi_serve2:5000 {
-           # Load balancing options
-           lb_policy round_robin
-       }
-   }
-   ```
+```plaintext
+http://localhost {
+    reverse_proxy swi_serve1:5000 swi_serve2:5000 {
+        # Load balancing options
+        lb_policy round_robin
+    }
+}
+```
 
 #### Example Docker Compose File
 
