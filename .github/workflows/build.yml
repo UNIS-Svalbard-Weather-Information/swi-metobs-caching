@@ -1,7 +1,10 @@
 name: Build Docker on prereleased
 on:
   release:
-    types: [prereleased, released]
+    types: 
+      - prereleased
+      - released
+      - published
 
 jobs:
   build-and-upload:
