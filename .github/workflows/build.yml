@@ -25,13 +25,15 @@ jobs:
       - name: Determine release type
         id: release_type
         run: |
-          if [[ "\\${{ github.event.release.prerelease }}" == "true" ]]; then
-            echo "IS_PRERELEASE=true" >> \\$GITHUB_ENV
-            echo "TAG_SUFFIX=-beta" >> \\$GITHUB_ENV
+          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_ENV
+            echo "TAG_SUFFIX=-beta" >> $GITHUB_ENV
           else
-            echo "IS_PRERELEASE=false" >> \\$GITHUB_ENV
+            echo "IS_PRERELEASE=false" >> $GITHUB_ENV
             echo "TAG_SUFFIX=" >> $GITHUB_ENV
           fi
+        shell: bash
+        
 
       - name: Update version file with release tag
         run: |
