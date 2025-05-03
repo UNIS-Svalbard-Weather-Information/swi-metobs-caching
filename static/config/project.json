@@ -1,8 +1,8 @@
 {
-    "iwinoats",
+    "iwin_boats" : {
+        "name": "IWIN Boats",
         "cite": "frank_iwin_2023"
-    },_boats": {
-        "name": "IWIN B,
+    },
     "iwin_lighthouse": {
         "name": "IWIN Lighthouse",
         "cite": "frank_iwin_2023"
