@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
+# SPDX-License-Identifier:  CC0-1.0
+
+
 import requests
 from datetime import datetime, timedelta, timezone
 import pandas as pd
