@@ -143,9 +143,18 @@ class DataSource(ABC):
             timeserie = []
 
             for index, row in df.iterrows():
+                lat, lon = None, None
                 obs = {'timestamp': index.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}  # Use the index as the timestamp
                 for key in keys:
-                    obs[key] = float(f"{row[key]:.2f}")  # Access row data using the column name
+                    if key == 'latitude':
+                        lat = row.get(key,None)
+                    elif key == 'longitude':
+                        lon = row.get(key,None)
+                    else:
+                        obs[key] = float(f"{row[key]:.2f}")  # Access row data using the column name
+                
+                if lat and lon:
+                    obs["location"] = {"lat": float(f"{lat:.4f}"), "lon": float(f"{lon:.4f}")}
                 timeserie.append(obs)
 
             return timeserie
