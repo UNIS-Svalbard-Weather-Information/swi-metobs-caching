@@ -30,6 +30,7 @@ If you want to test the latest developments that are not yet released, you need 
 
    ```sh
    git clone https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation.git
+   cd UNIS_SvalbardWeatherInformation
    git checkout [name of the branch to test]
    ```
 
