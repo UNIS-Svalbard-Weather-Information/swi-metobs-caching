@@ -46,6 +46,10 @@ If you want to test the latest developments that are not yet released, you need 
    sed -i 's|lpauchet/swi-server:latest|swi-server|g' docker-compose.yml
    ```
 
+4. If you need to work with the config files, you can add this line in the swi-server container in the Docker compose file
+   ```plaintext
+   - ./static/config:/app/static/config
+   ```
 ### Configuration
 1. Create a `.env` file in the project root directory.
 2. Add your API keys for the different data sources to the `.env` file. For example:
