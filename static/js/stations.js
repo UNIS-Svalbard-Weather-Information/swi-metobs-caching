@@ -25,6 +25,12 @@ let windMarkers = {};
 let fixedStations = [];
 
 /**
+ * Array to store fixed station data.
+ * @type {Array.<Object>}
+ */
+let mobileStations = [];
+
+/**
  * Array to store offline station data.
  * @type {Array.<Object>}
  */
@@ -53,7 +59,9 @@ function loadStations(windImagesUrl) {
         const onlineStations = onlineData.online_stations || [];
         offlineStations = offlineData.offline_stations || [];
 
-        fixedStations = onlineStations.filter(station => station.type === "fixed");
+        //fixedStations = onlineStations.filter(station => station.type === "fixed");
+        fixedStations = onlineStations;
+        //mobileStations = onlineStations.filter(station => station.type === "mobile");
 
         onlineStations.forEach(station => stationVisibility[station.id] = true);
         offlineStations.forEach(station => stationVisibility[station.id] = false);
@@ -435,13 +443,24 @@ function updateFixedStationMarker(station, data, windImagesUrl) {
 
     // Create popup content using latest data
     const variableInfo = createPopupContent(station, latestData);
+    let location = station.location;
+
+    if (station.type === 'mobile') {
+        const latestData = (data && data.timeseries && data.timeseries.length > 0)
+            ? data.timeseries[0] // Get the most recent measurement
+            : null;
+    
+        if (latestData) {
+            location = latestData.location;
+        }
+    }
 
     // Add the marker to the map with the custom icon
-    const marker = L.marker([station.location.lat, station.location.lon], { icon: customIcon }).addTo(map);
+    const marker = L.marker([location.lat, location.lon], { icon: customIcon }).addTo(map);
     marker.bindPopup(variableInfo);
     fixedStationMarkers[station.id] = marker;
 
-    updateWindMarker(station, data, windImagesUrl);
+    updateWindMarker(station, data, windImagesUrl, location);
 }
 
 
@@ -453,7 +472,7 @@ function updateFixedStationMarker(station, data, windImagesUrl) {
  * @param {Object|null} data - The station data, containing timeseries measurements.
  * @param {string} windImagesUrl - Base URL for wind images.
  */
-function updateWindMarker(station, data, windImagesUrl) {
+function updateWindMarker(station, data, windImagesUrl, location) {
     // Extract the latest available data from timeseries
     const latestData = (data && data.timeseries && data.timeseries.length > 0)
         ? data.timeseries[0] // Get the most recent measurement
@@ -486,7 +505,7 @@ function updateWindMarker(station, data, windImagesUrl) {
     }
 
     // Add new wind marker with updated position and icon
-    const windMarker = L.marker([station.location.lat, station.location.lon], {
+    const windMarker = L.marker([location.lat, location.lon], {
         icon: windRotatedIcon,
     }).addTo(map);
 
