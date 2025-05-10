@@ -32,13 +32,15 @@ def get_datasource(station_id, config=None):
 
     logger.info(f"Fetching metadata for station_id: {station_id}")
     station = config.get_metadata(station_id)
-
+    #print(station)
     # Get the datasource name from metadata
-    source_name = station.get('datasource', "FrostSource")
+    source_name = station.get('datasource', None)
+    type = station.get('type', 'fixed')
 
     # Validate the datasource
     if source_name not in DATASOURCE_MAPPING:
-        if station['type'] == 'mobile':
+        #print(type)
+        if type == 'mobile':
             logger.warning(f"Unknown datasource '{source_name}' for station_id {station_id}, defaulting to FrostBoatSource.")
             source_name = "FrostBoatSource"
         else:
