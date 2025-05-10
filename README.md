@@ -59,7 +59,7 @@ If you want to test the latest developments that are not yet released, you need 
    ```bash
    docker-compose up -d
    ```
-2. Access the application in your web browser at `http://localhost`. To use the application behind a load balancer, you can multiply the serve instance.
+2. Access the application in your web browser at `http://localhost`. For the default docker file, there is one caching service and two worker behind a caddy load balancer.
 
 ### Production Environment
 For production use, it is recommended to set up a load balancer to distribute traffic across multiple instances of the `swi_serve` service. This ensures high availability and reliability. Additionally, consider implementing monitoring and logging to track the application's performance and quickly address any issues that may arise. Note that access logs should be implemented at the load balancer level.
