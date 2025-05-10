@@ -85,7 +85,7 @@ def test_get_datasource_unknown_datasource_fallback(mock_logger, mock_config_han
     if the metadata contains an unknown datasource.
     """
     # Arrange
-    mock_config_handler.get_metadata.return_value = {"datasource": "UnknownSource"}
+    mock_config_handler.get_metadata.return_value = {"datasource": "UnknownSource", 'type':'fixed'}
     mock_config_handler.get_api_credential.return_value = "fallback_api_key"
 
     # Act
