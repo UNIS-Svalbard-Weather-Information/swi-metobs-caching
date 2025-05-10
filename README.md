@@ -21,6 +21,30 @@ The Svalbard Weather Information (SWI) project is a web application designed to 
 ### Installation
 1. Download the `docker-compose.yml` and `Caddyfile` file.
 
+
+### Build
+
+If you want to test the latest developments that are not yet released, you need to build the app from scratch:
+
+1. Clone the repository and go to the wanted branch:
+
+   ```sh
+   git clone https://github.com/LouisPauchet/UNIS_SvalbardWeatherInformation.git
+   git checkout [name of the branch to test]
+   ```
+
+2. Build the container:
+
+   ```sh
+   docker build -t swi-server .
+   ```
+
+3. Update the docker-compose file to replace the image name from Docker Hub with the name `swi-server`:
+
+   ```sh
+   sed -i 's|lpauchet/swi-server:latest|swi-server|g' docker-compose.yml
+   ```
+
 ### Configuration
 1. Create a `.env` file in the project root directory.
 2. Add your API keys for the different data sources to the `.env` file. For example:
