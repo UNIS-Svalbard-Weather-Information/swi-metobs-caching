@@ -11,7 +11,7 @@
             "windDirection": "wind_direction_corrected",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/boat/bard.png",
+        "icon": "/static/images/boat/bard.svg",
         "import_function" : "netcdf_boat.netcdf_boat"
     },
     
@@ -26,7 +26,7 @@
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/boat/billefjorden.png",
+        "icon": "/static/images/boat/billefjorden.svg",
         "import_function" : "netcdf_boat.netcdf_boat"
     },
     {
@@ -40,7 +40,7 @@
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/boat/billefjorden.png",
+        "icon": "/static/images/boat/polargirl.svg",
         "import_function" : "netcdf_boat.netcdf_boat"
     }
 ]
