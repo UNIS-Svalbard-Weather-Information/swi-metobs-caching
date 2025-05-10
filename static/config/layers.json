@@ -110,7 +110,7 @@
             "name": "World Imagery (very slow)",
             "type": "arcgis",
             "url": "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
-            "layers": [2],
+            "layers": [0],
             "cite" : "arcgis_world_imagery",
             "category" : "Terrain"
         },
