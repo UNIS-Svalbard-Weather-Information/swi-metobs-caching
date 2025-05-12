@@ -1,7 +1,7 @@
 {
     "baseMaps": [
         {
-            "name": "Topo Svalbard :)",
+            "name": "Topo Svalbard",
             "type": "arcgis",
             "url": "https://geodata.npolar.no/arcgis/rest/services/Basisdata/NP_Basiskart_Svalbard_WMTS_3857/MapServer",
             "cite": "norwegian_polar_institute_np_2024",
