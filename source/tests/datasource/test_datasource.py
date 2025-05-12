@@ -8,7 +8,7 @@ import pytest
 import logging
 from unittest.mock import patch, mock_open
 from source.datasource.datasource import DataSource
-import json
+import pandas as pd
 
 
 # Concrete subclass for testing
@@ -95,3 +95,96 @@ def test_handle_error(mock_error, data_source):
     error = Exception("Test error")
     data_source._handle_error(error)
     mock_error.assert_called_once_with("Error occurred: Test error")
+
+
+# Test for df_to_timeserie method
+def test_df_to_timeserie(data_source):
+    """Test conversion of DataFrame to time series observations."""
+    # Create a sample DataFrame
+    data = {
+        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
+        'airTemperature': [-5.4, -5.8],
+        'windDirection': [205, 205],
+        'windSpeed': [7.1, 6.1]
+    }
+    df = pd.DataFrame(data).set_index('timestamp')
+
+    # Call the method
+    result = data_source.df_to_timeserie(df)
+
+    # Expected result
+    expected_result = [
+        {
+            "airTemperature": -5.4,
+            "timestamp": "2025-02-08T17:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 7.1
+        },
+        {
+            "airTemperature": -5.8,
+            "timestamp": "2025-02-08T18:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 6.1
+        }
+    ]
+
+    # Assert the result
+    assert result == expected_result
+
+# Test for handling latitude and longitude
+def test_df_to_timeserie_with_location(data_source):
+    """Test conversion of DataFrame with latitude and longitude to time series observations."""
+    # Create a sample DataFrame with location data
+    data = {
+        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
+        'airTemperature': [-5.4, -5.8],
+        'windDirection': [205, 205],
+        'windSpeed': [7.1, 6.1],
+        'latitude': [48.8566, 48.8566],
+        'longitude': [2.3522, 2.3522]
+    }
+    df = pd.DataFrame(data).set_index('timestamp')
+
+    # Call the method
+    result = data_source.df_to_timeserie(df)
+
+    # Expected result
+    expected_result = [
+        {
+            "airTemperature": -5.4,
+            "timestamp": "2025-02-08T17:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 7.1,
+            "location": {"lat": 48.8566, "lon": 2.3522}
+        },
+        {
+            "airTemperature": -5.8,
+            "timestamp": "2025-02-08T18:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 6.1,
+            "location": {"lat": 48.8566, "lon": 2.3522}
+        }
+    ]
+
+    # Assert the result
+    assert result == expected_result
+
+# Test for error handling
+@patch.object(DataSource, '_handle_error')
+def test_df_to_timeserie_error_handling(mock_handle_error, data_source):
+    """Test error handling in df_to_timeserie method."""
+    # Create an invalid DataFrame (e.g., non-numeric data)
+    data = {
+        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
+        'airTemperature': [-5.4, 'invalid_value'],
+        'windDirection': [205, 205],
+        'windSpeed': [7.1, 6.1]
+    }
+    df = pd.DataFrame(data).set_index('timestamp')
+
+    # Call the method
+    result = data_source.df_to_timeserie(df)
+
+    # Assert that _handle_error was called and the result is None
+    mock_handle_error.assert_called_once()
+    assert result is None
