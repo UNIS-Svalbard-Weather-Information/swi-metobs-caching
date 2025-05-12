@@ -429,3 +429,12 @@ body {
   background-color: #999; /* Color of the day bars */
   user-select: none; /* Disable text selection */
 }
+
+
+/* Set a maximum height and enable scrolling for the layer control container */
+.leaflet-control-layers-list {
+  max-height: 30vh; /* Adjust this value as needed */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+}
