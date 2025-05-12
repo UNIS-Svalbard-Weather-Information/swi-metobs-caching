@@ -8,6 +8,10 @@
     "api_key" : "SWI_FROST_API_KEY"
   },
   {
+    "datasource" : "FrostBoatSource",
+    "api_key" : "SWI_FROST_API_KEY"
+  },
+  {
     "datasource" : "IWINFixedSource",
     "api_key" : "SWI_IWIN_FIXED_API_KEY"
   }
