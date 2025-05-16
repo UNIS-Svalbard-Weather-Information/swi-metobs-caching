@@ -83,14 +83,6 @@
             "category" : "Regulation"
         },
         {
-            "name": "Cultural heritage",
-            "type": "arcgis",
-            "url": "https://kart.ra.no/arcgis/rest/services/Distribusjon/Kulturminner20180301/MapServer",
-            "layers": [14, 15, 16, 3, 4, 5, 6, 7, 8],
-            "cite": "syssel_kuturminer",
-            "category" : "Regulation"
-        },
-        {
             "name": "Slope steepness (avalanche)",
             "type": "arcgis",
             "url": "https://nve.geodataonline.no/arcgis/rest/services/Bratthet/MapServer/",
