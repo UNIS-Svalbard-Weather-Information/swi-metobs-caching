@@ -48,6 +48,27 @@
             "maxValue": 300,
             "name" : "Snow Thickness",
             "default" : false
+        },
+        "airPressure": {
+            "unit": "hPa",
+            "minValue": 500,
+            "maxValue": 1500,
+            "name" : "Air Pressure",
+            "default" : false
+        },
+        "soilMoisture": {
+            "unit": "%",
+            "minValue": 0,
+            "maxValue": 100,
+            "name" : "Soil Moisture",
+            "default" : false
+        },
+        "soilTemperature": {
+            "unit": "°C",
+            "minValue": -40,
+            "maxValue": 50,
+            "name" : "Soil Temperature",
+            "default" : false
         }
     }
 }
