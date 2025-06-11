@@ -8,12 +8,14 @@ from source.configHandler.confighandler import ConfigHandler
 from source.datasource.FrostSource import FrostSource
 from source.datasource.IWINFixedSource import IWINFixedSource
 from source.datasource.FrostBoatSource import FrostBoatSource
+from source.datasource.HolfuySource import HolfuySource
 
 # Mapping dictionary for supported data sources
 DATASOURCE_MAPPING = {
     "FrostSource": FrostSource,
     "FrostBoatSource" : FrostBoatSource,
-    "IWINFixedSource": IWINFixedSource
+    "IWINFixedSource": IWINFixedSource,
+    "HolfuySource" : HolfuySource
 }
 
 

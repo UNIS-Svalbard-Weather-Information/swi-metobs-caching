@@ -11,7 +11,8 @@
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 78.15952,
-        "lon": 16.0247
+        "lon": 16.0247,
+        "datasource" : "HolfuySource"
     },
     {
         "id": "892",
@@ -26,7 +27,8 @@
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 78.33758,
-        "lon": 16.52850
+        "lon": 16.52850,
+        "datasource" : "HolfuySource"
     },
     {
         "id": "1154",
@@ -41,7 +43,8 @@
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 78.20265,
-        "lon": 16.77224
+        "lon": 16.77224,
+        "datasource" : "HolfuySource"
     },
     {
         "id": "1876",
@@ -58,7 +61,8 @@
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 77.89537,
-        "lon": 16.71191
+        "lon": 16.71191,
+        "datasource" : "HolfuySource"
     },
     {
         "id": "SN99895",
