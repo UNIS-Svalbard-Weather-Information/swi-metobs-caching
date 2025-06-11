@@ -1,5 +1,66 @@
 [
     {
+        "id": "949",
+        "name": "Adventdalen, Gruve 7",
+        "project": "Holfuy",
+        "variables": {
+            "airTemperature": "temperature",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "windSpeedGust": "wind_gust"
+        },
+        "icon": "/static/images/holfuy.svg",
+        "lat": 78.15952,
+        "lon": 16.0247
+    },
+    {
+        "id": "892",
+        "name": "UNIS Vindodden",
+        "project": "Holfuy",
+        "variables": {
+            "airTemperature": "temperature",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "windSpeedGust": "wind_gust",
+            "relativeHumidity": "humidity"
+        },
+        "icon": "/static/images/holfuy.svg",
+        "lat": 78.33758,
+        "lon": 16.52850
+    },
+    {
+        "id": "1154",
+        "name": "Brentskaret_ HS",
+        "project": "Holfuy",
+        "variables": {
+            "airTemperature": "temperature",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "windSpeedGust": "wind_gust",
+            "airPressure": "pressure" 
+        },
+        "icon": "/static/images/holfuy.svg",
+        "lat": 78.20265,
+        "lon": 16.77224
+    },
+    {
+        "id": "1876",
+        "name": "UNIS Svea",
+        "project": "Holfuy",
+        "variables": {
+            "airTemperature": "temperature",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_direction",
+            "windSpeedGust": "wind_gust",
+            "airPressure": "pressure",
+            "relativeHumidity": "humidity",
+            "soilTemperature" : "2nd_temp"
+        },
+        "icon": "/static/images/holfuy.svg",
+        "lat": 77.89537,
+        "lon": 16.71191
+    },
+    {
         "id": "SN99895",
         "name": "KVADEHUKEN II",
         "project": "Met Norway",
