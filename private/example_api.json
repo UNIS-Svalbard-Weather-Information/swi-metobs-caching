@@ -14,5 +14,9 @@
   {
     "datasource" : "IWINFixedSource",
     "api_key" : "SWI_IWIN_FIXED_API_KEY"
+  },
+  {
+    "datasource" : "HolfuySource",
+    "api_key" : "SWI_HOLFUY_API_KEY"
   }
 ]
