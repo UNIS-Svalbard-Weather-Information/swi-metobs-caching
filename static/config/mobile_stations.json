@@ -67,7 +67,6 @@
         "name": "IWOOS 5 - Sassenfjorden",
         "project": "IWOOS",
         "variables": {
-            "": "temperature",
             "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
