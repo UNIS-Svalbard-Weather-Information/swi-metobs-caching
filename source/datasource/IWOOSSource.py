@@ -58,7 +58,7 @@ class IWOOSSource(DataSource):
             
             self.logger.info(f"Fetched real-time data for {station_id}")
             return self.transform_realtime_data(self.open_data(station_id), station_id)
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             self._handle_error(e)
             return None
 
@@ -82,7 +82,7 @@ class IWOOSSource(DataSource):
             self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
 
             return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             self._handle_error(e)
             return None
 
