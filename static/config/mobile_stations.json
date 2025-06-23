@@ -16,7 +16,7 @@
     },
     {
         "id": "2025_IWOOS_id1",
-        "name": "IWOOS 1     - Isfjorden",
+        "name": "IWOOS 1 - Nordfjorden Entrance",
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
@@ -28,7 +28,7 @@
     },
     {
         "id": "2025_IWOOS_id2",
-        "name": "IWOOS 2 - Isfjorden",
+        "name": "IWOOS 2 - Isfjorden Floskjeret",
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
@@ -40,7 +40,7 @@
     },
     {
         "id": "2025_IWOOS_id3",
-        "name": "IWOOS 3 - Nordfjorden Entrance",
+        "name": "IWOOS 3 - Isfjorden Norseliusjupet",
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
@@ -80,28 +80,24 @@
         "id": "SN77046",
         "name": "Ms Billefjord",
         "project": "IWIN Boats",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSBillefjord/10min/%Y/%m/mobile_AWS_MSBillefjord_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "air_temperature",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/boat/billefjorden.svg",
-        "import_function" : "netcdf_boat.netcdf_boat"
+        "icon": "/static/images/boat/billefjorden.svg"
     },
     {
         "id": "SN77051",
         "name": "Ms Polargirl",
         "project": "IWIN Boats",
-        "url": "https://thredds.met.no/thredds/dodsC/met.no/observations/unis/mobile_AWS_MSPolargirl/10min/%Y/%m/mobile_AWS_MSPolargirl_Table_10min_%Y%m%d.nc",
         "variables": {
             "airTemperature": "air_temperature",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity"
         },
-        "icon": "/static/images/boat/polargirl.svg",
-        "import_function" : "netcdf_boat.netcdf_boat"
+        "icon": "/static/images/boat/polargirl.svg"
     }
 ]

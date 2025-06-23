@@ -48,6 +48,27 @@
             "maxValue": 300,
             "name" : "Snow Thickness",
             "default" : false
+        },
+        "sea_surface_wave_height": {
+            "unit": "m",
+            "minValue": 0,
+            "maxValue": 300,
+            "name" : "Significant Wave Height",
+            "default" : false
+        },
+        "sea_temperature_0.2": {
+            "unit": "°C",
+            "minValue": -5,
+            "maxValue": 30,
+            "name" : "Sea Temperature (20cm)",
+            "default" : false
+        },
+        "sea_temperature_2.4": {
+            "unit": "°C",
+            "minValue": -5,
+            "maxValue": 30,
+            "name" : "Sea Temperature (240cm)",
+            "default" : false
         }
     }
 }
