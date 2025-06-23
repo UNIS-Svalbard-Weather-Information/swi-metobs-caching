@@ -19,8 +19,7 @@
         "name": "IWOOS 1     - Isfjorden",
         "project": "IWOOS",
         "variables": {
-            "": "temperature",
-            "sea_surface_wave_height": "pHs",
+            "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
         },
@@ -32,8 +31,7 @@
         "name": "IWOOS 2 - Isfjorden",
         "project": "IWOOS",
         "variables": {
-            "": "temperature",
-            "sea_surface_wave_height": "pHs",
+            "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
         },
@@ -45,8 +43,7 @@
         "name": "IWOOS 3 - Nordfjorden Entrance",
         "project": "IWOOS",
         "variables": {
-            "": "temperature",
-            "sea_surface_wave_height": "pHs",
+            "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
         },
@@ -58,8 +55,7 @@
         "name": "IWOOS 4 - Nordfjorden",
         "project": "IWOOS",
         "variables": {
-            "": "temperature",
-            "sea_surface_wave_height": "pHs",
+            "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
         },
@@ -72,7 +68,7 @@
         "project": "IWOOS",
         "variables": {
             "": "temperature",
-            "sea_surface_wave_height": "pHs",
+            "sea_surface_wave_height": "pHs0",
             "sea_temperature_0.2": "pT02",
             "sea_temperature_2.4": "pT24"
         },
