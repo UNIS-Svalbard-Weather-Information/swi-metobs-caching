@@ -20,8 +20,8 @@
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
-            "sea_temperature_0.2": "pT02",
-            "sea_temperature_2.4": "pT24"
+            "wave_freq_low_moment": "pT02",
+            "wave_freq_high_moment": "pT24"
         },
         "icon": "/static/images/iwoos.svg",
          "datasource" : "IWOOSSource"
@@ -32,8 +32,8 @@
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
-            "sea_temperature_0.2": "pT02",
-            "sea_temperature_2.4": "pT24"
+            "wave_freq_low_moment": "pT02",
+            "wave_freq_high_moment": "pT24"
         },
         "icon": "/static/images/iwoos.svg",
          "datasource" : "IWOOSSource"
@@ -44,8 +44,8 @@
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
-            "sea_temperature_0.2": "pT02",
-            "sea_temperature_2.4": "pT24"
+            "wave_freq_low_moment": "pT02",
+            "wave_freq_high_moment": "pT24"
         },
         "icon": "/static/images/iwoos.svg",
          "datasource" : "IWOOSSource"
@@ -56,8 +56,8 @@
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
-            "sea_temperature_0.2": "pT02",
-            "sea_temperature_2.4": "pT24"
+            "wave_freq_low_moment": "pT02",
+            "wave_freq_high_moment": "pT24"
         },
         "icon": "/static/images/iwoos.svg",
          "datasource" : "IWOOSSource"
@@ -68,8 +68,8 @@
         "project": "IWOOS",
         "variables": {
             "sea_surface_wave_height": "pHs0",
-            "sea_temperature_0.2": "pT02",
-            "sea_temperature_2.4": "pT24"
+            "wave_freq_low_moment": "pT02",
+            "wave_freq_high_moment": "pT24"
         },
         "icon": "/static/images/iwoos.svg",
          "datasource" : "IWOOSSource"
