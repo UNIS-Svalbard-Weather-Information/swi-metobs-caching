@@ -56,18 +56,18 @@
                 "name" : "Significant Wave Height",
                 "default" : false
             },
-            "wave_freq_low_moment": {
-                "unit": "Hz",  
+            "wave_period_low_moment": {
+                "unit": "s",  
                 "minValue": 0, 
                 "maxValue": 10, 
-                "name": "Low Moment Wave Frequency",
+                "name": "Low Moment Wave Period",
                 "default": 0.0  
             },
-            "wave_freq_high_moment": {
-                "unit": "Hz",  
+            "wave_period_high_moment": {
+                "unit": "s",  
                 "minValue": 0, 
                 "maxValue": 20, 
-                "name": "High Moment Wave Frequency",
+                "name": "High Moment Wave Period",
                 "default": 0.0 
             }
     }
