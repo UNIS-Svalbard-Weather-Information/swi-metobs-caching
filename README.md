@@ -91,4 +91,4 @@ We welcome contributions from the community. To contribute:
 Feel free to open issues for any bugs, feature requests, or general feedback. Your input is valuable to us!
 
 ## License
-This project is licensed under the CC0-1.0 License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the EUPL-1.2. See the [LICENSE](LICENSE) file for details.
