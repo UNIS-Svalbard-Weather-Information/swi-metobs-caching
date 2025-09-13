@@ -55,8 +55,8 @@ def get_datasource(station_id, config=None):
     # Get the actual class from the mapping dictionary
     source_class = DATASOURCE_MAPPING[source_name]
 
-    logger.info(f"Fetching API Key for: {source_name}")
-    # Get API credentials for this datasource
-    api_key = config.get_api_credential(source_name)
+    # logger.info(f"Fetching API Key for: {source_name}")
+    # # Get API credentials for this datasource
+    # api_key = config.get_api_credential(source_name)
 
-    return source_class(api_key=api_key)
+    return source_class()
