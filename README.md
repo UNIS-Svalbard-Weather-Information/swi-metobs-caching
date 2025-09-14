@@ -13,6 +13,10 @@ The Svalbard Weather Information (SWI) project is a web application designed to 
 - **GPX Import/Export**: Easily import and export GPX files for route planning and sharing.
 - **Drawing Tools**: Annotate and draw on maps to customize your trip planning.
 
+## Repository Organization
+
+The repository is structured with branches that correspond to various issues, as well as dedicated branches for each major version, which are clearly labeled. The `master` branch contains the most recent updates and changes. Currently, `1.0_polarfox` is the released version, while `1.1_sandpiper` is designated as the upcoming version.
+
 ## Getting Started
 
 ### Prerequisites
@@ -46,7 +50,7 @@ If you want to test the latest developments that are not yet released, you need 
    sed -i 's|lpauchet/swi-server:latest|swi-server|g' docker-compose.yml
    ```
 
-4. If you need to work with the config files, you can add this line in the swi-server container in the Docker compose file
+4. If you need to work with the config files, you can add this line in the Docker compose file, in the swi-server containers under volumes. 
    ```plaintext
    - ./static/config:/app/static/config
    ```
@@ -57,6 +61,7 @@ If you want to test the latest developments that are not yet released, you need 
    SWI_FROST_API_KEY=your_frost_api_key
    SWI_IWIN_FIXED_API_KEY=your_iwin_api_key
    ```
+You can create your own frost API key at [Frost](https://frost.met.no/howto.html).
 
 ### Running the Application
 1. Start the Docker container:
@@ -86,4 +91,4 @@ We welcome contributions from the community. To contribute:
 Feel free to open issues for any bugs, feature requests, or general feedback. Your input is valuable to us!
 
 ## License
-This project is licensed under the CC0-1.0 License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the EUPL-1.2. See the [LICENSE](LICENSE) file for details.
