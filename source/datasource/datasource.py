@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
+# SPDX-License-Identifier:  EUPL-1.2
+
 import sys
 import os
 

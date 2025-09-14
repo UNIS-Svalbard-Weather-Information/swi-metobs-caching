@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
+# SPDX-License-Identifier:  EUPL-1.2
+
 import json
 from source.logger.logger import Logger
 import difflib
@@ -39,7 +42,6 @@ class ConfigHandler:
         self._cached_configs = None
         self._cached_credential = None
         self.logger = Logger.setup_logger(self.__class__.__name__)
-        self._env_variable_mapping = self._load_env_variable_mapping()
 
     def get_variable(self, station_id):
         """
@@ -161,19 +163,6 @@ class ConfigHandler:
 
         self._cached_configs = configs
         return configs
-    
-
-    def _load_env_variable_mapping(self):
-        env_config_file = 'private/example_api.json'
-        try:
-            with open(env_config_file, 'r') as f:
-                data = json.load(f)
-                return {item["datasource"]: item["api_key"] for item in data}
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger = Logger.setup_logger("ConfigHandler")
-            logger.error(f"Error loading environment variable mapping: {e}")
-            return {}
-
     
     def _handle_error(self, error):
         """
