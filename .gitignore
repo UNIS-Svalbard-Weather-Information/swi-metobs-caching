@@ -12,3 +12,4 @@ static/maps/managed
 static/maps/managed/*
 private
 docker_volume/*
+config/*
