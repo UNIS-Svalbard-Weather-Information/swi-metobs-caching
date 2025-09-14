@@ -49,10 +49,8 @@ class CacheHandler:
 
         if path_config is None:
             self.path_config = {
-                'station_status' : './000_stations_status',
-                # 'station_status' : 'cache_stations_status.json',
-                'station_metadata_single' : './000_stations_metadata/',
-                'realtime_data' : './111_data_realtime/',
+                'station_status' : './000_stations_status/',
+                'realtime_data' : './000_latest_obs/',
                 'hourly_data': './111_hourly_data/',
                 'online' : './000_status_online_stations/',
                 'offline': './000_status_offline_stations/',
@@ -158,11 +156,7 @@ class CacheHandler:
         """
 
 
-
-
         self.logger.info("Starting to cache realtime data...")
-
-        realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
 
         if self.online_stations is None or len(self.online_stations) == 0:
             self.logger.info("Unknown station status. Starting collection and caching of the station status...")
@@ -173,6 +167,7 @@ class CacheHandler:
             self.logger.warning("No online stations found. Skipping data caching.")
             return
 
+        latest_station_data = {}
 
         for station in self.online_stations:
             try:
@@ -185,14 +180,12 @@ class CacheHandler:
                     self.logger.warning(f"No data fetched for {station}, skipping cache write.")
                     continue
 
-                filename = os.path.join(realtime_data_path, f"{station}.json")
-
-                self._write_cache(data, filename)
-
-                self.logger.info(f"Saved real-time data for {station} at {filename}.")
+                latest_station_data[station] = data
 
             except Exception as e:
                 self.logger.error(f"Error processing real-time data for {station}: {e}", exc_info=True)
+
+        self._write_cache(latest_station_data, os.path.join(self.path_config.get('realtime_data'), "latest_dict.json"))
 
         self.logger.info("Finished caching real-time data.")
 
