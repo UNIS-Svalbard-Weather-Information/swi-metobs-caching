@@ -13,7 +13,7 @@ from source.datasource.datasourceFactory import get_datasource
 from source.logger.logger import Logger
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import shutil
 import pandas as pd
 
@@ -218,7 +218,7 @@ class CacheHandler:
             return
 
         # Calculate the start and end times for the hourly data
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=hours_ago)
         start_of_day = end_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -229,18 +229,20 @@ class CacheHandler:
                 self.logger.debug(f"Fetching hourly data for station: {station}")
                 datasource = get_datasource(station, config=self.config)
 
+
+                # print(datetime.utcnow().isoformat(),(start_time - timedelta(hours=12)).isoformat(), type((start_time - timedelta(hours=12)).isoformat()))
                 data = datasource.fetch_timeseries_data(
                     station,
-                    (start_time - timedelta(hours=12)).isoformat(),
-                    (end_time).isoformat(),
+                    (start_time - timedelta(hours=12)).isoformat().split("+")[0],
+                    (end_time).isoformat().split("+")[0],
                     return_df=True
                 )
 
-                path_parquet = os.path.join(self.path_config.get("historical", "./000_long_timeseries/"), station, f"{start_time.strftime("%Y-%m-%d")}.parquet")
-                self._atomic_write_parquet(data[(data.index <= pd.to_datetime(end_time).tz_localize('UTC')) & (data.index >= pd.to_datetime(start_of_day).tz_localize('UTC'))], path_parquet)
+                path_parquet = os.path.join(self.path_config.get("historical", "./000_long_timeseries/"), station, f"{end_time.strftime("%Y-%m-%d")}.parquet")
+                self._atomic_write_parquet(data[(data.index <= pd.to_datetime(end_time)) & (data.index >= pd.to_datetime(start_of_day))], path_parquet)
 
 
-                data = datasource.df_to_timeserie(data[(data.index <= pd.to_datetime(end_time).tz_localize('UTC')) & (data.index >= pd.to_datetime(start_time).tz_localize('UTC'))])
+                data = datasource.df_to_timeserie(data[(data.index <= pd.to_datetime(end_time)) & (data.index >= pd.to_datetime(start_time))])
 
                 data = {
                 "id": station,
@@ -275,6 +277,7 @@ class CacheHandler:
                         self.logger.warning(f"No data entry found for {station} at shift {shift}.")
 
             except Exception as e:
+                raise e
                 self.logger.error(f"Error processing hourly data for {station}: {e}", exc_info=True)
 
 
