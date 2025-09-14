@@ -45,7 +45,7 @@ def mock_config_handler():
         "lon": 56.78,
     }
     mock.get_variable.return_value = {"temp": {"units": "C"}}
-    mock.get_api_credential.return_value = "fake-api-key"
+    # mock.get_api_credential.return_value = "fake-api-key"
     return mock
 
 

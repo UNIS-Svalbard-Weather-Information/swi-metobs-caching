@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timedelta, timezone
 import pandas as pd
+import os
 
 from .datasource import DataSource
 
@@ -17,14 +18,14 @@ class FrostSource(DataSource):
 
     BASE_URL = "https://frost.met.no"
 
-    def __init__(self, api_key):
+    def __init__(self, api_key = None):
         """
         Initialize the FrostSource instance with the given client ID.
 
         Args:
             client_id (str): The client ID for authenticating with the Frost API.
         """
-        super().__init__(api_key=api_key)
+        super().__init__(api_key = os.getenv("SWI_FROST_API_KEY", api_key))
         self.session = requests.Session()
         self.session.auth = (self.api_key, '')
 
