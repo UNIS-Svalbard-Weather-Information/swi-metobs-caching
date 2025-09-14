@@ -4,8 +4,8 @@ import difflib
 import os
 
 config_files = [
-    'static/config/fixed_stations.json',
-    'static/config/mobile_stations.json'
+    'config/stations/fixed_stations.json',
+    'config/stations/mobile_stations.json'
 ]
 
 class StationNotFoundError(Exception):
