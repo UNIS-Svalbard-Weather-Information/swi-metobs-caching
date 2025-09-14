@@ -1,5 +1,0 @@
-from source.maps_processing.avalanche_forecast_processing import AvalancheForecastProcessing
-
-avalanche_forecast_handler = AvalancheForecastProcessing()
-
-avalanche_forecast_handler.process_3003()
