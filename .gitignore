@@ -1,8 +1,10 @@
 venv/*
 .venv/*
-data/*
+data
+data-test
 *__pycache__*
 .ipynb_checkpoints/*
 *.psd
 *.ipynb
 config/*
+.env
