@@ -12,7 +12,7 @@
         "icon": "/static/images/holfuy.svg",
         "lat": 78.15952,
         "lon": 16.0247,
-        "datasource" : "HolfuySource"
+        "datasource": "HolfuySource"
     },
     {
         "id": "892",
@@ -28,7 +28,7 @@
         "icon": "/static/images/holfuy.svg",
         "lat": 78.33758,
         "lon": 16.52850,
-        "datasource" : "HolfuySource"
+        "datasource": "HolfuySource"
     },
     {
         "id": "1154",
@@ -39,12 +39,12 @@
             "windSpeed": "wind_speed",
             "windDirection": "wind_direction",
             "windSpeedGust": "wind_gust",
-            "airPressure": "pressure" 
+            "airPressure": "pressure"
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 78.20265,
         "lon": 16.77224,
-        "datasource" : "HolfuySource"
+        "datasource": "HolfuySource"
     },
     {
         "id": "1876",
@@ -57,12 +57,12 @@
             "windSpeedGust": "wind_gust",
             "airPressure": "pressure",
             "relativeHumidity": "humidity",
-            "soilTemperature" : "2nd_temp"
+            "soilTemperature": "2nd_temp"
         },
         "icon": "/static/images/holfuy.svg",
         "lat": 77.89537,
         "lon": 16.71191,
-        "datasource" : "HolfuySource"
+        "datasource": "HolfuySource"
     },
     {
         "id": "SN99895",
@@ -105,6 +105,22 @@
         "icon": "/static/images/metAWS.svg",
         "lat": 78.1905,
         "lon": 15.7815
+    },
+    {
+        "id": "SN99811",
+        "name": "Inglefieldbukta",
+        "project": "Met Norway",
+        "url": "https://frost.met.no/sources/v0.jsonld",
+        "variables": {
+            "airTemperature": "air_temperature",
+            "windSpeed": "wind_speed",
+            "windDirection": "wind_from_direction",
+            "relativeHumidity": "relative_humidity",
+            "windSpeedGust": "max(wind_speed_of_gust PT1H)"
+        },
+        "icon": "/static/images/metAWS.svg",
+        "lat": 77.8852552,
+        "lon": 18.27206847
     },
     {
         "id": "SN99877",
