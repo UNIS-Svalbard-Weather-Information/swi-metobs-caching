@@ -1,0 +1,17 @@
+LICENSE.md
+README.md
+.gitignore
+.dockerignore
+data
+data-test
+venv/*
+.venv/*
+data/*
+*__pycache__*
+.ipynb_checkpoints/*
+*.psd
+*.ipynb
+.env
+config
+data
+data-test

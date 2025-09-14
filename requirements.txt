@@ -1,0 +1,9 @@
+requests
+pandas
+numpy
+datetime
+netCDF4
+xarray
+loguru
+dotenv
+PyArrow

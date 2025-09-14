@@ -1,6 +1,8 @@
 venv/*
 .venv/*
-data/*
+config
+data
+data-test
 *__pycache__*
 .ipynb_checkpoints/*
 *.psd
@@ -12,3 +14,4 @@ static/maps/managed
 static/maps/managed/*
 private
 docker_volume/*
+.env
