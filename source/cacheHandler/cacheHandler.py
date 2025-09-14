@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import shutil
 
 class CacheHandler:
-    def __init__(self, directory='./cache/', path_config = None, cleaning_list = None, serve_only = False):
+    def __init__(self, directory='./data/', path_config = None, cleaning_list = None):
         """
             Initialize a CacheHandler instance to manage caching of station data.
 
@@ -44,11 +44,13 @@ class CacheHandler:
         self.logger = Logger.setup_logger("CacheHandler")
         self.config = ConfigHandler()
         self.online_stations = []
+
         os.makedirs(self.directory, exist_ok=True)
 
         if path_config is None:
             self.path_config = {
-                'station_status' : 'cache_stations_status.json',
+                'station_status' : './000_stations_status',
+                # 'station_status' : 'cache_stations_status.json',
                 'station_metadata_single' : './000_stations_metadata/',
                 'realtime_data' : './111_data_realtime/',
                 'hourly_data': './111_hourly_data/',
@@ -57,12 +59,6 @@ class CacheHandler:
             }
         else:
             self.path_config = path_config
-
-        if os.environ.get('SWI_INSTANCE_SERVE_ONLY') == 'true' or serve_only:
-            self.serve_only = True
-            self.logger.info("This instance is in SERVE ONLY mode.")
-        else:
-            self.serve_only = False
         
         
 
@@ -87,14 +83,14 @@ class CacheHandler:
                   status (online/offline), last_updated timestamp, project, and icon.
         """
         self.logger.info("Starting to cache station statuses...")
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
-            return -1
 
         stations = self.config.get_stations(type="all")
         self.logger.info(f"Retrieved {len(stations)} stations for processing.")
 
-        state = []
+        state = {}
+        online = {}
+        offline = {}
+        
 
         for station_id in stations:
             try:
@@ -125,7 +121,12 @@ class CacheHandler:
                     "icon" : metadata.get("icon", "/static/images/red_dot.png"),
                 }
 
-                state.append(infos)
+                state[station_id] = infos
+                if is_online:
+                    online[station_id] = infos
+                else:
+                    offline[station_id] = infos
+
                 self.logger.info(f"Successfully processed station {station_id}")
 
             except Exception as e:
@@ -133,9 +134,11 @@ class CacheHandler:
 
         self.logger.info(f"Finished caching station statuses. Total stations processed: {len(state)}")
 
-        self._write_cache(state, self.path_config.get('station_status', 'cache_stations_status.json'))
+        self._write_cache(state, os.path.join(self.path_config.get('station_status'), "all_dict.json"))
+        self._write_cache(online, os.path.join(self.path_config.get('station_status'), "online_dict.json"))
+        self._write_cache(offline, os.path.join(self.path_config.get('station_status'), "offline_dict.json"))
 
-        self._clear_cache(self.cleaning_list)
+        # self._clear_cache(self.cleaning_list)
 
         return state
 
@@ -158,10 +161,6 @@ class CacheHandler:
 
 
         self.logger.info("Starting to cache realtime data...")
-
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
-            return -1
 
         realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
 
@@ -212,10 +211,6 @@ class CacheHandler:
             None
         """
         self.logger.info("Starting to cache hourly data...")
-
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
-            return -1
 
         hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
 
@@ -271,167 +266,6 @@ class CacheHandler:
 
         self.logger.info("Finished caching hourly data.")
 
-    def get_cached_online_stations(self, type="all", status='online'):
-        """
-        Retrieve cached station information filtered by type and status.
-
-        This method attempts to read a cache file containing stations filtered by the given status (online/offline). If the
-        filtered cache file does not exist, it reads the complete station status cache, filters the data based on the provided
-        station type and status, writes the filtered result to a new cache file, and returns the filtered data.
-
-        Args:
-            type (str): The station type to filter by. Use "all" to include stations of any type.
-            status (str): The station status to filter by ('online' or 'offline').
-
-        Returns:
-            dict: A dictionary with a key (e.g., 'online_stations') mapping to a list of station dictionaries. Each station
-                  dictionary includes keys: id, name, type, location, project, status, icon, and variables.
-        """
-        filename = os.path.join(self.path_config.get(status, '/status_online/'), f"{type}.json")
-
-        cached_data = self._read_cache(filename)
-        if cached_data is not None:
-            return cached_data
-
-        cached_stations = self._read_cache(self.path_config.get('station_status', 'cache_stations_status.json'))
-
-        result_list = []
-        for station in cached_stations:
-            if station.get('status', 'offline') == status:
-                if type == "all" or station.get('type') == type:
-                    result_list.append(
-                        {key: station[key] for key in ["id", "name", "type", "location", "project", "status", "icon", "variables"] if key in station}
-                    )
-
-        result = {
-            f"{status}_stations": result_list,
-        }
-
-        self._write_cache(result, filename)
-
-        return result
-
-    def get_cached_realtime_data(self, station_id):
-        """
-        Retrieve cached real-time data for a specific station.
-
-        This method reads and returns the cached real-time data for the station with the provided station_id from the file
-        specified by the 'realtime_data' path in path_config. If the file is missing or contains invalid data, appropriate
-        warnings or error messages are logged.
-
-        Args:
-            station_id (str): The unique identifier of the station whose real-time data is to be retrieved.
-
-        Returns:
-            dict: A dictionary containing the station's real-time data if available.
-            None: If no data is found or an error occurs.
-        """
-        self.logger.info(f"Fetching real-time data for station ID: {station_id}")
-        try:
-            realtime_data_path = self.path_config.get('realtime_data', '/realtime_data/')
-            filename = os.path.join(realtime_data_path, f"{station_id}.json")
-
-            cached_data = self._read_cache(filename)
-            if cached_data is None:
-                self.logger.warning(f"Cache file contains no valid data for station ID {station_id}")
-            else:
-                self.logger.info(f"Successfully retrieved cached data for station ID {station_id}")
-
-            return cached_data
-
-        except json.JSONDecodeError as e:
-            self.logger.error(f"Invalid JSON format in cache file for station ID {station_id}: {e}", exc_info=True)
-        except Exception as e:
-            self.logger.critical(f"Unexpected error while fetching real-time data for station ID {station_id}: {e}",
-                                 exc_info=True)
-
-        return None
-
-    def get_cached_hourly_data(self, station_id, shift):
-        """
-        Retrieve cached hourly data for a specific station and shift.
-
-        This method reads and returns the cached hourly data for the station with the provided station_id and shift from
-        the file specified by the 'hourly_data' path in path_config. If the shift is 0, it calls get_cached_realtime_data.
-        If the file is missing or contains invalid data, appropriate warnings or error messages are logged.
-
-        Args:
-            station_id (str): The unique identifier of the station whose hourly data is to be retrieved.
-            shift (int or str): The shift value indicating how many hours ago the data was cached.
-
-        Returns:
-            dict: A dictionary containing the station's hourly data if available.
-            None: If no data is found or an error occurs.
-        """
-        self.logger.info(f"Fetching hourly data for station ID: {station_id} with shift: {shift}")
-
-        try:
-            # Convert shift to an integer if it's a string
-            shift = int(shift)
-
-            if shift == 0:
-                return self.get_cached_realtime_data(station_id)
-
-            hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
-            shift_path = os.path.join(hourly_data_path, f"{shift}")
-            filename = os.path.join(shift_path, f"{station_id}.json")
-
-            cached_data = self._read_cache(filename)
-            if cached_data is None:
-                self.logger.warning(f"Cache file contains no valid data for station ID {station_id} with shift {shift}")
-            else:
-                self.logger.info(f"Successfully retrieved cached data for station ID {station_id} with shift {shift}")
-
-            return cached_data
-
-        except json.JSONDecodeError as e:
-            self.logger.error(f"Invalid JSON format in cache file for station ID {station_id} with shift {shift}: {e}", exc_info=True)
-        except Exception as e:
-            self.logger.critical(f"Unexpected error while fetching hourly data for station ID {station_id} with shift {shift}: {e}", exc_info=True)
-
-        return None
-
-    def get_cached_station_metadata(self, station_id):
-        """
-        Retrieve and cache metadata for a specific station.
-
-        This method attempts to read a dedicated metadata file for the specified station from the path defined in
-        'station_metadata_single'. If the file is not found, it retrieves the station's metadata from the overall station
-        status cache, writes the metadata to the dedicated file, and returns the metadata.
-
-        Args:
-            station_id (str): The unique identifier of the station whose metadata is to be retrieved.
-
-        Returns:
-            dict: A dictionary containing the station's metadata, including keys such as name, type, location, project, and icon.
-            None: If the metadata is not found or an error occurs.
-        """
-        self.logger.info(f"Fetching metadata for station ID: {station_id}")
-        try:
-            filename = os.path.join(self.path_config.get('station_metadata_single', 'stations_metadata'),
-                                    f"{station_id}.json")
-            cached_data = self._read_cache(filename)
-            if cached_data is not None:
-                return cached_data
-
-            stations_metadata = self._read_cache(self.path_config.get('station_status', 'cache_stations_status.json'))
-            if not stations_metadata:
-                self.logger.warning("No station metadata found in cache.")
-                return None
-
-            for station in stations_metadata:
-                if station.get('id') == station_id:
-                    self._write_cache(station, filename)
-                    return station
-
-            self.logger.warning(f"Station ID {station_id} not found in metadata cache.")
-            return None
-
-        except Exception as e:
-            self.logger.error(f"Unexpected error retrieving metadata for station {station_id}: {e}")
-            return None
-
-
     def _clear_cache(self, entries):
         """
         Clear specified cache entries by deleting their corresponding files or directories.
@@ -449,9 +283,6 @@ class CacheHandler:
 
         self.logger.info(f"Starting cache clearing for {len(entries)} entries.")
 
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Caching")
-            return -1
 
         for entry in entries:
             file_path = self.path_config.get(entry)
@@ -483,10 +314,6 @@ class CacheHandler:
         Returns:
             None
         """
-
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Writing Data")
-            return -1
 
         # Construct the full file path
         file_path = os.path.join(self.directory, filename)
@@ -546,10 +373,6 @@ class CacheHandler:
         Returns:
             None
         """
-
-        if self.serve_only:
-            self.logger.info("This instance is in SERVE ONLY mode. Skipping Delete Path")
-            return -1
 
         try:
             if os.path.isfile(path):  # Check if it's a file
