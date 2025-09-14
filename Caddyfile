@@ -1,6 +1,0 @@
-http://localhost {
-    reverse_proxy swi_serve1:5000 swi_serve2:5000 {
-        # Load balancing options
-        lb_policy round_robin
-    }
-}
