@@ -90,31 +90,22 @@ class HolfuySource(DataSource):
             dict: A dictionary containing transformed historical weather data if successful.
             None: If an error occurs during the request.
         """
-        raise NotImplementedError("This function is not implemented yet.")
-        endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
+        start_str = (pd.to_datetime(start_time) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+        end_str = (pd.to_datetime(end_time) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
-        stations_variable = self.config.get_variable(station_id)
-        variables = []
-        for var in stations_variable:
-            if stations_variable[var] is not None:
-                variables.append(stations_variable[var])
+        endpoint = f"https://api.holfuy.com/archive/?s={station_id}&m=JSON&tu=C&su=m/s&pw={self.api_key}&utc&type=1&start_date={start_str}&stop_date={end_str}"
 
-        params = {
-            "sources": station_id,
-            "elements": ",".join(variables),
-            "referencetime": f"{start_time}/{end_time}"
-        }
         try:
-            response = self.session.get(endpoint, params=params)
+            response = self.session.get(endpoint)
             response.raise_for_status()
             raw_data = response.json()
             self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
-            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
+            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df, start_time = start_time, end_time=end_time)
         except requests.exceptions.RequestException as e:
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
+    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min', start_time=None, end_time=None):
         """
         Transform raw historical data into a time series format.
 
@@ -129,22 +120,31 @@ class HolfuySource(DataSource):
             pd.DataFrame: DataFrame with resampled and transformed data if `return_df` is True.
             None: If an error occurs during transformation.
         """
-        raise NotImplementedError("This function is not implemented yet.")
         try:
             # Fetch variable mapping for the station
             variable_mapping = self.config.get_variable(station_id)
-            observations = raw_data.get('data', [])
+            
             timeseries = []
 
-            for source in observations:
-                # Initialize a dictionary for each timestamp
-                record = {"timestamp": source.get('referenceTime')}
-                for obs in source.get('observations', []):
-                    element_id = obs.get('elementId')
-                    variable_name = next((k for k, v in variable_mapping.items() if v == element_id), None)
-                    if variable_name:
-                        record[variable_name] = obs.get('value')
-                        timeseries.append(record)
+            for m in raw_data.get("measurements", []):
+                ts = {}
+
+                if m["dateTime"]:
+                    ts["timestamp"] = pd.to_datetime(m["dateTime"]).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+                else:
+                    raise("No TimeStamp found in the API Answer")
+
+
+                for key, value in variable_mapping.items():
+                    if m.get(value):
+                        ts[key] = float(m[value])
+                    elif m.get(value.split("_")[0]) and m.get(value.split("_")[0]).get(value.split("_")[1]):
+                        ts[key] = float(m[value.split("_")[0]][value.split("_")[1]])
+                    else:
+                        ts[key] = np.nan
+
+                timeseries.append(ts)
+
 
             # Create DataFrame from the timeseries data
             df = pd.DataFrame(timeseries)
@@ -154,10 +154,22 @@ class HolfuySource(DataSource):
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 df.set_index('timestamp', inplace=True)
 
+            # print(type(start_time), end_time, df)
+
+            if start_time and end_time and not df.empty:
+                df = df[(df.index >= pd.to_datetime(start_time).tz_localize('UTC')) &
+                        (df.index <= pd.to_datetime(end_time).tz_localize('UTC'))]
+            elif start_time and not df.empty:
+                df = df[df.index >= pd.to_datetime(start_time).tz_localize('UTC')]
+            elif end_time and not df.empty:
+                df = df[df.index <= pd.to_datetime(end_time).tz_localize('UTC')]
+
             # Resample if required
             if resample != "AUTO" and not df.empty:
                 df = df.resample(resample).mean()
                 df.dropna(inplace=True)
+
+            
 
             # Return DataFrame or raw timeseries list
             if return_df:
@@ -187,7 +199,7 @@ class HolfuySource(DataSource):
         """
         try:
             variable_mapping = self.config.get_variable(station_id)
-            print(variable_mapping)
+            # print(variable_mapping)
             ts = {}
 
             if raw_data["dateTime"]:
@@ -204,7 +216,7 @@ class HolfuySource(DataSource):
                     ts[key] = None
 
 
-            print(ts)
+            # print(ts)
             return {
                 "id": station_id,
                 "timeseries": [ts]
