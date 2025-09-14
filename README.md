@@ -100,5 +100,6 @@ Cached files are stored in the `data` folder with the following organization:
 - **Environment Variables:**
   - `SWI_HOLFUY_API_KEY`
   - `SWI_FROST_API_KEY`
+  If not running in a docker container, the env variables are loaded from a .env at the root of the project.
 - **Volume Mapping:** A volume should be mapped to the data folder (exact path to be determined).
 - **Unit Testing** Most of the code is shipped with unit test from the legacy project but it have not yet been updated.
