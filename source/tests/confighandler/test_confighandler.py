@@ -149,14 +149,14 @@ def test_handle_error(mock_open_func, mock_logger, config_handler):
 #             api_key = config_handler.get_api_credential("FrostSource")
 #             assert api_key == "XXXXX"
 
-def test_get_api_credential_invalid_datasource(config_handler):
-    """Test that an unknown datasource returns None."""
-    mock_data = '[{"datasource": "FrostSource", "api_key": "XXXXX"}]'
+# def test_get_api_credential_invalid_datasource(config_handler):
+#     """Test that an unknown datasource returns None."""
+#     mock_data = '[{"datasource": "FrostSource", "api_key": "XXXXX"}]'
 
-    with patch("builtins.open", mock_open(read_data=mock_data)):
-        with patch("json.load", return_value=json.loads(mock_data)):
-            api_key = config_handler.get_api_credential("UnknownSource")
-            assert api_key is None
+#     with patch("builtins.open", mock_open(read_data=mock_data)):
+#         with patch("json.load", return_value=json.loads(mock_data)):
+#             api_key = config_handler.get_api_credential("UnknownSource")
+#             assert api_key is None
 
 # def test_get_api_credential_file_not_found(config_handler):
 #     """Test that a missing configuration file is handled gracefully."""

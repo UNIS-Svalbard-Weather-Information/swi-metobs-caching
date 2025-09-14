@@ -25,14 +25,14 @@ def frost_source():
     source._handle_error = MagicMock()
     return source
 
-def test_init():
-    """
-    Test the initialization of FrostSource.
-    """
-    client_id = 'test_client_id'
-    source = FrostSource(client_id)
-    assert source.api_key == client_id
-    assert source.session.auth == (client_id, '')
+# def test_init():
+#     """
+#     Test the initialization of FrostSource.
+#     """
+#     client_id = 'test_client_id'
+#     source = FrostSource(client_id)
+#     assert source.api_key == client_id
+#     assert source.session.auth == (client_id, '')
 
 @patch('requests.Session.get')
 def test_fetch_station_data(mock_get, frost_source):

@@ -15,6 +15,10 @@
         "name": "PermaMeteoCommunity",
         "cite": "frost_api_met_norway"
     },
+    "Holfuy": {
+        "name": "Holfuy",
+        "cite": "holfuy_api"
+    },
     "iwoos": {
         "name": "IWOOS",
         "cite": "iwoos"

@@ -1,19 +1,14 @@
-# SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
-# SPDX-License-Identifier:  CC0-1.0
-
-
 import requests
 from datetime import datetime, timedelta, timezone
 import pandas as pd
-import traceback
+import numpy as np
 import os
 
 from .datasource import DataSource
 
-
-class FrostBoatSource(DataSource):
+class HolfuySource(DataSource):
     """
-    A data source integration for the boats from Frost API provided by MET Norway.
+    A data source integration for the Frost API provided by MET Norway.
     This class allows fetching metadata, real-time, and historical weather data
     from specific weather stations.
 
@@ -22,7 +17,6 @@ class FrostBoatSource(DataSource):
         session (requests.Session): A session object for making authenticated API requests.
     """
 
-    BASE_URL = "https://frost.met.no"
 
     def __init__(self, api_key=None):
         """
@@ -31,9 +25,8 @@ class FrostBoatSource(DataSource):
         Args:
             client_id (str): The client ID for authenticating with the Frost API.
         """
-        super().__init__(api_key = os.getenv("SWI_FROST_API_KEY", api_key))
+        super().__init__(api_key=os.getenv("SWI_HOLFUY_API_KEY", api_key))
         self.session = requests.Session()
-        self.session.auth = (self.api_key, '')
 
     def fetch_station_data(self, station_id):
         """
@@ -46,6 +39,7 @@ class FrostBoatSource(DataSource):
             dict: A dictionary containing station metadata if successful.
             None: If an error occurs during the request.
         """
+        return {}
         endpoint = f"{self.BASE_URL}/sources/v0.jsonld"
         params = {"ids": station_id}
         try:
@@ -69,24 +63,11 @@ class FrostBoatSource(DataSource):
             dict: A dictionary containing transformed real-time weather data if successful.
             None: If an error occurs during the request.
         """
-        endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
-
-        stations_variable = self.config.get_variable(station_id)
-        variables = ['latitude','longitude']
-        for var in stations_variable:
-            if stations_variable[var] is not None:
-                variables.append(stations_variable[var])
-
-        params = {
-            "sources": station_id,
-            "elements": ",".join(variables),
-            "referencetime": "latest",
-            #"maxage": "PT1H"  # Last hour
-        }
+        endpoint = f"https://api.holfuy.com/live/?s={station_id}&m=JSON&tu=C&su=m/s&pw={self.api_key}&utc"
 
         #print(params)
         try:
-            response = self.session.get(endpoint, params=params)
+            response = self.session.get(endpoint)
             response.raise_for_status()
             raw_data = response.json()
             self.logger.info(f"Fetched real-time data for {station_id}")
@@ -109,30 +90,22 @@ class FrostBoatSource(DataSource):
             dict: A dictionary containing transformed historical weather data if successful.
             None: If an error occurs during the request.
         """
-        endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
+        start_str = (pd.to_datetime(start_time) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+        end_str = (pd.to_datetime(end_time) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
 
-        stations_variable = self.config.get_variable(station_id)
-        variables = ['latitude', 'longitude']
-        for var in stations_variable:
-            if stations_variable[var] is not None:
-                variables.append(stations_variable[var])
+        endpoint = f"https://api.holfuy.com/archive/?s={station_id}&m=JSON&tu=C&su=m/s&pw={self.api_key}&utc&type=1&start_date={start_str}&stop_date={end_str}"
 
-        params = {
-            "sources": station_id,
-            "elements": ",".join(variables),
-            "referencetime": f"{start_time}/{end_time}"
-        }
         try:
-            response = self.session.get(endpoint, params=params)
+            response = self.session.get(endpoint)
             response.raise_for_status()
             raw_data = response.json()
             self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
-            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
+            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df, start_time = start_time, end_time=end_time)
         except requests.exceptions.RequestException as e:
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
+    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min', start_time=None, end_time=None):
         """
         Transform raw historical data into a time series format.
 
@@ -150,28 +123,28 @@ class FrostBoatSource(DataSource):
         try:
             # Fetch variable mapping for the station
             variable_mapping = self.config.get_variable(station_id)
-            observations = raw_data.get('data', [])
+            
             timeseries = []
 
-            for source in observations:
-                # Initialize a dictionary for each timestamp
-                record = {"timestamp": source.get('referenceTime')}
-                for obs in source.get('observations', []):
-                    element_id = obs.get('elementId')
-                    variable_name = next((k for k, v in variable_mapping.items() if v == element_id), None)
+            for m in raw_data.get("measurements", []):
+                ts = {}
 
-                    if element_id == 'latitude':
-                        record['latitude'] = obs.get('value')
-                        continue
+                if m["dateTime"]:
+                    ts["timestamp"] = pd.to_datetime(m["dateTime"]).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+                else:
+                    raise("No TimeStamp found in the API Answer")
 
-                    if element_id == 'longitude':
-                        record['longitude'] = obs.get('value')
-                        continue
 
-                    if variable_name:
-                        record[variable_name] = obs.get('value')
-                
-                timeseries.append(record)
+                for key, value in variable_mapping.items():
+                    if m.get(value):
+                        ts[key] = float(m[value])
+                    elif m.get(value.split("_")[0]) and m.get(value.split("_")[0]).get(value.split("_")[1]):
+                        ts[key] = float(m[value.split("_")[0]][value.split("_")[1]])
+                    else:
+                        ts[key] = np.nan
+
+                timeseries.append(ts)
+
 
             # Create DataFrame from the timeseries data
             df = pd.DataFrame(timeseries)
@@ -181,10 +154,22 @@ class FrostBoatSource(DataSource):
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 df.set_index('timestamp', inplace=True)
 
+            # print(type(start_time), end_time, df)
+
+            if start_time and end_time and not df.empty:
+                df = df[(df.index >= pd.to_datetime(start_time).tz_localize('UTC')) &
+                        (df.index <= pd.to_datetime(end_time).tz_localize('UTC'))]
+            elif start_time and not df.empty:
+                df = df[df.index >= pd.to_datetime(start_time).tz_localize('UTC')]
+            elif end_time and not df.empty:
+                df = df[df.index <= pd.to_datetime(end_time).tz_localize('UTC')]
+
             # Resample if required
             if resample != "AUTO" and not df.empty:
-                df = df.resample('10min').mean().resample(resample).first()
+                df = df.resample(resample).mean()
                 df.dropna(inplace=True)
+
+            
 
             # Return DataFrame or raw timeseries list
             if return_df:
@@ -198,7 +183,6 @@ class FrostBoatSource(DataSource):
 
         except Exception as e:
             self._handle_error(e)
-            traceback.print_exc()
             return None
 
     def transform_realtime_data(self, raw_data, station_id):
@@ -215,42 +199,28 @@ class FrostBoatSource(DataSource):
         """
         try:
             variable_mapping = self.config.get_variable(station_id)
-            sources = raw_data.get('data', [])
+            # print(variable_mapping)
+            ts = {}
 
-            latest_observations = {}
-
-            if len(sources) == 1:
-                lat, long = None, None
-                source = sources[0]
-                source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
-                observation = {'timestamp': source_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}
-                
-                for obs in source.get('observations', []):
-                        element_id = obs.get('elementId')
-                        value = obs.get('value')
-                        #print(element_id)
-                        if element_id == 'latitude':
-                            lat = value
-
-                        if element_id == 'longitude':
-                            long = value
-
-                        var = next((k for k, v in variable_mapping.items() if v == element_id), None)
-
-                        if var is not None:
-                            observation[var] = value
-
-                if lat and long:
-                    observation["location"] = {"lat": lat, "lon": long}
-
-                return {
-                    "id": station_id,
-                    "timeseries": [observation]
-                }
-            
+            if raw_data["dateTime"]:
+                ts["timestamp"] = pd.to_datetime(raw_data["dateTime"]).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
             else:
-                return None
+                raise("No TimeStamp found in the API Answer")
 
+            for key, value in variable_mapping.items():
+                if raw_data.get(value):
+                    ts[key] = raw_data[value]
+                elif raw_data.get(value.split("_")[0]) and raw_data.get(value.split("_")[0]).get(value.split("_")[1]):
+                    ts[key] = raw_data[value.split("_")[0]][value.split("_")[1]]
+                else:
+                    ts[key] = None
+
+
+            # print(ts)
+            return {
+                "id": station_id,
+                "timeseries": [ts]
+            }
 
         except Exception as e:
             self._handle_error(e)
@@ -270,47 +240,17 @@ class FrostBoatSource(DataSource):
         Returns:
             bool: True if the station is considered online, False otherwise.
         """
-        data = self.fetch_realtime_data(station_id)
-        if not data:
-            self.logger.warning(f"No data returned for station {station_id}.")
-            self.logger.info(f"Station {station_id} is considered OFFLINE.")
-            return False
 
-        #print(data)
+        endpoint = f"https://api.holfuy.com/live/?s={station_id}&m=JSON&tu=C&su=m/s&pw={self.api_key}&utc"
 
-        # Check if the data structure is as expected
-        timeseries = data.get("timeseries")
-        if not timeseries or len(timeseries) == 0:
-            self.logger.warning(f"No timeseries entries for station {station_id}.")
-            self.logger.info(f"Station {station_id} is considered OFFLINE.")
-            return False
+        response = self.session.get(endpoint)
+        response_json = response.json()
 
-        # We'll take the first (and presumably most recent) timeseries entry
-        latest_entry = timeseries[0]
-        timestamp_str = latest_entry.get("timestamp")
-        if not timestamp_str:
-            self.logger.warning(f"No 'timestamp' field for station {station_id}.")
-            self.logger.info(f"Station {station_id} is considered OFFLINE.")
-            return False
-
-        # Convert to Python datetime; handle trailing "Z" by replacing with UTC offset.
-        try:
-            latest_time = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-        except ValueError as e:
-            self.logger.error(f"Error parsing timestamp for station {station_id}: {e}")
-            return False
-
-        # Define the cutoff time
-        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc)  - timedelta(minutes=max_inactive_minutes)
-
-        # If the station reported data newer than the cutoff, it's "online"
-        if latest_time >= cutoff_time:
-            self.logger.info(
-                f"Station {station_id} last timestamp = {latest_time} (< {max_inactive_minutes}min old). Considered ONLINE."
-            )
+        if not ("error" in response_json.keys() or "errorCode" in response_json.keys()):
             return True
         else:
-            self.logger.info(
-                f"Station {station_id} last timestamp = {latest_time}, older than {max_inactive_minutes}min. OFFLINE."
-            )
+            self.logger.warning(f"Station Holfuy {station_id} is offline.")
             return False
+                
+
+

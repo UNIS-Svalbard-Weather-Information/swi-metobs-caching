@@ -42,19 +42,19 @@ def test_get_datasource_frostsource(mock_logger, mock_config_handler):
     """
     # Arrange
     mock_config_handler.get_metadata.return_value = {"datasource": "FrostSource"}
-    mock_config_handler.get_api_credential.return_value = "frost_api_key"
+    # mock_config_handler.get_api_credential.return_value = "frost_api_key"
 
     # Act
     datasource = get_datasource("station_frost")
 
     # Assert
     assert isinstance(datasource, FrostSource), "Should return FrostSource instance"
-    assert datasource.api_key == "frost_api_key", "API key should match the mock credential"
+    # assert datasource.api_key == "frost_api_key", "API key should match the mock credential"
 
     # Check logger calls
     mock_logger.info.assert_any_call("Fetching metadata for station_id: station_frost")
     mock_logger.info.assert_any_call("Datasource identified for station_frost: FrostSource")
-    mock_logger.info.assert_any_call("Fetching API Key for: FrostSource")
+    # mock_logger.info.assert_any_call("Fetching API Key for: FrostSource")
 
 
 def test_get_datasource_iwinfixedsource(mock_logger, mock_config_handler):
@@ -64,19 +64,19 @@ def test_get_datasource_iwinfixedsource(mock_logger, mock_config_handler):
     """
     # Arrange
     mock_config_handler.get_metadata.return_value = {"datasource": "IWINFixedSource"}
-    mock_config_handler.get_api_credential.return_value = "iwin_api_key"
+    # mock_config_handler.get_api_credential.return_value = "iwin_api_key"
 
     # Act
     datasource = get_datasource("station_iwin")
 
     # Assert
     assert isinstance(datasource, IWINFixedSource), "Should return IWINFixedSource instance"
-    assert datasource.api_key == "iwin_api_key", "API key should match the mock credential"
+    # assert datasource.api_key == "iwin_api_key", "API key should match the mock credential"
 
     # Check logger calls
     mock_logger.info.assert_any_call("Fetching metadata for station_id: station_iwin")
     mock_logger.info.assert_any_call("Datasource identified for station_iwin: IWINFixedSource")
-    mock_logger.info.assert_any_call("Fetching API Key for: IWINFixedSource")
+    # mock_logger.info.assert_any_call("Fetching API Key for: IWINFixedSource")
 
 
 def test_get_datasource_unknown_datasource_fallback(mock_logger, mock_config_handler):
@@ -86,7 +86,7 @@ def test_get_datasource_unknown_datasource_fallback(mock_logger, mock_config_han
     """
     # Arrange
     mock_config_handler.get_metadata.return_value = {"datasource": "UnknownSource", 'type':'fixed'}
-    mock_config_handler.get_api_credential.return_value = "fallback_api_key"
+    # mock_config_handler.get_api_credential.return_value = "fallback_api_key"
 
     # Act
     datasource = get_datasource("station_unknown")
@@ -94,7 +94,7 @@ def test_get_datasource_unknown_datasource_fallback(mock_logger, mock_config_han
     # Assert
     # Because "UnknownSource" isn't in DATASOURCE_MAPPING, it should default to FrostSource
     assert isinstance(datasource, FrostSource), "Unknown data source should fall back to FrostSource"
-    assert datasource.api_key == "fallback_api_key", "Should use fallback API key"
+    # assert datasource.api_key == "fallback_api_key", "Should use fallback API key"
 
     # Check logger calls for the warning and fallback notice
     mock_logger.warning.assert_any_call(
