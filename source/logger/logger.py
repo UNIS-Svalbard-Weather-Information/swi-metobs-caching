@@ -1,4 +1,7 @@
-import logging
+# SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
+# SPDX-License-Identifier:  EUPL-1.2
+
+from loguru import logger
 
 class Logger:
     @staticmethod
@@ -22,16 +25,16 @@ class Logger:
                   '%(asctime)s - %(name)s - %(levelname)s - %(message)s'.
                 - A logging level set to INFO.
         """
-        logger = logging.getLogger(name)
+        # logger = logging.getLogger(name)
 
-        # Avoid adding multiple handlers if the logger is already configured
-        if not logger.hasHandlers():
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
+        # # Avoid adding multiple handlers if the logger is already configured
+        # if not logger.hasHandlers():
+        #     handler = logging.StreamHandler()
+        #     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        #     handler.setFormatter(formatter)
+        #     logger.addHandler(handler)
 
-        # Explicitly set the logger's level
-        logger.setLevel(logging.INFO)
+        # # Explicitly set the logger's level
+        # logger.setLevel(logging.INFO)
 
         return logger
