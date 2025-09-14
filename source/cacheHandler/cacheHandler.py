@@ -15,6 +15,7 @@ from source.logger.logger import Logger
 import json
 from datetime import datetime, timedelta
 import shutil
+import pandas as pd
 
 class CacheHandler:
     def __init__(self, directory='./data/', path_config = None, cleaning_list = None):
@@ -51,7 +52,8 @@ class CacheHandler:
             self.path_config = {
                 'station_status' : './000_stations_status/',
                 'realtime_data' : './000_latest_obs/',
-                'hourly_data': './111_hourly_data/',
+                'historical' : './000_long_timeseries/',
+                'hourly_data': './000_hourly_data/',
                 'online' : './000_status_online_stations/',
                 'offline': './000_status_offline_stations/',
             }
@@ -218,6 +220,9 @@ class CacheHandler:
         # Calculate the start and end times for the hourly data
         end_time = datetime.utcnow()
         start_time = end_time - timedelta(hours=hours_ago)
+        start_of_day = end_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        result = {-i : {} for i in range(1, hours_ago+1)}
 
         for station in self.online_stations:
             try:
@@ -226,9 +231,22 @@ class CacheHandler:
 
                 data = datasource.fetch_timeseries_data(
                     station,
-                    start_time.isoformat(),
-                    end_time.isoformat()
+                    (start_time - timedelta(hours=12)).isoformat(),
+                    (end_time).isoformat(),
+                    return_df=True
                 )
+
+                path_parquet = os.path.join(self.path_config.get("historical", "./000_long_timeseries/"), station, f"{start_time.strftime("%Y-%m-%d")}.parquet")
+                self._atomic_write_parquet(data[(data.index <= pd.to_datetime(end_time).tz_localize('UTC')) & (data.index >= pd.to_datetime(start_of_day).tz_localize('UTC'))], path_parquet)
+
+
+                data = datasource.df_to_timeserie(data[(data.index <= pd.to_datetime(end_time).tz_localize('UTC')) & (data.index >= pd.to_datetime(start_time).tz_localize('UTC'))])
+
+                data = {
+                "id": station,
+                "timeseries": data
+                }
+
 
                 if not data or 'timeseries' not in data:
                     self.logger.warning(f"No data fetched for {station}, skipping cache write.")
@@ -238,8 +256,7 @@ class CacheHandler:
                 for shift in range(1, hours_ago + 1):
                     shift_time = end_time - timedelta(hours=shift)
                     shift_path = os.path.join(hourly_data_path, f"-{shift}")
-                    os.makedirs(shift_path, exist_ok=True)
-
+                    
                     # Find the corresponding data entry for the shift
                     entry = next((e for e in data['timeseries'] if e['timestamp'].startswith(shift_time.isoformat()[:13])), None)
                     if entry:
@@ -248,14 +265,22 @@ class CacheHandler:
                             "id": station,
                             "timeseries": [entry]
                         }
-                        filename = os.path.join(shift_path, f"{station}.json")
-                        self._write_cache(data_to_cache, filename)
-                        self.logger.info(f"Saved hourly data for {station} at {filename}.")
+                        result[-shift][station] = data_to_cache
                     else:
+                        data_to_cache = {
+                            "id": station,
+                            "timeseries": None
+                        }
+                        result[-shift][station] = data_to_cache
                         self.logger.warning(f"No data entry found for {station} at shift {shift}.")
 
             except Exception as e:
                 self.logger.error(f"Error processing hourly data for {station}: {e}", exc_info=True)
+
+
+        for key, value in result.items():
+            path = os.path.join(self.path_config.get('hourly_data', './000_hourly_data/'), f"{key}.json")
+            self._write_cache(value, path)
 
         self.logger.info("Finished caching hourly data.")
 
@@ -292,6 +317,13 @@ class CacheHandler:
 
         self.logger.info("Cache clearing completed.")
 
+    def _atomic_write_parquet(self, df, filename):
+        path = os.path.join(self.directory, filename)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        df.to_parquet(path + ".tmp")
+
+        os.replace(path + ".tmp", path)
 
     def _write_cache(self, json_data, filename):
         """
@@ -315,8 +347,9 @@ class CacheHandler:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         try:
-            with open(file_path, 'w', encoding='utf-8') as file:
+            with open(file_path + ".tmp", 'w', encoding='utf-8') as file:
                 json.dump(json_data, file, indent=4)
+            os.replace(file_path + ".tmp", file_path)
             self.logger.info(f"Cache written successfully to {file_path}")
         except Exception as e:
             self.logger.error(f"Error writing cache to {file_path}: {e}", exc_info=True)
