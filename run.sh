@@ -33,3 +33,4 @@ cp -rf "$FOLDER_NAME"/* "$OTHER_CONFIG/" || exit 1
 
 # Run the Python script
 echo "Running run.py..."
+python3 ./run.py
