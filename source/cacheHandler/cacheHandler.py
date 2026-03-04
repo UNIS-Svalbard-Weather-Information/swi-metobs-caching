@@ -17,29 +17,30 @@ from datetime import datetime, timedelta, timezone
 import shutil
 import pandas as pd
 
+
 class CacheHandler:
-    def __init__(self, directory='./data/', path_config = None, cleaning_list = None):
+    def __init__(self, directory="./data/", path_config=None, cleaning_list=None):
         """
-            Initialize a CacheHandler instance to manage caching of station data.
+        Initialize a CacheHandler instance to manage caching of station data.
 
-            Args:
-                directory (str): The base directory where cache files are stored.
-                    Default is './cache/'.
-                path_config (dict, optional): A dictionary mapping cache entry names to file paths.
-                    If None, defaults to:
-                        {
-                            'station_status': 'cache_stations_status.json',
-                            'station_metadata_single': './000_stations_metadata/',
-                            'realtime_data': './111_data_realtime/',
-                            'hourly_data' : './111_hourly_data/',
-                            'online': './000_status_online_stations/',
-                            'offline': './000_status_offline_stations/',
-                        }
-                cleaning_list (list, optional): A list of cache entry keys to be cleared during cache operations.
-                    Default is ['online', 'offline'].
+        Args:
+            directory (str): The base directory where cache files are stored.
+                Default is './cache/'.
+            path_config (dict, optional): A dictionary mapping cache entry names to file paths.
+                If None, defaults to:
+                    {
+                        'station_status': 'cache_stations_status.json',
+                        'station_metadata_single': './000_stations_metadata/',
+                        'realtime_data': './111_data_realtime/',
+                        'hourly_data' : './111_hourly_data/',
+                        'online': './000_status_online_stations/',
+                        'offline': './000_status_offline_stations/',
+                    }
+            cleaning_list (list, optional): A list of cache entry keys to be cleared during cache operations.
+                Default is ['online', 'offline'].
 
-            Returns:
-                None
+        Returns:
+            None
         """
         self.directory = directory
         self.logger = Logger.setup_logger("CacheHandler")
@@ -50,20 +51,18 @@ class CacheHandler:
 
         if path_config is None:
             self.path_config = {
-                'station_status' : './realtime/000_stations_status/',
-                'realtime_data' : './realtime/000_latest_obs/',
-                'historical' : './historical/000_long_timeseries/',
-                'hourly_data': './realtime/000_hourly_data/',
-                'online' : './realtime/000_status_online_stations/',
-                'offline': './realtime/000_status_offline_stations/',
+                "station_status": "./realtime/000_stations_status/",
+                "realtime_data": "./realtime/000_latest_obs/",
+                "historical": "./historical/000_long_timeseries/",
+                "hourly_data": "./realtime/000_hourly_data/",
+                "online": "./realtime/000_status_online_stations/",
+                "offline": "./realtime/000_status_offline_stations/",
             }
         else:
             self.path_config = path_config
-        
-        
 
         if cleaning_list is None:
-            self.cleaning_list = ['online', 'offline']
+            self.cleaning_list = ["online", "offline"]
         else:
             self.cleaning_list = cleaning_list
 
@@ -90,14 +89,15 @@ class CacheHandler:
         state = {}
         online = {}
         offline = {}
-        
 
         for station_id in stations:
             try:
                 self.logger.debug(f"Processing station status for: {station_id}")
-                datasource = get_datasource(station_id,  config=self.config)
+                datasource = get_datasource(station_id, config=self.config)
                 is_online = datasource.is_station_online(station_id)
-                self.logger.debug(f"Station {station_id} online status: {'online' if is_online else 'offline'}")
+                self.logger.debug(
+                    f"Station {station_id} online status: {'online' if is_online else 'offline'}"
+                )
 
                 if is_online:
                     self.online_stations.append(station_id)
@@ -117,8 +117,8 @@ class CacheHandler:
                     "variables": list(variables.keys()) if variables else [],
                     "status": "online" if is_online else "offline",
                     "last_updated": timestamp or "Unknown",
-                    "project" : metadata.get("project", "Unknown"),
-                    "icon" : metadata.get("icon", "/static/images/red_dot.png"),
+                    "project": metadata.get("project", "Unknown"),
+                    "icon": metadata.get("icon", "/static/images/red_dot.png"),
                 }
 
                 state[station_id] = infos
@@ -130,13 +130,25 @@ class CacheHandler:
                 self.logger.info(f"Successfully processed station {station_id}")
 
             except Exception as e:
-                self.logger.error(f"Error processing station {station_id}: {e}", exc_info=True)
+                self.logger.error(
+                    f"Error processing station {station_id}: {e}", exc_info=True
+                )
 
-        self.logger.info(f"Finished caching station statuses. Total stations processed: {len(state)}")
+        self.logger.info(
+            f"Finished caching station statuses. Total stations processed: {len(state)}"
+        )
 
-        self._write_cache(state, os.path.join(self.path_config.get('station_status'), "all_dict.json"))
-        self._write_cache(online, os.path.join(self.path_config.get('station_status'), "online_dict.json"))
-        self._write_cache(offline, os.path.join(self.path_config.get('station_status'), "offline_dict.json"))
+        self._write_cache(
+            state, os.path.join(self.path_config.get("station_status"), "all_dict.json")
+        )
+        self._write_cache(
+            online,
+            os.path.join(self.path_config.get("station_status"), "online_dict.json"),
+        )
+        self._write_cache(
+            offline,
+            os.path.join(self.path_config.get("station_status"), "offline_dict.json"),
+        )
 
         # self._clear_cache(self.cleaning_list)
 
@@ -157,13 +169,13 @@ class CacheHandler:
             None
         """
 
-
         self.logger.info("Starting to cache realtime data...")
 
         if self.online_stations is None or len(self.online_stations) == 0:
-            self.logger.info("Unknown station status. Starting collection and caching of the station status...")
+            self.logger.info(
+                "Unknown station status. Starting collection and caching of the station status..."
+            )
             self.cache_stations_status()
-
 
         if self.online_stations is None or len(self.online_stations) == 0:
             self.logger.warning("No online stations found. Skipping data caching.")
@@ -174,20 +186,27 @@ class CacheHandler:
         for station in self.online_stations:
             try:
                 self.logger.debug(f"Fetching real-time data for station: {station}")
-                datasource = get_datasource(station,  config=self.config)
+                datasource = get_datasource(station, config=self.config)
 
                 data = datasource.fetch_realtime_data(station)
 
                 if not data:
-                    self.logger.warning(f"No data fetched for {station}, skipping cache write.")
+                    self.logger.warning(
+                        f"No data fetched for {station}, skipping cache write."
+                    )
                     continue
 
                 latest_station_data[station] = data
 
             except Exception as e:
-                self.logger.error(f"Error processing real-time data for {station}: {e}", exc_info=True)
+                self.logger.error(
+                    f"Error processing real-time data for {station}: {e}", exc_info=True
+                )
 
-        self._write_cache(latest_station_data, os.path.join(self.path_config.get('realtime_data'), "latest_dict.json"))
+        self._write_cache(
+            latest_station_data,
+            os.path.join(self.path_config.get("realtime_data"), "latest_dict.json"),
+        )
 
         self.logger.info("Finished caching real-time data.")
 
@@ -207,10 +226,12 @@ class CacheHandler:
         """
         self.logger.info("Starting to cache hourly data...")
 
-        hourly_data_path = self.path_config.get('hourly_data', '/hourly_data/')
+        hourly_data_path = self.path_config.get("hourly_data", "/hourly_data/")
 
         if self.online_stations is None or len(self.online_stations) == 0:
-            self.logger.info("Unknown station status. Starting collection and caching of the station status...")
+            self.logger.info(
+                "Unknown station status. Starting collection and caching of the station status..."
+            )
             self.cache_stations_status()
 
         if self.online_stations is None or len(self.online_stations) == 0:
@@ -222,67 +243,84 @@ class CacheHandler:
         start_time = end_time - timedelta(hours=hours_ago)
         start_of_day = end_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        result = {-i : {} for i in range(1, hours_ago+1)}
+        result = {-i: {} for i in range(1, hours_ago + 1)}
 
         for station in self.online_stations:
             try:
                 self.logger.debug(f"Fetching hourly data for station: {station}")
                 datasource = get_datasource(station, config=self.config)
 
-
                 # print(datetime.utcnow().isoformat(),(start_time - timedelta(hours=12)).isoformat(), type((start_time - timedelta(hours=12)).isoformat()))
                 data = datasource.fetch_timeseries_data(
                     station,
                     (start_time - timedelta(hours=12)).isoformat().split("+")[0],
                     (end_time).isoformat().split("+")[0],
-                    return_df=True
+                    return_df=True,
                 )
 
-                path_parquet = os.path.join(self.path_config.get("historical", "./000_long_timeseries/"), station, f"{end_time.strftime("%Y-%m-%d")}.parquet")
-                self._atomic_write_parquet(data[(data.index <= pd.to_datetime(end_time)) & (data.index >= pd.to_datetime(start_of_day))], path_parquet)
+                path_parquet = os.path.join(
+                    self.path_config.get("historical", "./000_long_timeseries/"),
+                    station,
+                    f"{end_time.strftime('%Y-%m-%d')}.parquet",
+                )
+                self._atomic_write_parquet(
+                    data[
+                        (data.index <= pd.to_datetime(end_time))
+                        & (data.index >= pd.to_datetime(start_of_day))
+                    ],
+                    path_parquet,
+                )
 
+                data = datasource.df_to_timeserie(
+                    data[
+                        (data.index <= pd.to_datetime(end_time))
+                        & (data.index >= pd.to_datetime(start_time))
+                    ]
+                )
 
-                data = datasource.df_to_timeserie(data[(data.index <= pd.to_datetime(end_time)) & (data.index >= pd.to_datetime(start_time))])
+                data = {"id": station, "timeseries": data}
 
-                data = {
-                "id": station,
-                "timeseries": data
-                }
-
-
-                if not data or 'timeseries' not in data:
-                    self.logger.warning(f"No data fetched for {station}, skipping cache write.")
+                if not data or "timeseries" not in data:
+                    self.logger.warning(
+                        f"No data fetched for {station}, skipping cache write."
+                    )
                     continue
 
                 # Create a subdirectory for each hourly shift
                 for shift in range(1, hours_ago + 1):
                     shift_time = end_time - timedelta(hours=shift)
-                    shift_path = os.path.join(hourly_data_path, f"-{shift}")
-                    
+                    # shift_path = os.path.join(hourly_data_path, f"-{shift}")
+
                     # Find the corresponding data entry for the shift
-                    entry = next((e for e in data['timeseries'] if e['timestamp'].startswith(shift_time.isoformat()[:13])), None)
+                    entry = next(
+                        (
+                            e
+                            for e in data["timeseries"]
+                            if e["timestamp"].startswith(shift_time.isoformat()[:13])
+                        ),
+                        None,
+                    )
                     if entry:
                         # Prepare the data structure with a single record in timeseries
-                        data_to_cache = {
-                            "id": station,
-                            "timeseries": [entry]
-                        }
+                        data_to_cache = {"id": station, "timeseries": [entry]}
                         result[-shift][station] = data_to_cache
                     else:
-                        data_to_cache = {
-                            "id": station,
-                            "timeseries": None
-                        }
+                        data_to_cache = {"id": station, "timeseries": None}
                         result[-shift][station] = data_to_cache
-                        self.logger.warning(f"No data entry found for {station} at shift {shift}.")
+                        self.logger.warning(
+                            f"No data entry found for {station} at shift {shift}."
+                        )
 
             except Exception as e:
                 raise e
-                self.logger.error(f"Error processing hourly data for {station}: {e}", exc_info=True)
-
+                self.logger.error(
+                    f"Error processing hourly data for {station}: {e}", exc_info=True
+                )
 
         for key, value in result.items():
-            path = os.path.join(self.path_config.get('hourly_data', './000_hourly_data/'), f"{key}.json")
+            path = os.path.join(
+                self.path_config.get("hourly_data", "./000_hourly_data/"), f"{key}.json"
+            )
             self._write_cache(value, path)
 
         self.logger.info("Finished caching hourly data.")
@@ -303,7 +341,6 @@ class CacheHandler:
         """
 
         self.logger.info(f"Starting cache clearing for {len(entries)} entries.")
-
 
         for entry in entries:
             file_path = self.path_config.get(entry)
@@ -350,7 +387,7 @@ class CacheHandler:
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         try:
-            with open(file_path + ".tmp", 'w', encoding='utf-8') as file:
+            with open(file_path + ".tmp", "w", encoding="utf-8") as file:
                 json.dump(json_data, file, indent=4)
             os.replace(file_path + ".tmp", file_path)
             self.logger.info(f"Cache written successfully to {file_path}")
@@ -374,7 +411,7 @@ class CacheHandler:
         """
         file_path = os.path.join(self.directory, struct)
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
+            with open(file_path, "r", encoding="utf-8") as file:
                 data = json.load(file)
                 self.logger.info(f"Cache read successfully from {file_path}")
                 return data
