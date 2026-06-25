@@ -88,7 +88,7 @@ def frost_source():
     # api_key = config.get_api_credential('FrostSource')
 
 
-    api_key = os.getenv("SWI_FROST_API_KEY")
+    os.getenv("SWI_FROST_API_KEY")
 
     return FrostSource(api_key=None)
 
@@ -151,8 +151,6 @@ def test_transform_realtime_data(frost_source, station):
 def test_transform_timeseries_data(frost_source, station):
     """Test transforming historical data for a station."""
     # Fetch historical raw data
-    start_time = "2023-01-01T00:00:00Z"
-    end_time = "2023-01-02T00:00:00Z"
     raw_data = RAW_DATAS_TIME_SERIE
 
     if raw_data is None:

@@ -217,7 +217,6 @@ class FrostBoatSource(DataSource):
             variable_mapping = self.config.get_variable(station_id)
             sources = raw_data.get('data', [])
 
-            latest_observations = {}
 
             if len(sources) == 1:
                 lat, long = None, None

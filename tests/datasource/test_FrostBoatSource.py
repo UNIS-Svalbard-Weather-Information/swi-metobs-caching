@@ -67,7 +67,7 @@ def test_fetch_realtime_data_failure_sn77046(frost_source):
         result = frost_source.fetch_realtime_data("SN77046")
 
         # Assertions
-        assert result == None
+        assert result is None
 
 def test_fetch_timeseries_data_success_sn77051(frost_source):
     # Mock the response from the API for station SN77051

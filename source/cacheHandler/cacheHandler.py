@@ -226,7 +226,7 @@ class CacheHandler:
         """
         self.logger.info("Starting to cache hourly data...")
 
-        hourly_data_path = self.path_config.get("hourly_data", "/hourly_data/")
+        self.path_config.get("hourly_data", "/hourly_data/")
 
         if self.online_stations is None or len(self.online_stations) == 0:
             self.logger.info(
