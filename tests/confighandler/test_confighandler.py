@@ -26,8 +26,8 @@ def mock_config_files():
     ]
 
     return {
-        "static/config/fixed_stations.json": json.dumps(fixed_station_data),
-        "static/config/mobile_stations.json": json.dumps(mobile_station_data),
+        "config/stations/fixed_stations.json": json.dumps(fixed_station_data),
+        "config/stations/mobile_stations.json": json.dumps(mobile_station_data),
     }
 
 
@@ -46,8 +46,8 @@ def test_load_config(mock_open_func, config_handler, mock_config_files):
     """
     # Set the config_files attribute to the desired test files
     config_handler.config_files = [
-        "static/config/fixed_stations.json",
-        "static/config/mobile_stations.json",
+        "config/stations/fixed_stations.json",
+        "config/stations/mobile_stations.json",
     ]
 
     # Mock the open calls for each file
