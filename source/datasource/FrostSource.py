@@ -8,6 +8,7 @@ import os
 
 from .datasource import DataSource
 
+
 class FrostSource(DataSource):
     """
     A data source integration for the Frost API provided by MET Norway.
@@ -21,16 +22,16 @@ class FrostSource(DataSource):
 
     BASE_URL = "https://frost.met.no"
 
-    def __init__(self, api_key = None):
+    def __init__(self, api_key=None):
         """
         Initialize the FrostSource instance with the given client ID.
 
         Args:
             client_id (str): The client ID for authenticating with the Frost API.
         """
-        super().__init__(api_key = os.getenv("SWI_FROST_API_KEY", api_key))
+        super().__init__(api_key=os.getenv("SWI_FROST_API_KEY", api_key))
         self.session = requests.Session()
-        self.session.auth = (self.api_key, '')
+        self.session.auth = (self.api_key, "")
 
     def fetch_station_data(self, station_id):
         """
@@ -78,10 +79,10 @@ class FrostSource(DataSource):
             "sources": station_id,
             "elements": ",".join(variables),
             "referencetime": "latest",
-            #"maxage": "PT1H"  # Last hour
+            # "maxage": "PT1H"  # Last hour
         }
 
-        #print(params)
+        # print(params)
         try:
             response = self.session.get(endpoint, params=params)
             response.raise_for_status()
@@ -92,7 +93,7 @@ class FrostSource(DataSource):
             self._handle_error(e)
             return None
 
-    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df=False):
         """
         Query historical weather data for a specific time range.
 
@@ -117,19 +118,25 @@ class FrostSource(DataSource):
         params = {
             "sources": station_id,
             "elements": ",".join(variables),
-            "referencetime": f"{start_time}/{end_time}"
+            "referencetime": f"{start_time}/{end_time}",
         }
         try:
             response = self.session.get(endpoint, params=params)
             response.raise_for_status()
             raw_data = response.json()
-            self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
-            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
+            self.logger.info(
+                f"Fetched timeseries data for {station_id} from {start_time} to {end_time}"
+            )
+            return self.transform_timeseries_data(
+                raw_data, station_id, return_df=return_df
+            )
         except requests.exceptions.RequestException as e:
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
+    def transform_timeseries_data(
+        self, raw_data, station_id, return_df=False, resample="60min"
+    ):
         """
         Transform raw historical data into a time series format.
 
@@ -147,17 +154,20 @@ class FrostSource(DataSource):
         try:
             # Fetch variable mapping for the station
             variable_mapping = self.config.get_variable(station_id)
-            observations = raw_data.get('data', [])
+            observations = raw_data.get("data", [])
             timeseries = []
 
             for source in observations:
                 # Initialize a dictionary for each timestamp
-                record = {"timestamp": source.get('referenceTime')}
-                for obs in source.get('observations', []):
-                    element_id = obs.get('elementId')
-                    variable_name = next((k for k, v in variable_mapping.items() if v == element_id), None)
+                record = {"timestamp": source.get("referenceTime")}
+                for obs in source.get("observations", []):
+                    element_id = obs.get("elementId")
+                    variable_name = next(
+                        (k for k, v in variable_mapping.items() if v == element_id),
+                        None,
+                    )
                     if variable_name:
-                        record[variable_name] = obs.get('value')
+                        record[variable_name] = obs.get("value")
                         timeseries.append(record)
 
             # Create DataFrame from the timeseries data
@@ -165,8 +175,8 @@ class FrostSource(DataSource):
 
             # Ensure 'timestamp' is parsed as datetime
             if not df.empty:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-                df.set_index('timestamp', inplace=True)
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                df.set_index("timestamp", inplace=True)
 
             # Resample if required
             if resample != "AUTO" and not df.empty:
@@ -177,11 +187,10 @@ class FrostSource(DataSource):
             if return_df:
                 return df
 
-            self.logger.info("Transformed raw time series data into the specified structure dynamically.")
-            return {
-                "id": station_id,
-                "timeseries": self.df_to_timeserie(df)
-            }
+            self.logger.info(
+                "Transformed raw time series data into the specified structure dynamically."
+            )
+            return {"id": station_id, "timeseries": self.df_to_timeserie(df)}
 
         except Exception as e:
             self._handle_error(e)
@@ -201,7 +210,7 @@ class FrostSource(DataSource):
         """
         try:
             variable_mapping = self.config.get_variable(station_id)
-            sources = raw_data.get('data', [])
+            sources = raw_data.get("data", [])
 
             # Dictionary to store the latest observation for each variable
             latest_observations = {}
@@ -210,20 +219,31 @@ class FrostSource(DataSource):
 
             for source in sources:
                 # Parse the source timestamp into a timezone-aware datetime object
-                source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
+                source_timestamp = datetime.fromisoformat(
+                    source.get("referenceTime").replace("Z", "+00:00")
+                )
                 # Update the most recent timestamp if necessary
-                if most_recent_timestamp is None or source_timestamp > most_recent_timestamp:
+                if (
+                    most_recent_timestamp is None
+                    or source_timestamp > most_recent_timestamp
+                ):
                     most_recent_timestamp = source_timestamp
 
                 # Collect observations
-                for obs in source.get('observations', []):
-                    element_id = obs.get('elementId')
-                    value = obs.get('value')
-                    var = next((k for k, v in variable_mapping.items() if v == element_id), None)
+                for obs in source.get("observations", []):
+                    element_id = obs.get("elementId")
+                    value = obs.get("value")
+                    var = next(
+                        (k for k, v in variable_mapping.items() if v == element_id),
+                        None,
+                    )
 
                     if var is not None:
                         # Store the observation if it's the latest for the variable
-                        if var not in latest_observations or source_timestamp > latest_observations[var][0]:
+                        if (
+                            var not in latest_observations
+                            or source_timestamp > latest_observations[var][0]
+                        ):
                             latest_observations[var] = (source_timestamp, value)
 
             if not latest_observations or most_recent_timestamp is None:
@@ -244,14 +264,16 @@ class FrostSource(DataSource):
                 return None
 
             # Assign the most recent timestamp to all variables
-            final_observation = {'timestamp': most_recent_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}
+            final_observation = {
+                "timestamp": most_recent_timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                + "Z"
+            }
             final_observation.update(consolidated_observations)
 
-            self.logger.info("Transformed raw real-time data to include the latest observations within the last hour.")
-            return {
-                "id": station_id,
-                "timeseries": [final_observation]
-            }
+            self.logger.info(
+                "Transformed raw real-time data to include the latest observations within the last hour."
+            )
+            return {"id": station_id, "timeseries": [final_observation]}
         except Exception as e:
             self._handle_error(e)
             return None
@@ -276,7 +298,7 @@ class FrostSource(DataSource):
             self.logger.info(f"Station {station_id} is considered OFFLINE.")
             return False
 
-        #print(data)
+        # print(data)
 
         # Check if the data structure is as expected
         timeseries = data.get("timeseries")
@@ -301,7 +323,9 @@ class FrostSource(DataSource):
             return False
 
         # Define the cutoff time
-        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc)  - timedelta(minutes=max_inactive_minutes)
+        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(
+            minutes=max_inactive_minutes
+        )
 
         # If the station reported data newer than the cutoff, it's "online"
         if latest_time >= cutoff_time:

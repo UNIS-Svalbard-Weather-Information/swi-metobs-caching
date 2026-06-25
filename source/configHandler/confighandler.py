@@ -6,14 +6,16 @@ from source.logger.logger import Logger
 import difflib
 
 config_files = [
-    'config/stations/fixed_stations.json',
-    'config/stations/mobile_stations.json'
+    "config/stations/fixed_stations.json",
+    "config/stations/mobile_stations.json",
 ]
+
 
 class StationNotFoundError(Exception):
     """
     Exception raised when a station is not found in the configuration files.
     """
+
     def __init__(self, station_id, suggestions=None):
         message = f"Station ID '{station_id}' not found."
         if suggestions:
@@ -66,7 +68,9 @@ class ConfigHandler:
         suggestions = difflib.get_close_matches(
             station_id,
             [config.get("id") for config in configs if "id" in config],
-            n=3, cutoff=0.6)
+            n=3,
+            cutoff=0.6,
+        )
         raise StationNotFoundError(station_id, suggestions)
 
     def get_metadata(self, station_id):
@@ -89,7 +93,7 @@ class ConfigHandler:
         for config in configs:
             if config.get("id") == station_id:
                 if "datasource" not in config:
-                    #config["datasource"] = "FrostDatasource"
+                    # config["datasource"] = "FrostDatasource"
                     pass
                 return config
         return None
@@ -110,8 +114,9 @@ class ConfigHandler:
         Raises:
             AssertionError: If `type` is not one of ["all", "mobile", "fixed"].
         """
-        assert type in ["all", "mobile", "fixed"], \
+        assert type in ["all", "mobile", "fixed"], (
             "Type must be one of ['all', 'mobile', 'fixed']"
+        )
 
         configs = self._load_config()
         stations = []
@@ -145,24 +150,24 @@ class ConfigHandler:
         configs = []
         for file in self.config_files:
             try:
-                with open(file, 'r') as f:
+                with open(file, "r") as f:
                     data = json.load(f)
                     # Ensure we have a list of config dictionaries
                     config_list = data if isinstance(data, list) else [data]
                     for config in config_list:
                         # Add station type: if the config contains the key 'mobile',
                         # mark it as 'mobile', otherwise default to 'fixed'
-                        if 'mobile' in file:
-                            config['type'] = 'mobile'
+                        if "mobile" in file:
+                            config["type"] = "mobile"
                         else:
-                            config['type'] = 'fixed'
+                            config["type"] = "fixed"
                     configs.extend(config_list)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 self._handle_error(e)
 
         self._cached_configs = configs
         return configs
-    
+
     def _handle_error(self, error):
         """
         Log and handle errors that occur during configuration loading or data fetching.

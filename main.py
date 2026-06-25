@@ -1,7 +1,6 @@
 from source.cacheHandler.cacheHandler import CacheHandler
 
 
-
 def main():
     station_handler = CacheHandler()
 

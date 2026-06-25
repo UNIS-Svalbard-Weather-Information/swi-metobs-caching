@@ -9,6 +9,7 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 
 from source.configHandler.confighandler import ConfigHandler
+
 # Importing CacheHandler from its path
 from source.cacheHandler.cacheHandler import CacheHandler
 
@@ -54,14 +55,16 @@ def cache_handler(temp_cache_dir, mock_config_handler):
     for cache storage. Overwrites the real ConfigHandler with our mock.
     """
     path_config = {
-        'station_status': '000_stations_status/',
-        'station_metadata': 'cache_stations_status.json',
-        'realtime_data': '111_data_realtime/',
-        'online': '000_status_online_stations/',
-        'offline' : '000_status_offline_stations/'
+        "station_status": "000_stations_status/",
+        "station_metadata": "cache_stations_status.json",
+        "realtime_data": "111_data_realtime/",
+        "online": "000_status_online_stations/",
+        "offline": "000_status_offline_stations/",
     }
 
-    ch = CacheHandler(directory=str(temp_cache_dir), path_config=path_config, cleaning_list=['online'])
+    ch = CacheHandler(
+        directory=str(temp_cache_dir), path_config=path_config, cleaning_list=["online"]
+    )
     ch.config = mock_config_handler
     return ch
 
@@ -72,10 +75,13 @@ class TestCacheHandler:
     Test suite for the CacheHandler class.
     """
 
-    @pytest.mark.parametrize("stations, side_effects", [
-        (["station1", "station2"], [True, False]),
-        (["station3"], [True]),
-    ])
+    @pytest.mark.parametrize(
+        "stations, side_effects",
+        [
+            (["station1", "station2"], [True, False]),
+            (["station3"], [True]),
+        ],
+    )
     @patch("source.cacheHandler.cacheHandler.get_datasource")  # <--- PATCH HERE
     def test_cache_stations_status(
         self,
@@ -84,7 +90,7 @@ class TestCacheHandler:
         side_effects,
         cache_handler,
         mock_config_handler,
-        temp_cache_dir
+        temp_cache_dir,
     ):
         # 1. Ensure the config returns the right stations
         mock_config_handler.get_stations.return_value = stations
@@ -117,16 +123,13 @@ class TestCacheHandler:
 
     @patch("source.cacheHandler.cacheHandler.get_datasource")
     def test_cache_stations_status_error_handling(
-            self,
-            mock_get_datasource,
-            cache_handler,
-            mock_config_handler
+        self, mock_get_datasource, cache_handler, mock_config_handler
     ):
         """
         Test exception handling if there's an error processing a station.
         """
         # Suppose the second station fails on is_station_online
-        mock_config_handler.get_stations.return_value = ['station_ok', 'station_fail']
+        mock_config_handler.get_stations.return_value = ["station_ok", "station_fail"]
 
         ds_mock_ok = MagicMock()
         ds_mock_ok.is_station_online.return_value = True
@@ -136,7 +139,7 @@ class TestCacheHandler:
 
         def side_effect_get_datasource(station_id, config=None):
             # station_id can come in as 'station_ok' or 'station_fail'
-            if station_id == 'station_ok':
+            if station_id == "station_ok":
                 return ds_mock_ok
             return ds_mock_fail
 
@@ -146,14 +149,14 @@ class TestCacheHandler:
         result = cache_handler.cache_stations_status()
 
         # 'station_ok' is processed; 'station_fail' triggers an exception
-        assert len(result) == 1, "Only one station should appear in the result after error."
-        assert cache_handler.online_stations == ['station_ok']
+        assert len(result) == 1, (
+            "Only one station should appear in the result after error."
+        )
+        assert cache_handler.online_stations == ["station_ok"]
 
     @patch("source.cacheHandler.cacheHandler.get_datasource")
     def test_cache_realtime_data_with_online_stations(
-        self,
-        mock_get_datasource,
-        cache_handler
+        self, mock_get_datasource, cache_handler
     ):
         cache_handler.online_stations = ["station1"]
 
@@ -178,9 +181,7 @@ class TestCacheHandler:
 
     @patch("source.cacheHandler.cacheHandler.get_datasource")
     def test_cache_realtime_data_no_online_stations(
-        self,
-        mock_get_datasource,
-        cache_handler
+        self, mock_get_datasource, cache_handler
     ):
         # Start with no known online stations
         cache_handler.online_stations = []
@@ -200,18 +201,7 @@ class TestCacheHandler:
         )
         assert not os.path.exists(station_file)
 
-
-
-
-
-
-
-
-    def test_clear_cache(
-        self,
-        cache_handler,
-        temp_cache_dir
-    ):
+    def test_clear_cache(self, cache_handler, temp_cache_dir):
         """
         Test _clear_cache removes specified folders/files.
         """
@@ -225,11 +215,7 @@ class TestCacheHandler:
         cache_handler._clear_cache(["online"])
         assert not online_path.exists()
 
-    def test_write_and_read_cache(
-        self,
-        cache_handler,
-        temp_cache_dir
-    ):
+    def test_write_and_read_cache(self, cache_handler, temp_cache_dir):
         """
         Test the _write_cache and _read_cache methods together.
         """
@@ -241,11 +227,7 @@ class TestCacheHandler:
 
         assert read_data == data_to_write
 
-    def test_delete_path(
-        self,
-        cache_handler,
-        temp_cache_dir
-    ):
+    def test_delete_path(self, cache_handler, temp_cache_dir):
         """
         Test the _delete_path method with both files and directories.
         """

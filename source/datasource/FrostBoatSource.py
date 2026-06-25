@@ -31,9 +31,9 @@ class FrostBoatSource(DataSource):
         Args:
             client_id (str): The client ID for authenticating with the Frost API.
         """
-        super().__init__(api_key = os.getenv("SWI_FROST_API_KEY", api_key))
+        super().__init__(api_key=os.getenv("SWI_FROST_API_KEY", api_key))
         self.session = requests.Session()
-        self.session.auth = (self.api_key, '')
+        self.session.auth = (self.api_key, "")
 
     def fetch_station_data(self, station_id):
         """
@@ -72,7 +72,7 @@ class FrostBoatSource(DataSource):
         endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
 
         stations_variable = self.config.get_variable(station_id)
-        variables = ['latitude','longitude']
+        variables = ["latitude", "longitude"]
         for var in stations_variable:
             if stations_variable[var] is not None:
                 variables.append(stations_variable[var])
@@ -81,10 +81,10 @@ class FrostBoatSource(DataSource):
             "sources": station_id,
             "elements": ",".join(variables),
             "referencetime": "latest",
-            #"maxage": "PT1H"  # Last hour
+            # "maxage": "PT1H"  # Last hour
         }
 
-        #print(params)
+        # print(params)
         try:
             response = self.session.get(endpoint, params=params)
             response.raise_for_status()
@@ -95,7 +95,7 @@ class FrostBoatSource(DataSource):
             self._handle_error(e)
             return None
 
-    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df=False):
         """
         Query historical weather data for a specific time range.
 
@@ -112,7 +112,7 @@ class FrostBoatSource(DataSource):
         endpoint = f"{self.BASE_URL}/observations/v0.jsonld"
 
         stations_variable = self.config.get_variable(station_id)
-        variables = ['latitude', 'longitude']
+        variables = ["latitude", "longitude"]
         for var in stations_variable:
             if stations_variable[var] is not None:
                 variables.append(stations_variable[var])
@@ -120,19 +120,25 @@ class FrostBoatSource(DataSource):
         params = {
             "sources": station_id,
             "elements": ",".join(variables),
-            "referencetime": f"{start_time}/{end_time}"
+            "referencetime": f"{start_time}/{end_time}",
         }
         try:
             response = self.session.get(endpoint, params=params)
             response.raise_for_status()
             raw_data = response.json()
-            self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
-            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
+            self.logger.info(
+                f"Fetched timeseries data for {station_id} from {start_time} to {end_time}"
+            )
+            return self.transform_timeseries_data(
+                raw_data, station_id, return_df=return_df
+            )
         except requests.exceptions.RequestException as e:
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
+    def transform_timeseries_data(
+        self, raw_data, station_id, return_df=False, resample="60min"
+    ):
         """
         Transform raw historical data into a time series format.
 
@@ -150,27 +156,30 @@ class FrostBoatSource(DataSource):
         try:
             # Fetch variable mapping for the station
             variable_mapping = self.config.get_variable(station_id)
-            observations = raw_data.get('data', [])
+            observations = raw_data.get("data", [])
             timeseries = []
 
             for source in observations:
                 # Initialize a dictionary for each timestamp
-                record = {"timestamp": source.get('referenceTime')}
-                for obs in source.get('observations', []):
-                    element_id = obs.get('elementId')
-                    variable_name = next((k for k, v in variable_mapping.items() if v == element_id), None)
+                record = {"timestamp": source.get("referenceTime")}
+                for obs in source.get("observations", []):
+                    element_id = obs.get("elementId")
+                    variable_name = next(
+                        (k for k, v in variable_mapping.items() if v == element_id),
+                        None,
+                    )
 
-                    if element_id == 'latitude':
-                        record['latitude'] = obs.get('value')
+                    if element_id == "latitude":
+                        record["latitude"] = obs.get("value")
                         continue
 
-                    if element_id == 'longitude':
-                        record['longitude'] = obs.get('value')
+                    if element_id == "longitude":
+                        record["longitude"] = obs.get("value")
                         continue
 
                     if variable_name:
-                        record[variable_name] = obs.get('value')
-                
+                        record[variable_name] = obs.get("value")
+
                 timeseries.append(record)
 
             # Create DataFrame from the timeseries data
@@ -178,23 +187,22 @@ class FrostBoatSource(DataSource):
 
             # Ensure 'timestamp' is parsed as datetime
             if not df.empty:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-                df.set_index('timestamp', inplace=True)
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                df.set_index("timestamp", inplace=True)
 
             # Resample if required
             if resample != "AUTO" and not df.empty:
-                df = df.resample('10min').mean().resample(resample).first()
+                df = df.resample("10min").mean().resample(resample).first()
                 df.dropna(inplace=True)
 
             # Return DataFrame or raw timeseries list
             if return_df:
                 return df
 
-            self.logger.info("Transformed raw time series data into the specified structure dynamically.")
-            return {
-                "id": station_id,
-                "timeseries": self.df_to_timeserie(df)
-            }
+            self.logger.info(
+                "Transformed raw time series data into the specified structure dynamically."
+            )
+            return {"id": station_id, "timeseries": self.df_to_timeserie(df)}
 
         except Exception as e:
             self._handle_error(e)
@@ -215,41 +223,44 @@ class FrostBoatSource(DataSource):
         """
         try:
             variable_mapping = self.config.get_variable(station_id)
-            sources = raw_data.get('data', [])
-
+            sources = raw_data.get("data", [])
 
             if len(sources) == 1:
                 lat, long = None, None
                 source = sources[0]
-                source_timestamp = datetime.fromisoformat(source.get('referenceTime').replace('Z', '+00:00'))
-                observation = {'timestamp': source_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}
-                
-                for obs in source.get('observations', []):
-                        element_id = obs.get('elementId')
-                        value = obs.get('value')
-                        #print(element_id)
-                        if element_id == 'latitude':
-                            lat = value
+                source_timestamp = datetime.fromisoformat(
+                    source.get("referenceTime").replace("Z", "+00:00")
+                )
+                observation = {
+                    "timestamp": source_timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                    + "Z"
+                }
 
-                        if element_id == 'longitude':
-                            long = value
+                for obs in source.get("observations", []):
+                    element_id = obs.get("elementId")
+                    value = obs.get("value")
+                    # print(element_id)
+                    if element_id == "latitude":
+                        lat = value
 
-                        var = next((k for k, v in variable_mapping.items() if v == element_id), None)
+                    if element_id == "longitude":
+                        long = value
 
-                        if var is not None:
-                            observation[var] = value
+                    var = next(
+                        (k for k, v in variable_mapping.items() if v == element_id),
+                        None,
+                    )
+
+                    if var is not None:
+                        observation[var] = value
 
                 if lat and long:
                     observation["location"] = {"lat": lat, "lon": long}
 
-                return {
-                    "id": station_id,
-                    "timeseries": [observation]
-                }
-            
+                return {"id": station_id, "timeseries": [observation]}
+
             else:
                 return None
-
 
         except Exception as e:
             self._handle_error(e)
@@ -275,7 +286,7 @@ class FrostBoatSource(DataSource):
             self.logger.info(f"Station {station_id} is considered OFFLINE.")
             return False
 
-        #print(data)
+        # print(data)
 
         # Check if the data structure is as expected
         timeseries = data.get("timeseries")
@@ -300,7 +311,9 @@ class FrostBoatSource(DataSource):
             return False
 
         # Define the cutoff time
-        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc)  - timedelta(minutes=max_inactive_minutes)
+        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(
+            minutes=max_inactive_minutes
+        )
 
         # If the station reported data newer than the cutoff, it's "online"
         if latest_time >= cutoff_time:
