@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import pytest
-import logging
+from loguru import logger
 from unittest.mock import patch
 from source.datasource.datasource import DataSource
 import pandas as pd
@@ -51,7 +51,7 @@ def data_source():
 def test_initialization(data_source):
     """Test initialization of DataSource."""
     assert data_source.api_key == "test_api_key"
-    assert isinstance(data_source.logger, logging.Logger)
+    assert isinstance(data_source.logger, logger)
 
 
 def test_fetch_station_data(data_source):
@@ -99,7 +99,7 @@ def test_is_station_online(data_source):
     assert data_source.is_station_online("999") is False
 
 
-@patch.object(logging.Logger, "error")
+@patch.object(logger, "error")
 def test_handle_error(mock_error, data_source):
     """Test _handle_error method."""
     error = Exception("Test error")
