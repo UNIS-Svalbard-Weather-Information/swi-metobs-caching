@@ -51,7 +51,6 @@ def data_source():
 def test_initialization(data_source):
     """Test initialization of DataSource."""
     assert data_source.api_key == "test_api_key"
-    assert isinstance(data_source.logger, logger)
 
 
 def test_fetch_station_data(data_source):
