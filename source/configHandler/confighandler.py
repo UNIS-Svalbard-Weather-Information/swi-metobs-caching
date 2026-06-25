@@ -4,7 +4,6 @@
 import json
 from source.logger.logger import Logger
 import difflib
-import os
 
 config_files = [
     'config/stations/fixed_stations.json',

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier:  EUPL-1.2
 
 import requests
-from datetime import datetime, timedelta, timezone
 import pandas as pd
 import numpy as np
 import os

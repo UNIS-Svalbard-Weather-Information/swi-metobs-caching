@@ -1,9 +1,8 @@
 import sys
 import os
-from unittest.mock import patch, Mock, MagicMock
-from datetime import datetime, timedelta, date
+from unittest.mock import patch, MagicMock
+from datetime import date
 import pytest
-import requests
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 

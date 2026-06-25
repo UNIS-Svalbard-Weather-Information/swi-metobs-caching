@@ -7,8 +7,6 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from abc import ABC, abstractmethod
-import logging
-import json
 from source.logger.logger import Logger
 from source.configHandler.confighandler import ConfigHandler
 

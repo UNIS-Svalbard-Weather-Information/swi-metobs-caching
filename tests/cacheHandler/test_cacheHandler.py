@@ -5,12 +5,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 import json
 import pytest
-import shutil
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
 from source.configHandler.confighandler import ConfigHandler
-from source.logger.logger import Logger
 # Importing CacheHandler from its path
 from source.cacheHandler.cacheHandler import CacheHandler
 
@@ -55,7 +53,6 @@ def cache_handler(temp_cache_dir, mock_config_handler):
     Creates an instance of CacheHandler, using the temporary directory
     for cache storage. Overwrites the real ConfigHandler with our mock.
     """
-    from source.cacheHandler.cacheHandler import CacheHandler  # Ensure correct import
     path_config = {
         'station_status': '000_stations_status/',
         'station_metadata': 'cache_stations_status.json',

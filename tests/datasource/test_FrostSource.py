@@ -1,6 +1,6 @@
 import sys
 import os
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta, timezone
 import pytest
 import requests

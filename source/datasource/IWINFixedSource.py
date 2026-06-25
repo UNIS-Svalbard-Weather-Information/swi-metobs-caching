@@ -1,8 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
 # SPDX-License-Identifier:  EUPL-1.2
 
-from datetime import datetime, timedelta, date
-import pandas as pd
+from datetime import timedelta, date
 import netCDF4 as nc
 
 from .datasource import DataSource
