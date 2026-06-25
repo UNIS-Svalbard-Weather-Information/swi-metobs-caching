@@ -25,3 +25,16 @@ test = [
     "pytest-cov>=5.0.0",
     "python-dateutil>=2.9.0.post0",
 ]
+
+[dependency-groups]
+dev = [
+    "dask[complete]>=2025.12.0",
+    "ipykernel>=7.1.0",
+    "ipython>=9.8.0",
+    "jinja2>=3.1.6",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.8",
+    "pip>=25.3",
+    "pre-commit>=4.5.1",
+    "ruff>=0.14.10",
+]
