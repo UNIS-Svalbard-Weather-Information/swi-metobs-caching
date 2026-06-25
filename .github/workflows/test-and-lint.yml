@@ -13,6 +13,9 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+
+    env:
+      SWI_FROST_API_KEY: ${{ secrets.SWI_FROST_API_KEY }}
     
     steps:
       - name: Checkout repository
