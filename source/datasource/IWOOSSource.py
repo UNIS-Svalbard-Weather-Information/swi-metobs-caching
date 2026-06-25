@@ -54,14 +54,13 @@ class IWOOSSource(DataSource):
             None: If an error occurs during the request.
         """
         try:
-            
             self.logger.info(f"Fetched real-time data for {station_id}")
             return self.transform_realtime_data(self.open_data(station_id), station_id)
         except Exception as e:
             self._handle_error(e)
             return None
 
-    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df=False):
         """
         Query historical weather data for a specific time range.
 
@@ -78,14 +77,20 @@ class IWOOSSource(DataSource):
         try:
             raw_data = self.open_data(station_id)[slice(start_time, end_time)]
 
-            self.logger.info(f"Fetched timeseries data for {station_id} from {start_time} to {end_time}")
+            self.logger.info(
+                f"Fetched timeseries data for {station_id} from {start_time} to {end_time}"
+            )
 
-            return self.transform_timeseries_data(raw_data, station_id, return_df = return_df)
+            return self.transform_timeseries_data(
+                raw_data, station_id, return_df=return_df
+            )
         except Exception as e:
             self._handle_error(e)
             return None
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df=False, resample='60min'):
+    def transform_timeseries_data(
+        self, raw_data, station_id, return_df=False, resample="60min"
+    ):
         """
         Transform raw historical data into a time series format.
 
@@ -106,19 +111,20 @@ class IWOOSSource(DataSource):
             if resample != "AUTO" and not raw_data.empty:
                 raw_data = raw_data.resample(resample).mean().interpolate()
 
-            variable_mapping['latitude'] = 'lat'
-            variable_mapping['longitude'] = 'lon'
+            variable_mapping["latitude"] = "lat"
+            variable_mapping["longitude"] = "lon"
 
-            raw_data = raw_data.rename(columns = {value: key for key, value in variable_mapping.items()})
-            
+            raw_data = raw_data.rename(
+                columns={value: key for key, value in variable_mapping.items()}
+            )
+
             if return_df:
                 return raw_data
 
-            self.logger.info("Transformed raw time series data into the specified structure dynamically.")
-            return {
-                "id": station_id,
-                "timeseries": self.df_to_timeserie(raw_data)
-            }
+            self.logger.info(
+                "Transformed raw time series data into the specified structure dynamically."
+            )
+            return {"id": station_id, "timeseries": self.df_to_timeserie(raw_data)}
 
         except Exception as e:
             self._handle_error(e)
@@ -146,29 +152,31 @@ class IWOOSSource(DataSource):
             data_dict = most_recent_record.iloc[0].to_dict()
 
             observation = {
-                "timestamp" : most_recent_date.tz_localize('UTC').strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                "timestamp": most_recent_date.tz_localize("UTC").strftime(
+                    "%Y-%m-%dT%H:%M:%S.%f"
+                )[:-3]
+                + "Z",
                 "location": {
-                    "lat": round(data_dict.get('lat'),6),
-                    "lon": round(data_dict.get('lon'),6)
-                    }
+                    "lat": round(data_dict.get("lat"), 6),
+                    "lon": round(data_dict.get("lon"), 6),
+                },
             }
 
             if data_dict:
                 for key, value in variable_mapping.items():
-                    v = data_dict.get(value, 'NA')
+                    v = data_dict.get(value, "NA")
                     try:
                         observation[key] = round(v, 2)
-                    except:
-                        observation[key] = 'NA'
+                    except Exception as e:
+                        observation[key] = "NA"
+                        self.logger.warning(
+                            f"Error occurred while transforming variable '{key}': {e}"
+                        )
 
-                return {
-                    "id": station_id,
-                    "timeseries": [observation]
-                }
-            
+                return {"id": station_id, "timeseries": [observation]}
+
             else:
                 return None
-
 
         except Exception as e:
             self._handle_error(e)
@@ -194,7 +202,7 @@ class IWOOSSource(DataSource):
             self.logger.info(f"Station {station_id} is considered OFFLINE.")
             return False
 
-        #print(data)
+        # print(data)
 
         # Check if the data structure is as expected
         timeseries = data.get("timeseries")
@@ -219,7 +227,9 @@ class IWOOSSource(DataSource):
             return False
 
         # Define the cutoff time
-        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc)  - timedelta(minutes=max_inactive_minutes)
+        cutoff_time = datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(
+            minutes=max_inactive_minutes
+        )
 
         # If the station reported data newer than the cutoff, it's "online"
         if latest_time >= cutoff_time:
@@ -232,13 +242,20 @@ class IWOOSSource(DataSource):
                 f"Station {station_id} last timestamp = {latest_time}, older than {max_inactive_minutes}min. OFFLINE."
             )
             return False
-        
-    def open_data(self, station_id):
-        a = pd.read_csv(f"https://raw.githubusercontent.com/jerabaul29/{station_id}_data/main/gps_data_{station_id}.csv", 
-                    parse_dates=True, index_col='time', usecols=['lat', 'lon', 'time'])
 
-        b = pd.read_csv(f"https://raw.githubusercontent.com/jerabaul29/{station_id}_data/main/wavestat_data_{station_id}.csv", 
-                    parse_dates=True, index_col='time', usecols=['pHs0', 'pT02', 'pT24', 'time'])
-        
-        return b.join(pd.concat([a,b]).sort_index().interpolate()[['lat', 'lon']])
-    
+    def open_data(self, station_id):
+        a = pd.read_csv(
+            f"https://raw.githubusercontent.com/jerabaul29/{station_id}_data/main/gps_data_{station_id}.csv",
+            parse_dates=True,
+            index_col="time",
+            usecols=["lat", "lon", "time"],
+        )
+
+        b = pd.read_csv(
+            f"https://raw.githubusercontent.com/jerabaul29/{station_id}_data/main/wavestat_data_{station_id}.csv",
+            parse_dates=True,
+            index_col="time",
+            usecols=["pHs0", "pT02", "pT24", "time"],
+        )
+
+        return b.join(pd.concat([a, b]).sort_index().interpolate()[["lat", "lon"]])
