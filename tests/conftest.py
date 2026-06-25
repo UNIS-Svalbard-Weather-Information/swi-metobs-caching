@@ -28,11 +28,11 @@ TEST_FIXED_STATIONS = [
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity",
             "windSpeedGust": "max(wind_speed_of_gust PT1H)",
-            "surfaceSnowThickness": "surface_snow_thickness"
+            "surfaceSnowThickness": "surface_snow_thickness",
         },
         "icon": "/static/images/metAWS.svg",
         "lat": 78.2022,
-        "lon": 15.831
+        "lon": 15.831,
     },
     {
         "id": "SN99840",
@@ -45,12 +45,12 @@ TEST_FIXED_STATIONS = [
             "windDirection": "wind_from_direction",
             "relativeHumidity": "relative_humidity",
             "windSpeedGust": "max(wind_speed_of_gust PT1H)",
-            "surfaceSnowThickness": "surface_snow_thickness"
+            "surfaceSnowThickness": "surface_snow_thickness",
         },
         "icon": "/static/images/metAWS.svg",
         "lat": 78.2453,
-        "lon": 15.5015
-    }
+        "lon": 15.5015,
+    },
 ]
 
 TEST_MOBILE_STATIONS = [
@@ -63,10 +63,10 @@ TEST_MOBILE_STATIONS = [
             "airTemperature": "air_temperature",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": "relative_humidity"
+            "relativeHumidity": "relative_humidity",
         },
         "icon": "/static/images/boat/billefjorden.svg",
-        "import_function": "netcdf_boat.netcdf_boat"
+        "import_function": "netcdf_boat.netcdf_boat",
     },
     {
         "id": "SN77051",
@@ -77,11 +77,11 @@ TEST_MOBILE_STATIONS = [
             "airTemperature": "air_temperature",
             "windSpeed": "wind_speed",
             "windDirection": "wind_from_direction",
-            "relativeHumidity": "relative_humidity"
+            "relativeHumidity": "relative_humidity",
         },
         "icon": "/static/images/boat/polargirl.svg",
-        "import_function": "netcdf_boat.netcdf_boat"
-    }
+        "import_function": "netcdf_boat.netcdf_boat",
+    },
 ]
 
 
@@ -90,28 +90,28 @@ def test_config_dir():
     """
     Session-scoped fixture that creates the config/stations directory
     and temporary config files for testing.
-    
+
     Returns the path to the config directory.
     """
     # Get the project root directory
     project_root = Path(__file__).parent.parent
     config_dir = project_root / "config" / "stations"
-    
+
     # Create the directory if it doesn't exist
     config_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create fixed_stations.json
     fixed_file = config_dir / "fixed_stations.json"
     if not fixed_file.exists():
         with open(fixed_file, "w") as f:
             json.dump(TEST_FIXED_STATIONS, f, indent=4)
-    
+
     # Create mobile_stations.json
     mobile_file = config_dir / "mobile_stations.json"
     if not mobile_file.exists():
         with open(mobile_file, "w") as f:
             json.dump(TEST_MOBILE_STATIONS, f, indent=4)
-    
+
     return config_dir
 
 
@@ -119,10 +119,10 @@ def test_config_dir():
 def cleanup_test_config(request, test_config_dir):
     """
     Autouse fixture that optionally cleans up test config files after tests.
-    
+
     This fixture is marked as autouse=True so it runs for all tests,
     but it only performs cleanup if the test has a 'cleanup_config' marker.
-    
+
     To use cleanup, mark your test with:
     @pytest.mark.cleanup_config
     """
@@ -139,23 +139,23 @@ def fresh_test_config_dir(tmp_path_factory):
     Module-scoped fixture that creates a temporary directory with
     test config files. This is useful when you need isolated config
     for specific test modules.
-    
+
     Returns a tuple of (temp_config_dir, fixed_file_path, mobile_file_path)
     """
     temp_dir = tmp_path_factory.mktemp("test_config")
     config_dir = temp_dir / "config" / "stations"
     config_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create fixed_stations.json
     fixed_file = config_dir / "fixed_stations.json"
     with open(fixed_file, "w") as f:
         json.dump(TEST_FIXED_STATIONS, f, indent=4)
-    
+
     # Create mobile_stations.json
     mobile_file = config_dir / "mobile_stations.json"
     with open(mobile_file, "w") as f:
         json.dump(TEST_MOBILE_STATIONS, f, indent=4)
-    
+
     return config_dir, fixed_file, mobile_file
 
 
