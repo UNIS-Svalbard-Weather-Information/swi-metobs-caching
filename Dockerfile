@@ -31,9 +31,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy the current directory to /swi
 COPY . .
 
-# Make run.sh executable
-RUN chmod +x /swi/run.sh
+# Make the entrypoint scripts executable
+RUN chmod +x /swi/entrypoint.sh /swi/run-cron.sh
 
-# Use run.sh as the entry point
-ENTRYPOINT ["/swi/run.sh"]
+# Use the entrypoint script - supports DOCKER_CRON=1 to stay alive between runs so an
+# external scheduler can re-trigger the job via `docker exec <container> run-cron`
+ENTRYPOINT ["./entrypoint.sh"]
 

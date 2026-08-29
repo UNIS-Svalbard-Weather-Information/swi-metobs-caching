@@ -4,6 +4,12 @@ REPO_URL="https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-statio
 FOLDER_NAME="config"
 OTHER_CONFIG="/swi/data/__swi-config__"
 
+# Ensure only one instance of main.py runs at a time
+if pidof -x "python3" >/dev/null; then
+    echo "Another instance of main.py is already running. Skipping."
+    exit 0
+fi
+
 # Save the initial directory
 INITIAL_DIR=$(pwd)
 
