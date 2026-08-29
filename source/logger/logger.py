@@ -3,6 +3,7 @@
 
 from loguru import logger
 
+
 class Logger:
     @staticmethod
     def setup_logger(name):

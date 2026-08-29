@@ -1,13 +1,13 @@
 import sys
 import os
-from unittest.mock import patch, Mock, MagicMock
-from datetime import datetime, timedelta, date
+from unittest.mock import patch, MagicMock
+from datetime import date
 import pytest
-import requests
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from source.datasource.IWINFixedSource import IWINFixedSource
+
 
 @pytest.fixture
 def mock_config_handler():
@@ -34,7 +34,9 @@ def mock_netcdf_dataset():
 
 
 @patch("netCDF4.Dataset")
-def test_fetch_station_data_today(mock_dataset, mock_config_handler, mock_netcdf_dataset):
+def test_fetch_station_data_today(
+    mock_dataset, mock_config_handler, mock_netcdf_dataset
+):
     """
     Test fetch_station_data successfully retrieves today's dataset.
     """
@@ -50,11 +52,10 @@ def test_fetch_station_data_today(mock_dataset, mock_config_handler, mock_netcdf
     result = datasource.fetch_station_data(station_id)
 
     # Assert the correct dataset was fetched and transformed
-    assert result == {
-        "attribute1": "value1",
-        "attribute2": "value2"
-    }
-    mock_dataset.assert_called_once_with(date.today().strftime("https://example.com/datasets/{date}.nc"))
+    assert result == {"attribute1": "value1", "attribute2": "value2"}
+    mock_dataset.assert_called_once_with(
+        date.today().strftime("https://example.com/datasets/{date}.nc")
+    )
 
 
 @patch("netCDF4.Dataset")
@@ -73,6 +74,7 @@ def test_fetch_station_data_not_found(mock_dataset, mock_config_handler):
     station_id = "station_123"
     with pytest.raises(FileNotFoundError, match="Dataset not available for station"):
         datasource.fetch_station_data(station_id)
+
 
 @patch("netCDF4.Dataset")
 def test_fetch_realtime_data(mock_dataset, mock_config_handler):
@@ -104,7 +106,9 @@ def test_fetch_realtime_data(mock_dataset, mock_config_handler):
     # Instantiate IWINFixedSource
     datasource = IWINFixedSource()
     datasource.config = mock_config_handler  # Replace the config handler with our mock
-    datasource._load_file = MagicMock(return_value=mock_dataset.return_value)  # Mock _load_file
+    datasource._load_file = MagicMock(
+        return_value=mock_dataset.return_value
+    )  # Mock _load_file
 
     # Expected output
     expected_output = {
@@ -126,6 +130,7 @@ def test_fetch_realtime_data(mock_dataset, mock_config_handler):
     # Assert the correct data was fetched and transformed
     assert result == expected_output
     datasource._load_file.assert_called_once_with("bohemanneset", old=0)
+
 
 def test_transform_realtime_data(mock_config_handler):
     """
@@ -165,6 +170,3 @@ def test_transform_realtime_data(mock_config_handler):
 
     # Assert the data was transformed correctly
     assert transformed_data == expected_transformed_data
-
-
-

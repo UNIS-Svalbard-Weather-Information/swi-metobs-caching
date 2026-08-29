@@ -1,6 +1,5 @@
 venv/*
 .venv/*
-config
 data
 data-test
 *__pycache__*

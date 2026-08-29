@@ -4,6 +4,12 @@ REPO_URL="https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-statio
 FOLDER_NAME="config"
 OTHER_CONFIG="/swi/data/__swi-config__"
 
+# Ensure only one instance of main.py runs at a time
+if pidof -x "python3" >/dev/null; then
+    echo "Another instance of main.py is already running. Skipping."
+    exit 0
+fi
+
 # Save the initial directory
 INITIAL_DIR=$(pwd)
 
@@ -32,5 +38,5 @@ echo "Copying files from '$FOLDER_NAME' to '$OTHER_CONFIG' (overwriting existing
 cp -rf "$FOLDER_NAME"/* "$OTHER_CONFIG/" || exit 1
 
 # Run the Python script
-echo "Running run.py..."
-python3 ./run.py
+echo "Running main.py..."
+python3 ./main.py

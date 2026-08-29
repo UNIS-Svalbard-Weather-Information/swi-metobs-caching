@@ -1,8 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Louis Pauchet <louis.pauchet@insa-rouen.fr>
 # SPDX-License-Identifier:  EUPL-1.2
 
-from datetime import datetime, timedelta, date
-import pandas as pd
+from datetime import timedelta, date
 import netCDF4 as nc
 
 from .datasource import DataSource
@@ -29,14 +28,18 @@ class IWINFixedSource(DataSource):
             try:
                 dataset = self._load_file(station_id, old=days_offset)
                 self.logger.info(
-                    f"Dataset successfully loaded from {station_id} for {'today' if days_offset == 0 else 'yesterday'}")
+                    f"Dataset successfully loaded from {station_id} for {'today' if days_offset == 0 else 'yesterday'}"
+                )
                 return {attr: getattr(dataset, attr) for attr in dataset.ncattrs()}
             except FileNotFoundError:
                 self.logger.warning(
-                    f"Dataset not found for {station_id} {'today' if days_offset == 0 else 'yesterday'}")
+                    f"Dataset not found for {station_id} {'today' if days_offset == 0 else 'yesterday'}"
+                )
 
         # If neither today nor yesterday's dataset is available
-        error_message = f"Dataset not available for station {station_id} today or yesterday"
+        error_message = (
+            f"Dataset not available for station {station_id} today or yesterday"
+        )
         self.logger.error(error_message)
         raise FileNotFoundError(error_message)
 
@@ -70,11 +73,17 @@ class IWINFixedSource(DataSource):
             times = nc.num2date(time_var[:], time_var.units)
             most_recent_index = len(times) - 1
             most_recent_timestamp = times[most_recent_index]
-            self.logger.debug(f"Most recent timestamp for {station_id}: {most_recent_timestamp}")
+            self.logger.debug(
+                f"Most recent timestamp for {station_id}: {most_recent_timestamp}"
+            )
         except KeyError:
-            raise ValueError(f"Time variable not found in dataset for station {station_id}.")
+            raise ValueError(
+                f"Time variable not found in dataset for station {station_id}."
+            )
         except Exception as e:
-            self.logger.error(f"Error processing time variable for station {station_id}: {e}")
+            self.logger.error(
+                f"Error processing time variable for station {station_id}: {e}"
+            )
             raise
 
         raw_data = {}
@@ -83,9 +92,13 @@ class IWINFixedSource(DataSource):
                 try:
                     # Handle scalar values or numpy arrays
                     value = dataset.variables[mapped_var][most_recent_index]
-                    raw_data[raw_var] = value.item() if hasattr(value, "item") else value
+                    raw_data[raw_var] = (
+                        value.item() if hasattr(value, "item") else value
+                    )
                 except Exception as e:
-                    self.logger.warning(f"Error fetching data for variable {mapped_var} in station {station_id}: {e}")
+                    self.logger.warning(
+                        f"Error fetching data for variable {mapped_var} in station {station_id}: {e}"
+                    )
         self.logger.debug(f"Raw data for {station_id}: {raw_data}")
 
         transformed_data = self.transform_realtime_data(raw_data, station_id)
@@ -125,15 +138,23 @@ class IWINFixedSource(DataSource):
         for raw_key, mapped_var in variable_map.items():
             if mapped_var and raw_key in raw_data:
                 transformed_data[raw_key] = raw_data[raw_key]
-        self.logger.debug(f"Transformed data after mapping for {station_id}: {transformed_data}")
+        self.logger.debug(
+            f"Transformed data after mapping for {station_id}: {transformed_data}"
+        )
 
         return transformed_data
 
     def fetch_timeseries_data(self, station_id, start_time, end_time, return_df=False):
-        raise NotImplementedError("fetch_timeseries_data must be implemented by the subclass.")
+        raise NotImplementedError(
+            "fetch_timeseries_data must be implemented by the subclass."
+        )
 
-    def transform_timeseries_data(self, raw_data, station_id, return_df, resample="60min"):
-        raise NotImplementedError("transform_timeseries_data must be implemented by the subclass.")
+    def transform_timeseries_data(
+        self, raw_data, station_id, return_df, resample="60min"
+    ):
+        raise NotImplementedError(
+            "transform_timeseries_data must be implemented by the subclass."
+        )
 
     def _load_file(self, station_id, old=0):
         """
@@ -164,7 +185,9 @@ class IWINFixedSource(DataSource):
             dataset = nc.Dataset(dataset_url)
             return dataset
         except FileNotFoundError:
-            self.logger.error(f"Dataset not found for station {station_id} on {data_date}")
+            self.logger.error(
+                f"Dataset not found for station {station_id} on {data_date}"
+            )
             raise
         except Exception as e:
             self.logger.error(f"Unexpected error while fetching dataset: {e}")

@@ -5,8 +5,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import pytest
-import logging
-from unittest.mock import patch, mock_open
+from loguru import logger
+from unittest.mock import patch
 from source.datasource.datasource import DataSource
 import pandas as pd
 
@@ -20,10 +20,18 @@ class MockDataSource(DataSource):
         return {"station_id": station_id, "temperature": 25.5}
 
     def fetch_timeseries_data(self, station_id, start_time, end_time):
-        return {"station_id": station_id, "start_time": start_time, "end_time": end_time, "data": []}
+        return {
+            "station_id": station_id,
+            "start_time": start_time,
+            "end_time": end_time,
+            "data": [],
+        }
 
     def transform_realtime_data(self, raw_data, station_id):
-        return {"station_id": station_id, "processed_temperature": raw_data.get("temperature")}
+        return {
+            "station_id": station_id,
+            "processed_temperature": raw_data.get("temperature"),
+        }
 
     def transform_timeseries_data(self, raw_data, station_id):
         return {"station_id": station_id, "processed_data": raw_data.get("data")}
@@ -43,7 +51,6 @@ def data_source():
 def test_initialization(data_source):
     """Test initialization of DataSource."""
     assert data_source.api_key == "test_api_key"
-    assert isinstance(data_source.logger, logging.Logger)
 
 
 def test_fetch_station_data(data_source):
@@ -60,7 +67,9 @@ def test_fetch_realtime_data(data_source):
 
 def test_fetch_timeseries_data(data_source):
     """Test fetch_timeseries_data method."""
-    result = data_source.fetch_timeseries_data("123", "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
+    result = data_source.fetch_timeseries_data(
+        "123", "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z"
+    )
     assert result == {
         "station_id": "123",
         "start_time": "2023-01-01T00:00:00Z",
@@ -89,7 +98,7 @@ def test_is_station_online(data_source):
     assert data_source.is_station_online("999") is False
 
 
-@patch.object(logging.Logger, "error")
+@patch.object(logger, "error")
 def test_handle_error(mock_error, data_source):
     """Test _handle_error method."""
     error = Exception("Test error")
@@ -102,48 +111,14 @@ def test_df_to_timeserie(data_source):
     """Test conversion of DataFrame to time series observations."""
     # Create a sample DataFrame
     data = {
-        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
-        'airTemperature': [-5.4, -5.8],
-        'windDirection': [205, 205],
-        'windSpeed': [7.1, 6.1]
+        "timestamp": pd.to_datetime(
+            ["2025-02-08T17:00:00.000", "2025-02-08T18:00:00.000"]
+        ),
+        "airTemperature": [-5.4, -5.8],
+        "windDirection": [205, 205],
+        "windSpeed": [7.1, 6.1],
     }
-    df = pd.DataFrame(data).set_index('timestamp')
-
-    # Call the method
-    result = data_source.df_to_timeserie(df)
-
-    # Expected result
-    expected_result = [
-        {
-            "airTemperature": -5.4,
-            "timestamp": "2025-02-08T17:00:00.000Z",
-            "windDirection": 205,
-            "windSpeed": 7.1
-        },
-        {
-            "airTemperature": -5.8,
-            "timestamp": "2025-02-08T18:00:00.000Z",
-            "windDirection": 205,
-            "windSpeed": 6.1
-        }
-    ]
-
-    # Assert the result
-    assert result == expected_result
-
-# Test for handling latitude and longitude
-def test_df_to_timeserie_with_location(data_source):
-    """Test conversion of DataFrame with latitude and longitude to time series observations."""
-    # Create a sample DataFrame with location data
-    data = {
-        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
-        'airTemperature': [-5.4, -5.8],
-        'windDirection': [205, 205],
-        'windSpeed': [7.1, 6.1],
-        'latitude': [48.8566, 48.8566],
-        'longitude': [2.3522, 2.3522]
-    }
-    df = pd.DataFrame(data).set_index('timestamp')
+    df = pd.DataFrame(data).set_index("timestamp")
 
     # Call the method
     result = data_source.df_to_timeserie(df)
@@ -155,32 +130,74 @@ def test_df_to_timeserie_with_location(data_source):
             "timestamp": "2025-02-08T17:00:00.000Z",
             "windDirection": 205,
             "windSpeed": 7.1,
-            "location": {"lat": 48.8566, "lon": 2.3522}
         },
         {
             "airTemperature": -5.8,
             "timestamp": "2025-02-08T18:00:00.000Z",
             "windDirection": 205,
             "windSpeed": 6.1,
-            "location": {"lat": 48.8566, "lon": 2.3522}
-        }
+        },
     ]
 
     # Assert the result
     assert result == expected_result
 
+
+# Test for handling latitude and longitude
+def test_df_to_timeserie_with_location(data_source):
+    """Test conversion of DataFrame with latitude and longitude to time series observations."""
+    # Create a sample DataFrame with location data
+    data = {
+        "timestamp": pd.to_datetime(
+            ["2025-02-08T17:00:00.000", "2025-02-08T18:00:00.000"]
+        ),
+        "airTemperature": [-5.4, -5.8],
+        "windDirection": [205, 205],
+        "windSpeed": [7.1, 6.1],
+        "latitude": [48.8566, 48.8566],
+        "longitude": [2.3522, 2.3522],
+    }
+    df = pd.DataFrame(data).set_index("timestamp")
+
+    # Call the method
+    result = data_source.df_to_timeserie(df)
+
+    # Expected result
+    expected_result = [
+        {
+            "airTemperature": -5.4,
+            "timestamp": "2025-02-08T17:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 7.1,
+            "location": {"lat": 48.8566, "lon": 2.3522},
+        },
+        {
+            "airTemperature": -5.8,
+            "timestamp": "2025-02-08T18:00:00.000Z",
+            "windDirection": 205,
+            "windSpeed": 6.1,
+            "location": {"lat": 48.8566, "lon": 2.3522},
+        },
+    ]
+
+    # Assert the result
+    assert result == expected_result
+
+
 # Test for error handling
-@patch.object(DataSource, '_handle_error')
+@patch.object(DataSource, "_handle_error")
 def test_df_to_timeserie_error_handling(mock_handle_error, data_source):
     """Test error handling in df_to_timeserie method."""
     # Create an invalid DataFrame (e.g., non-numeric data)
     data = {
-        'timestamp': pd.to_datetime(['2025-02-08T17:00:00.000', '2025-02-08T18:00:00.000']),
-        'airTemperature': [-5.4, 'invalid_value'],
-        'windDirection': [205, 205],
-        'windSpeed': [7.1, 6.1]
+        "timestamp": pd.to_datetime(
+            ["2025-02-08T17:00:00.000", "2025-02-08T18:00:00.000"]
+        ),
+        "airTemperature": [-5.4, "invalid_value"],
+        "windDirection": [205, 205],
+        "windSpeed": [7.1, 6.1],
     }
-    df = pd.DataFrame(data).set_index('timestamp')
+    df = pd.DataFrame(data).set_index("timestamp")
 
     # Call the method
     result = data_source.df_to_timeserie(df)

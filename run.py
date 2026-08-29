@@ -2,7 +2,7 @@ from source.cacheHandler.cacheHandler import CacheHandler
 
 import os
 
-if not os.path.exists('/.dockerenv'):
+if not os.path.exists("/.dockerenv"):
     import dotenv
 
     dotenv.load_dotenv(".env")

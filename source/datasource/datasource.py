@@ -7,14 +7,12 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from abc import ABC, abstractmethod
-import logging
-import json
 from source.logger.logger import Logger
 from source.configHandler.confighandler import ConfigHandler
 
 config_files = [
-    'static/config/fixed_stations.json',
-    'static/config/mobile_stations.json'
+    "static/config/fixed_stations.json",
+    "static/config/mobile_stations.json",
 ]
 
 
@@ -66,7 +64,7 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df = False):
+    def fetch_timeseries_data(self, station_id, start_time, end_time, return_df=False):
         """
         Query historical data for a specific station and time range.
 
@@ -147,17 +145,24 @@ class DataSource(ABC):
 
             for index, row in df.iterrows():
                 lat, lon = None, None
-                obs = {'timestamp': index.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'}  # Use the index as the timestamp
+                obs = {
+                    "timestamp": index.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+                }  # Use the index as the timestamp
                 for key in keys:
-                    if key == 'latitude':
-                        lat = row.get(key,None)
-                    elif key == 'longitude':
-                        lon = row.get(key,None)
+                    if key == "latitude":
+                        lat = row.get(key, None)
+                    elif key == "longitude":
+                        lon = row.get(key, None)
                     else:
-                        obs[key] = float(f"{row[key]:.2f}")  # Access row data using the column name
-                
+                        obs[key] = float(
+                            f"{row[key]:.2f}"
+                        )  # Access row data using the column name
+
                 if lat and lon:
-                    obs["location"] = {"lat": float(f"{lat:.4f}"), "lon": float(f"{lon:.4f}")}
+                    obs["location"] = {
+                        "lat": float(f"{lat:.4f}"),
+                        "lon": float(f"{lon:.4f}"),
+                    }
                 timeserie.append(obs)
 
             return timeserie
