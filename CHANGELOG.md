@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/compare/0.0.5...0.0.6) (2026-10-11)
+
+
+### Bug Fixes
+
+* **deps:** refresh uv.lock to current releases ([a6e8c5c](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/commit/a6e8c5c029e6bf2fca0e07699e2859ccbfd30453))
+
 ## [0.0.5](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/compare/0.0.4...0.0.5) (2026-08-29)
 
 
