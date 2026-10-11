@@ -15,3 +15,7 @@ data/*
 config
 data
 data-test
+.ruff_cache/
+.pytest_cache/
+.coverage
+.github/
