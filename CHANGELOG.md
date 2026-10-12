@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.0](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/compare/0.0.6...0.1.0) (2026-10-12)
+
+
+### Features
+
+* **docker:** run the cron job as an unprivileged user ([4b6d417](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/commit/4b6d417c2de659a3edf3388e0354f9e4d5bab114))
+* **docker:** run the cron job as an unprivileged user ([c517542](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/commit/c517542593eb68171cdda070e7d1a89e09af95a6))
+
 ## [0.0.6](https://github.com/UNIS-Svalbard-Weather-Information/swi-metobs-caching/compare/0.0.5...0.0.6) (2026-10-11)
 
 
