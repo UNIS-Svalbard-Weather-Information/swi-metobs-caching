@@ -10,6 +10,7 @@ from unittest.mock import patch, MagicMock
 from source.datasource.datasourceFactory import get_datasource
 from source.datasource.FrostSource import FrostSource
 from source.datasource.IWINFixedSource import IWINFixedSource
+from source.datasource.IWOOSNetcdfSource import IWOOSNetcdfSource
 
 
 @pytest.fixture
@@ -87,6 +88,29 @@ def test_get_datasource_iwinfixedsource(mock_logger, mock_config_handler):
         "Datasource identified for station_iwin: IWINFixedSource"
     )
     # mock_logger.info.assert_any_call("Fetching API Key for: IWINFixedSource")
+
+
+def test_get_datasource_iwoosnetcdfsource(mock_logger, mock_config_handler):
+    """
+    Test that get_datasource returns an IWOOSNetcdfSource
+    when the metadata indicates 'IWOOSNetcdfSource'.
+    """
+    # Arrange
+    mock_config_handler.get_metadata.return_value = {"datasource": "IWOOSNetcdfSource"}
+
+    # Act
+    datasource = get_datasource("station_iwoos")
+
+    # Assert
+    assert isinstance(datasource, IWOOSNetcdfSource), (
+        "Should return IWOOSNetcdfSource instance"
+    )
+
+    # Check logger calls
+    mock_logger.info.assert_any_call("Fetching metadata for station_id: station_iwoos")
+    mock_logger.info.assert_any_call(
+        "Datasource identified for station_iwoos: IWOOSNetcdfSource"
+    )
 
 
 def test_get_datasource_unknown_datasource_fallback(mock_logger, mock_config_handler):
